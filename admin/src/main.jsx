@@ -15,7 +15,12 @@ import ExpenseReport from './components/pages/Finance/Expense/ExpenseReport.jsx'
 import ExpenseDashboard from './components/pages/Finance/Expense/ExpenseDashboard.jsx'
 import ExpenseList from './components/pages/Finance/Expense/ExpenseList.jsx'
 import AddExpense from './components/pages/Finance/Expense/AddExpense.jsx'
-import MaintenanceDashboard from './components/pages/Finance/Maintenance/MaintenanceDashboard.jsx'
+import FacilityDashboard from './components/pages/Facility/FacilityDashboard.jsx'
+import BookingForm from './components/pages/Facility/BookingForm.jsx'
+import BookingList from './components/pages/Facility/BookingList.jsx'
+import BookingCalendar from './components/pages/Facility/BookingCalendar.jsx'
+import BookingDetails from './components/pages/Facility/BookingDetails.jsx'
+import MaintenanceDashboard from './components/pages/Finance/Maintenance/MaintenanceDashboard.jsx';
 import MaintenanceList from './components/pages/Finance/Maintenance/MaintenanceList.jsx'
 import MaintenanceDetails from './components/pages/Finance/Maintenance/MaintenanceDetails.jsx'
 import AddMaintenance from './components/pages/Finance/Maintenance/AddMaintenance.jsx'
@@ -48,6 +53,31 @@ const router = createBrowserRouter([
         element: <Payments />,
       },
       {
+        path: "facility",
+        children: [
+          {
+            path: "dashboard",
+            element: <FacilityDashboard />,
+          },
+          {
+            path: "book",
+            element: <BookingForm />,
+          },
+          {
+            path: "list",
+            element: <BookingList />,
+          },
+          {
+            path: "calendar",
+            element: <BookingCalendar />,
+          },
+          {
+            path: "booking/:id",
+            element: <BookingDetails />,
+          },
+        ],
+      },
+      {
         path: "maintenance",
         children: [
           {
@@ -74,6 +104,7 @@ const router = createBrowserRouter([
             path: ":id/receipt",
             element: <ReceiptGenerator />,
           },
+         
         ],
       },
       {
