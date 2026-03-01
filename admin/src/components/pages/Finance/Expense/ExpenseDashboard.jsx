@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   PieChart,
   Pie,
@@ -14,7 +15,8 @@ import {
 } from "recharts";
 
 const ExpenseDashboard = () => {
-  // Dummy Data (Replace with API later)
+  const navigate = useNavigate();
+
   const summary = {
     monthlyExpense: 180000,
     yearlyExpense: 2100000,
@@ -49,6 +51,30 @@ const ExpenseDashboard = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Expense Dashboard</h1>
         <p className="text-gray-500">Track and monitor society expenses</p>
+      </div>
+
+      {/* ✅ QUICK ACTION BUTTONS */}
+      <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <button
+          onClick={() => navigate("/expense/add")}
+          className="bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition"
+        >
+          Add Expense
+        </button>
+
+        <button
+          onClick={() => navigate("/expense/list")}
+          className="bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition"
+        >
+          Expense List
+        </button>
+
+        <button
+          onClick={() => navigate("/expense/report")}
+          className="bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition"
+        >
+          Expense Report
+        </button>
       </div>
 
       {/* SUMMARY CARDS */}
