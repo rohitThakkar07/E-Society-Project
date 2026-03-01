@@ -107,7 +107,7 @@ const MaintenanceDetails = () => {
 
           {/* Invoice Button */}
           <button
-            onClick={() => navigate('/InvoiceGenerator')}
+            onClick={() => navigate(`/maintenance/${maintenance.id}/invoice`)}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Generate Invoice
@@ -116,7 +116,7 @@ const MaintenanceDetails = () => {
           {/* Receipt Button (Only if Paid) */}
           {maintenance.status === "Paid" && (
             <button
-              onClick={() => navigate('/ReceiptGenerator')}
+              onClick={() => navigate(`/maintenance/${maintenance.id}/receipt`)}
               className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition"
             >
               Generate Receipt

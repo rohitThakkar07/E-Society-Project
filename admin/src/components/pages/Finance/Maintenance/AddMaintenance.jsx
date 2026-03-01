@@ -18,7 +18,7 @@ const AddMaintenance = () => {
     // axios.post("/api/maintenance", data)
 
     alert("Maintenance Added Successfully!");
-    navigate("/MaintenanceList")
+    navigate("/maintenance/list")
     reset();
   };
 

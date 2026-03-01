@@ -38,7 +38,7 @@ const MaintenanceDashboard = () => {
 
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/MaintenanceList')}
+            onClick={() => navigate('/maintenance/list')}
             className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition"
           >
             View List
@@ -48,7 +48,7 @@ const MaintenanceDashboard = () => {
             onClick={() =>
             {
                 console.log("add maintainene")
-                 navigate('/AddMaintenance')
+                 navigate('/maintenance/add')
             }
             }
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"

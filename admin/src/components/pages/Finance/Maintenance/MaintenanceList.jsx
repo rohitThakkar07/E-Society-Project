@@ -90,10 +90,14 @@ const MaintenanceList = () => {
                     </span>
                   </td>
                   <td className="p-4 text-center">
-                    <button className="text-blue-600 hover:underline mr-3" onClick={()=>navigate(`/MaintenanceDetails/${item.id}`)}>
+                    <button className="text-blue-600 hover:underline mr-3" onClick={()=>navigate(`/maintenance/${item.id}`)}>
                       View
                     </button>
-                    <button className="text-green-600 hover:underline">
+                    <button className="text-green-600 hover:underline" onClick={
+                      ()=>{
+                        navigate(`/maintenance/${item.id}/invoice`)
+                      }
+                    }>
                       Generate Invoice
                     </button>
                   </td>
