@@ -30,6 +30,9 @@ import RoleDashboard from './components/pages/RoleRights/RoleDashboard.jsx'
 import CreateRole from './components/pages/RoleRights/CreateRole.jsx'
 import RoleList from './components/pages/RoleRights/RoleList.jsx'
 import UserAccessList from './components/pages/RoleRights/UserAccessList.jsx'
+import ComplaintDashboard from './components/pages/Complaint/ComplaintDashboard.jsx'
+import ComplaintDetails from './components/pages/Complaint/ComplaintDetails.jsx'
+import CreateComplaint from './components/pages/Complaint/CreateComplaint.jsx'
 
 const router = createBrowserRouter([
   {
@@ -154,7 +157,15 @@ const router = createBrowserRouter([
       },
       {
         path: "complaints",
-        element: <Complaints />,
+        element: <ComplaintDashboard />,
+      },
+      {
+        path: "complaints/create",
+        element: <CreateComplaint />,
+      },
+      {
+        path: "complaints/:id",
+        element: <ComplaintDetails />,
       },
     ],
   },
