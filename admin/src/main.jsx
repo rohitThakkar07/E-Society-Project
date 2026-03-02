@@ -26,6 +26,10 @@ import MaintenanceDetails from './components/pages/Finance/Maintenance/Maintenan
 import AddMaintenance from './components/pages/Finance/Maintenance/AddMaintenance.jsx'
 import InvoiceGenerator from './components/pages/Finance/Maintenance/InvoiceGenerator.jsx'
 import ReceiptGenerator from './components/pages/Finance/Maintenance/ReceiptGenerator.jsx'
+import RoleDashboard from './components/pages/RoleRights/RoleDashboard.jsx'
+import CreateRole from './components/pages/RoleRights/CreateRole.jsx'
+import RoleList from './components/pages/RoleRights/RoleList.jsx'
+import UserAccessList from './components/pages/RoleRights/UserAccessList.jsx'
 
 const router = createBrowserRouter([
   {
@@ -127,6 +131,26 @@ const router = createBrowserRouter([
             element: <ExpenseReport />,
           },
         ],
+      },
+      {
+        path: "roles",
+        element: <RoleDashboard />,
+      },
+      {
+        path: "roles/create-role",
+        element: <CreateRole />,
+      },
+      {
+        path: "roles/edit/:id",
+        element: <CreateRole />,
+      },
+      {
+        path: "roles/list",
+        element: <RoleList />,
+      },
+      {
+        path: "roles/user-access",
+        element: <UserAccessList />,
       },
       {
         path: "complaints",

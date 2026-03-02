@@ -196,6 +196,15 @@ const Sidebar = ({ isOpen }) => {
           </svg>
           {isOpen && <span>Complaints</span>}
         </NavLink>
+
+        {/* Roles & Rights */}
+        <NavLink to="/roles" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
+          }`} title="Role & Right">
+          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+          </svg>
+          {isOpen && <span>Role & Rights</span>}
+        </NavLink>
       </nav>
     </aside>
   );
