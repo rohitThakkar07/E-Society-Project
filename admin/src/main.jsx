@@ -2,15 +2,12 @@ import React from 'react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
-import {BrowserRouter, createBrowserRouter, RouterProvider} from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AdminLayout from './components/common/AdminLayout.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import Residents from './components/pages/Residents.jsx'
 import Guards from './components/pages/Guards.jsx'
-import Visitors from './components/pages/Visitors.jsx'
 import Payments from './components/pages/Payments.jsx'
-import Complaints from './components/pages/Complaints.jsx'
 import ExpenseReport from './components/pages/Finance/Expense/ExpenseReport.jsx'
 import ExpenseDashboard from './components/pages/Finance/Expense/ExpenseDashboard.jsx'
 import ExpenseList from './components/pages/Finance/Expense/ExpenseList.jsx'
@@ -33,11 +30,14 @@ import UserAccessList from './components/pages/RoleRights/UserAccessList.jsx'
 import ComplaintDashboard from './components/pages/Complaint/ComplaintDashboard.jsx'
 import ComplaintDetails from './components/pages/Complaint/ComplaintDetails.jsx'
 import CreateComplaint from './components/pages/Complaint/CreateComplaint.jsx'
+import VisitorDashboard from './components/pages/Visitors/VisitorDashboard.jsx'
+import VisitorDetails from './components/pages/Visitors/VisitorsDetails.jsx'
+import VisitorReports from './components/pages/Visitors/VisitorReports.jsx'
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <AdminLayout />, 
+    element: <AdminLayout />,
     children: [
       {
         index: true,
@@ -51,10 +51,24 @@ const router = createBrowserRouter([
         path: "guards",
         element: <Guards />,
       },
+
       {
-        path: "visitors",
-        element: <Visitors />,
+        path: "/visitors",
+        element: <VisitorDashboard />,
       },
+      {
+        path: "/visitors/list",
+        element: <VisitorDashboard />,
+      },
+      {
+        path: "/visitors/:id",
+        element: <VisitorDetails />,
+      },
+      {
+        path: "/visitors/reports",
+        element: <VisitorReports />,
+      },
+
       {
         path: "payments",
         element: <Payments />,
@@ -111,7 +125,7 @@ const router = createBrowserRouter([
             path: ":id/receipt",
             element: <ReceiptGenerator />,
           },
-         
+
         ],
       },
       {
@@ -172,6 +186,6 @@ const router = createBrowserRouter([
 ]);
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router}/>
+    <RouterProvider router={router} />
   </StrictMode>,
 )
