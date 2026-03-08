@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const residentSchema = new mongoose.Schema({
 
-  // Personal Information
+  /* ---------------- Personal Information ---------------- */
+
   firstName: {
     type: String,
     required: true,
@@ -16,7 +17,7 @@ const residentSchema = new mongoose.Schema({
 
   gender: {
     type: String,
-    enum: ["Male", "Female", "Other"],
+    enum: ["Male", "Female"],
     required: true
   },
 
@@ -24,72 +25,81 @@ const residentSchema = new mongoose.Schema({
     type: Date
   },
 
-  // Contact Information
+  /* ---------------- Contact Information ---------------- */
+
   mobileNumber: {
     type: String,
-    required: true
+    required: true,
+    match: [/^[0-9]{10}$/, "Please enter a valid 10 digit mobile number"]
   },
 
   email: {
     type: String,
     lowercase: true,
-    trim: true
+    trim: true,
+    unique: true,
+    sparse: true
   },
 
-  // Flat Details
+  /* ---------------- Flat Details ---------------- */
+
   wing: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
 
   flatNumber: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
 
   floorNumber: {
     type: Number
   },
 
-  // Resident Details
+  /* ---------------- Resident Details ---------------- */
+
   residentType: {
     type: String,
-    enum: ["Owner", "Tenant", "Family"],
+    enum: ["Owner", "Tenant"],
     required: true
   },
 
   moveInDate: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
 
-  moveOutDate: {
-    type: Date
-  },
+ 
 
-  // Identity Details
+  /* ---------------- Identity Details ---------------- */
+
   idProofType: {
     type: String,
+    enum: ["Aadhaar", "PAN", "Driving License", "Passport"]
   },
 
   idProofNumber: {
-    type: String
+    type: String,
+    trim: true
   },
 
-  // Vehicle Details
-  vehicleNumber: {
-    type: String
-  },
+  /* ---------------- Emergency Contact ---------------- */
 
-  // Emergency Contact
   emergencyContactName: {
-    type: String
+    type: String,
+    trim: true
   },
 
   emergencyContactNumber: {
-    type: String
+    type: String,
+    match: [/^[0-9]{10}$/, "Please enter a valid 10 digit mobile number"]
   },
 
-  // Resident Status
+  /* ---------------- Resident Status ---------------- */
+
   status: {
     type: String,
     enum: ["Active", "Inactive"],
@@ -97,5 +107,9 @@ const residentSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
+
+
+/* Prevent duplicate residents in same flat */
+residentSchema.index({ wing: 1, flatNumber: 1 });
 
 module.exports = mongoose.model("Resident", residentSchema);

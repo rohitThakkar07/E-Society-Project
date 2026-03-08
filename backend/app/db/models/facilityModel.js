@@ -24,10 +24,6 @@ const facilitySchema = new mongoose.Schema({
     type: String
   },
 
-  capacity: {
-    type: Number
-  },
-
   status: {
     type: String,
     enum: ["Available", "Maintenance", "Closed"],

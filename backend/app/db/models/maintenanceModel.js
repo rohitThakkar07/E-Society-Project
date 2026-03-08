@@ -4,24 +4,15 @@ const maintenanceSchema = new mongoose.Schema({
 
   month: {
     type: String,
-    enum: [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
-    ],
+    enum: ["January","February","March","April","May","June","July","August","September","October","November","December"],
     required: true
   },
 
   amount: {
+    type: Number,
+    required: true
+  },
+   year: {
     type: Number,
     required: true
   },
@@ -39,11 +30,6 @@ const maintenanceSchema = new mongoose.Schema({
   description: {
     type: String
   },
-
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
-  }
 
 }, { timestamps: true });
 
