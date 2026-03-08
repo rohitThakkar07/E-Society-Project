@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import axios from 'axios';
 
 
@@ -18,39 +20,76 @@ const Login = () => {
     confirmPassword: "",
   });
 
-  const handleChange = async(e) => {
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
- 
-  const handleSubmit = async(e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isLogin) {
-      try{
-        const response =await axios.post('http://localhost:4000/user',formData);
-        alert(response.data);
-        console.log(response.status)
-      }catch(err){
-        console.log(err.message);
+      try {
+
+        const response = await axios.post(
+          "http://localhost:4000/api/auth/login",
+          formData
+        );
+        toast.success(response.data.message || "Login successful");
+        const { token, user } = response.data;
+
+        // store token
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", user.role);
+
+        console.log("Login success:", response.data);
+
+        // redirect based on role
+        if (user.role === "admin") {
+          window.location.href = "http://localhost:3001/";
+        }
+
+        if (user.role === "resident") {
+          navigate("/resident-dashboard");
+        }
+
+        if (user.role === "guard") {
+          navigate("/guard-dashboard");
+        }
+
+      } catch (err) {
+        toast.error(
+          err.response?.data?.message || "Login failed"
+        );
       }
 
-      // console.log("Logging in with:", formData);
-      // alert(`Login Successful as ${formData.role}!`);
-      navigate("/");
     } else {
+
       if (formData.password !== formData.confirmPassword) {
         alert("Passwords do not match!");
         return;
       }
-      const response = axios.post('http://localhost:4000/register',formData);
-      console.log(response)
-      // console.log("Registering:", formData);
-      // alert("Registration Successful! Please Login.");
-      setIsLogin(true);
+
+      try {
+
+        const response = await axios.post(
+          "http://localhost:4000/api/auth/register",
+          formData
+        );
+
+        console.log("Register success:", response.data);
+
+        alert("Registration Successful! Please Login.");
+        setIsLogin(true);
+
+      } catch (err) {
+        console.log(err.response?.data?.message || err.message);
+      }
+
     }
   };
 
- 
+
+
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center px-4"
@@ -136,29 +175,29 @@ const Login = () => {
             />
           </div>
 
-          
+
           <div className="mb-4">
-  <label className="block mb-1">Password</label>
+            <label className="block mb-1">Password</label>
 
-  <div className="flex w-full border rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-    <input
-      type={show ? 'text' : 'password'}
-      name="password"
-      placeholder="******"
-      onChange={handleChange}
-      required
-      className="flex-1 px-3 py-2 outline-none"
-    />
+            <div className="flex w-full border rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+              <input
+                type={show ? 'text' : 'password'}
+                name="password"
+                placeholder="******"
+                onChange={handleChange}
+                required
+                className="flex-1 px-3 py-2 outline-none"
+              />
 
-    <button
-      type="button"
-      onClick={() => setShow(!show)}
-      className="px-4 py-2 border-l bg-gray-300"
-    >
-      {show ? 'Hide' : 'Show'}
-    </button>
-  </div>
-</div>
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                className="px-4 py-2 border-l bg-gray-300"
+              >
+                {show ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
 
           {!isLogin && (
             <div className="mb-4">
@@ -199,6 +238,7 @@ const Login = () => {
           </p>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };
