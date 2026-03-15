@@ -1,8 +1,8 @@
 import React from 'react';
-import ExpenseDashboard from "../components/pages/Finance/Expense/ExpenseDashboard";
-import ExpenseList from "../components/pages/Finance/Expense/ExpenseList";
-import AddExpense from "../components/pages/Finance/Expense/AddExpense";
-import ExpenseReport from "../components/pages/Finance/Expense/ExpenseReport";
+import ExpenseDashboard from "../../Admin/pages/Finance/Expense/ExpenseDashboard";
+import ExpenseList from "../../Admin/pages/Finance/Expense/ExpenseList";
+import AddExpense from "../../Admin/pages/Finance/Expense/AddExpense";
+import ExpenseReport from "../../Admin/pages/Finance/Expense/ExpenseReport";
 
 const expenseRoutes = [
   {

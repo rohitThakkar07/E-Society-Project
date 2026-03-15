@@ -1,9 +1,9 @@
 import React from 'react';
-import FacilityDashboard from "../components/pages/Facility/FacilityDashboard";
-import BookingForm from "../components/pages/Facility/BookingForm";
-import BookingList from "../components/pages/Facility/BookingList";
-import BookingCalendar from "../components/pages/Facility/BookingCalendar";
-import BookingDetails from "../components/pages/Facility/BookingDetails";
+import FacilityDashboard from "../../Admin/pages/Facility/FacilityDashboard";
+import BookingForm from "../../Admin/pages/Facility/BookingForm";
+import BookingList from "../../Admin/pages/Facility/BookingList";
+import BookingCalendar from "../../Admin/pages/Facility/BookingCalendar";
+import BookingDetails from "../../Admin/pages/Facility/BookingDetails";
 
 const facilityRoutes = [
   {

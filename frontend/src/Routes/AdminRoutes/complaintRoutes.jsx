@@ -1,7 +1,7 @@
 import React from 'react';
-import ComplaintDashboard from "../components/pages/Complaint/ComplaintDashboard";
-import ComplaintDetails from "../components/pages/Complaint/ComplaintDetails";
-import CreateComplaint from "../components/pages/Complaint/CreateComplaint";
+import ComplaintDashboard from "../../Admin/pages/Complaint/ComplaintDashboard";
+import ComplaintDetails from "../../Admin/pages/Complaint/ComplaintDetails";
+import CreateComplaint from "../../Admin/pages/Complaint/CreateComplaint";
 
 const complaintRoutes = [
   {

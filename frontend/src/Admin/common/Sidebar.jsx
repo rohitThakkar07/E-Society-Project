@@ -8,8 +8,9 @@ const Sidebar = ({ isOpen }) => {
   return (
     <aside className={`bg-gray-900 text-white min-h-screen transition-all duration-300 overflow-hidden ${isOpen ? "w-64 p-5" : "w-20 p-3"}`}>
       <nav className="flex flex-col gap-2">
+        
         {/* Dashboard */}
-        <NavLink to="/" end className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
+        <NavLink to="/admin" end className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
           }`} title="Dashboard">
           <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />

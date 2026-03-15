@@ -1,5 +1,5 @@
 import React from 'react';
-import Payments from "../components/pages/Payments";
+import Payments from "../../Admin/pages/Payments";
 
 const paymentRoutes = [
   {

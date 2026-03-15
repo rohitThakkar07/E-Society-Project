@@ -1,6 +1,6 @@
 import React from 'react';
-import Residents from "../components/pages/Residents/Residents";
-import ResidentForm from "../components/pages/Residents/ResidentForm";
+import Residents from "../../Admin/pages/Residents/Residents";
+import ResidentForm from "../../Admin/pages/Residents/ResidentForm";
 
 const residentRoutes = [
   {

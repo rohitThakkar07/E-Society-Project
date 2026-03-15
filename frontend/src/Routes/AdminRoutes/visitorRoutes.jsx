@@ -1,7 +1,7 @@
 import React from 'react';
-import VisitorDashboard from "../components/pages/Visitors/VisitorDashboard";
-import VisitorDetails from "../components/pages/Visitors/VisitorsDetails";
-import VisitorReports from "../components/pages/Visitors/VisitorReports";
+import VisitorDashboard from "../../Admin/pages/Visitors/VisitorDashboard";
+import VisitorDetails from "../../Admin/pages/Visitors/VisitorsDetails";
+import VisitorReports from "../../Admin/pages/Visitors/VisitorReports";
 
 const visitorRoutes = [
   {

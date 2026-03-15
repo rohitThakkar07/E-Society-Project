@@ -1,8 +1,8 @@
 import React from 'react';
-import RoleDashboard from "../components/pages/RoleRights/RoleDashboard";
-import CreateRole from "../components/pages/RoleRights/CreateRole";
-import RoleList from "../components/pages/RoleRights/RoleList";
-import UserAccessList from "../components/pages/RoleRights/UserAccessList";
+import RoleDashboard from "../../Admin/pages/RoleRights/RoleDashboard";
+import CreateRole from "../../Admin/pages/RoleRights/CreateRole";
+import RoleList from "../../Admin/pages/RoleRights/RoleList";
+import UserAccessList from "../../Admin/pages/RoleRights/UserAccessList";
 
 const roleRoutes = [
   {

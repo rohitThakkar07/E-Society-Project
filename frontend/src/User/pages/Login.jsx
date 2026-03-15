@@ -45,11 +45,9 @@ const handleSubmit = async (e) => {
         toast.success(response.data.message || "Login successful");
 
         // 2. Redirect based on role (Case-insensitive check)
-        const userRole = user.role.toLowerCase();
-        
+        const userRole = user.role.toLowerCase();       
         if (userRole === "admin") {
-          // Use navigate for internal routes if possible, or window.location for external
-          window.location.href = "http://localhost:3001/"; 
+          navigate("/admin");
         } else if (userRole === "resident") {
           navigate("/");
         } else if (userRole === "guard" || userRole === "security") {
