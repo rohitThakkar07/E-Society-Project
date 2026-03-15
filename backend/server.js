@@ -9,6 +9,8 @@ const authRoutes = require("./app/routes_controller/Auth")
 const residentRoutes = require("./app/routes_controller/Resident");
 const facilityBookingRoutes = require("./app/routes_controller/FacilityBooking");
 const complaintRoutes = require("./app/routes_controller/Complaint");
+const guardRoutes = require("./app/routes_controller/Guard");
+const flatRoutes = require("./app/routes_controller/Flat");
 
 // MIDDLEWARE
 const errorHandler = require("./app/middlewares/errorMiddleware");
@@ -29,10 +31,11 @@ app.use(express.json());
 /* ---------------- ROUTES ---------------- */
 
 app.use("/api/auth", authRoutes );
-app.use("/api/resident",authMiddleware, residentRoutes);
+app.use("/api/resident", residentRoutes);
 app.use("/api/facility-booking",authMiddleware, facilityBookingRoutes);
 app.use("/api/complaint",authMiddleware, complaintRoutes);
-
+app.use("/api/guard",guardRoutes);
+app.use("/api/flat",flatRoutes);
 /* ---------------- ERROR HANDLER ---------------- */
 
 app.use(errorHandler);

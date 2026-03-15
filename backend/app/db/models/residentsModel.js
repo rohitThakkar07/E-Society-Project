@@ -2,8 +2,6 @@ const mongoose = require("mongoose");
 
 const residentSchema = new mongoose.Schema({
 
-  /* ---------------- Personal Information ---------------- */
-
   firstName: {
     type: String,
     required: true,
@@ -25,8 +23,6 @@ const residentSchema = new mongoose.Schema({
     type: Date
   },
 
-  /* ---------------- Contact Information ---------------- */
-
   mobileNumber: {
     type: String,
     required: true,
@@ -40,8 +36,6 @@ const residentSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
-
-  /* ---------------- Flat Details ---------------- */
 
   wing: {
     type: String,
@@ -59,7 +53,11 @@ const residentSchema = new mongoose.Schema({
     type: Number
   },
 
-  /* ---------------- Resident Details ---------------- */
+  flatType: {
+    type: String,
+    enum: ["1BHK", "2BHK", "3BHK", "4BHK"],
+    required: true
+  },
 
   residentType: {
     type: String,
@@ -72,21 +70,15 @@ const residentSchema = new mongoose.Schema({
     default: Date.now
   },
 
- 
-
-  /* ---------------- Identity Details ---------------- */
-
   idProofType: {
     type: String,
-    enum: ["Aadhaar", "PAN", "Driving License", "Passport"]
+    enum: ["Aadhaar"]
   },
 
   idProofNumber: {
     type: String,
     trim: true
   },
-
-  /* ---------------- Emergency Contact ---------------- */
 
   emergencyContactName: {
     type: String,
@@ -98,8 +90,6 @@ const residentSchema = new mongoose.Schema({
     match: [/^[0-9]{10}$/, "Please enter a valid 10 digit mobile number"]
   },
 
-  /* ---------------- Resident Status ---------------- */
-
   status: {
     type: String,
     enum: ["Active", "Inactive"],
@@ -108,8 +98,8 @@ const residentSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-
-/* Prevent duplicate residents in same flat */
-residentSchema.index({ wing: 1, flatNumber: 1 });
+residentSchema.index(
+  { wing: 1, flatNumber: 1 }
+);
 
 module.exports = mongoose.model("Resident", residentSchema);

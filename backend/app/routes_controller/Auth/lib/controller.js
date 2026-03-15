@@ -3,58 +3,53 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
-/* Register */
-const register = async (req, res) => {
+/* Register Resident */
+// const registerResident = async (req, res) => {
 
-  const errors = validationResult(req);
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).json({ errors: errors.array() });
+//   }
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      errors: errors.array()
-    });
-  }
+//   try {
+//     const { fullName, name, email, password, role } = req.body;
+//     const residentName = name || fullName;
 
-  try {
+//     const existingUser = await User.findOne({ email: email.toLowerCase() });
+//     if (existingUser) {
+//       return res.status(400).json({ success: false, message: "User already exists" });
+//     }
 
-    const { name, email, password, role } = req.body;
+//     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const existingUser = await User.findOne({ email });
+//     const user = await User.create({
+//       name: residentName,
+//       email: email.toLowerCase(),
+//       password: hashedPassword,
+//       role: role || "Resident"
+//     });
 
-    if (existingUser) {
-      return res.status(400).json({
-        message: "User already exists"
-      });
-    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+//     console.log("after send email");
+//     const userResponse = user.toObject();
+//     delete userResponse.password;
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role
-    });
+//     res.status(201).json({
+//       success: true,
+//       message: "Resident created and welcome email sent!",
+//       user: userResponse
+//     });
 
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      user
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message
-    });
-  }
-
-};
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 
 /* Login */
 
 const login = async (req, res) => {
-
+  console.log(req.body)
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -101,7 +96,25 @@ const login = async (req, res) => {
 
 };
 
+/* Logout */
+const logout = async (req, res) => {
+  try {
+    // If you are using Cookies to store the JWT, clear the cookie:
+    // res.clearCookie('token'); 
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Logout failed"
+    });
+  }
+};
 module.exports = {
-  register,
-  login
+  // registerResident,
+  login,
+  logout
 };
