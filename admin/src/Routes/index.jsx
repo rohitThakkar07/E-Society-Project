@@ -1,7 +1,10 @@
-import React from 'react';
+import React from "react";
+import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
-import AdminLayout from "../components/common/AdminLayout";
-import AdminDashboard from "../components/AdminDashboard";
+
+const AdminLayout = lazy(() => import("../components/common/AdminLayout"));
+const AdminDashboard = lazy(() => import("../components/AdminDashboard"));
+
 import residentRoutes from "./residentRoutes";
 import guardRoutes from "./guardRoutes";
 import visitorRoutes from "./visitorRoutes";
@@ -15,7 +18,9 @@ import paymentRoutes from "./paymentRoutes";
 const Router = createBrowserRouter([
   {
     path: "/",
-    element: <AdminLayout />,
+    element:(
+        <AdminLayout />,
+    ),
     children: [
       { index: true, element: <AdminDashboard /> },
 

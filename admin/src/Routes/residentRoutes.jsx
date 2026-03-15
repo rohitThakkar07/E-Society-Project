@@ -1,6 +1,6 @@
 import React from 'react';
 import Residents from "../components/pages/Residents/Residents";
-import AddResident from "../components/pages/Residents/ResidentForm";
+import ResidentForm from "../components/pages/Residents/ResidentForm";
 
 const residentRoutes = [
   {
@@ -9,7 +9,11 @@ const residentRoutes = [
   },
   {
     path: "residents/add",
-    element: <AddResident />,
+    element: <ResidentForm />,
+  },
+  {
+    path: "residents/edit/:id",
+    element: <ResidentForm />,
   },
 ];
 

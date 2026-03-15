@@ -8,7 +8,6 @@ const AdminLayout = ()=>{
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
-
     return (
         <>
         <Header toggleSidebar={toggleSidebar} />

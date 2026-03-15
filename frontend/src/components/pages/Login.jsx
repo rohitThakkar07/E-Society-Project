@@ -24,67 +24,64 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
+  
     e.preventDefault();
 
     if (isLogin) {
       try {
-
         const response = await axios.post(
           "http://localhost:4000/api/auth/login",
           formData
         );
-        toast.success(response.data.message || "Login successful");
+        
         const { token, user } = response.data;
 
-        // store token
+        // 1. Store Token and User Info
         localStorage.setItem("token", token);
         localStorage.setItem("role", user.role);
+        localStorage.setItem("userData", JSON.stringify(user));
 
-        console.log("Login success:", response.data);
+        toast.success(response.data.message || "Login successful");
 
-        // redirect based on role
-        if (user.role === "admin") {
-          window.location.href = "http://localhost:3001/";
-        }
-
-        if (user.role === "resident") {
-          navigate("/resident-dashboard");
-        }
-
-        if (user.role === "guard") {
+        // 2. Redirect based on role (Case-insensitive check)
+        const userRole = user.role.toLowerCase();
+        
+        if (userRole === "admin") {
+          // Use navigate for internal routes if possible, or window.location for external
+          window.location.href = "http://localhost:3001/"; 
+        } else if (userRole === "resident") {
+          navigate("/");
+        } else if (userRole === "guard" || userRole === "security") {
           navigate("/guard-dashboard");
         }
 
       } catch (err) {
-        toast.error(
-          err.response?.data?.message || "Login failed"
-        );
+        toast.error(err.response?.data?.message || "Login failed");
       }
 
     } else {
-
+      // REGISTER LOGIC
       if (formData.password !== formData.confirmPassword) {
-        alert("Passwords do not match!");
+        toast.error("Passwords do not match!");
         return;
       }
 
       try {
-
+        // If your register route is protected (unlikely), you would add headers here:
+        // const config = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
+        
         const response = await axios.post(
           "http://localhost:4000/api/auth/register",
           formData
         );
 
-        console.log("Register success:", response.data);
-
-        alert("Registration Successful! Please Login.");
+        toast.success("Registration Successful! Please Login.");
         setIsLogin(true);
 
       } catch (err) {
-        console.log(err.response?.data?.message || err.message);
+        toast.error(err.response?.data?.message || "Registration failed");
       }
-
     }
   };
 
@@ -100,7 +97,7 @@ const Login = () => {
     >
       <div className="w-full max-w-md bg-white/95 shadow-xl rounded-2xl p-6">
         <h3 className="text-center mb-6 font-bold text-2xl text-blue-600">
-          {isLogin ? "Welcome Back" : "Join Society"}
+          Welcome Back
         </h3>
 
         <form onSubmit={handleSubmit} method="POST">
@@ -232,8 +229,7 @@ const Login = () => {
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="text-blue-600 font-bold"
-            >
-              {isLogin ? "Register Here" : "Login Here"}
+            >Login Here
             </button>
           </p>
         </div>
