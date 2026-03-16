@@ -6,70 +6,61 @@ import { useNavigate } from "react-router-dom";
 
 const AddGuard = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
-
-  const [isLoading, setIsLoading] = useState(false);
+  } = useForm({
+    mode: "onBlur",
+  });
 
   const onSubmit = async (data) => {
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    Object.keys(data).forEach((key) => {
-      if (key === "idImage" && data[key].length > 0) {
-        formData.append(key, data[key][0]);
-      } else if (data[key] !== undefined) {
-        formData.append(key, data[key]);
+      for (const key in data) {
+        if (key === "idImage" && data[key]?.length > 0) {
+          formData.append("idImage", data[key][0]);
+        } else {
+          formData.append(key, data[key]);
+        }
       }
-    });
 
-    const response = await axios.post(
-      "http://localhost:4000/api/guard/create",
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
+      const response = await axios.post(
+        "http://localhost:4000/api/guard/create",
+        formData
+      );
+
+      if (response.data.success) {
+        toast.success("Guard registered successfully");
+        reset();
+        navigate("/admin/guards");
+      } else {
+        toast.error(response.data.message);
       }
-    );
-
-    // ✅ Handle success & backend errors
-    if (response.data.success) {
-      toast.success(response.data.message || "Guard registered successfully");
-      reset();
-      navigate("/guards");
-    } else {
-      toast.error(response.data.message || "Something went wrong");
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message || "Failed to create guard"
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-  } catch (error) {
-    console.error("Error adding guard:", error);
-
-    toast.error(
-      error.response?.data?.message ||
-      error.message ||
-      "Server Error"
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
       <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-
         <div className="mb-8 border-b pb-4">
           <h2 className="text-3xl font-extrabold text-gray-800">Add New Guard</h2>
           <p className="text-gray-500 mt-1">Register a new security personnel into the system.</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
           {/* --- Section 1: Personal Details --- */}
           <div>
             <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
@@ -159,17 +150,6 @@ const AddGuard = () => {
               Identity & Employment
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-              {/* <div>
-                <label className="text-sm font-medium text-gray-700">Contractor/Agency <span className="text-red-500">*</span></label>
-                <input
-                  {...register("contractor", { required: "Contractor is required" })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                  placeholder="Agency Name or ID"
-                />
-                {errors.contractor && <span className="text-xs text-red-500">{errors.contractor.message}</span>}
-              </div> */}
-
               <div>
                 <label className="text-sm font-medium text-gray-700">Shift <span className="text-red-500">*</span></label>
                 <select
@@ -191,7 +171,7 @@ const AddGuard = () => {
                 >
                   <option value="">Select ID</option>
                   <option value="Aadhar Card">Aadhar Card</option>
-                
+                  <option value="Voter ID">Voter ID</option>
                 </select>
                 {errors.idType && <span className="text-xs text-red-500">{errors.idType.message}</span>}
               </div>
@@ -214,7 +194,6 @@ const AddGuard = () => {
                   {...register("idImage")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                 />
-                {errors.idImage && <span className="text-xs text-red-500">{errors.idImage.message}</span>}
               </div>
 
               <div>
@@ -227,7 +206,6 @@ const AddGuard = () => {
                 {errors.joiningDate && <span className="text-xs text-red-500">{errors.joiningDate.message}</span>}
               </div>
 
-              {/* --- Password Field --- */}
               <div>
                 <label className="text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
                 <input
@@ -241,6 +219,7 @@ const AddGuard = () => {
                 />
                 {errors.password && <span className="text-xs text-red-500">{errors.password.message}</span>}
               </div>
+              
               <div>
                 <label className="text-sm font-medium text-gray-700">Status</label>
                 <select
@@ -252,7 +231,6 @@ const AddGuard = () => {
                   <option value="Inactive">Inactive</option>
                 </select>
               </div>
-
             </div>
           </div>
 
@@ -264,20 +242,9 @@ const AddGuard = () => {
               className={`px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all shadow-md 
                 ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg'}`}
             >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving Guard...
-                </span>
-              ) : (
-                "Save Guard Record"
-              )}
+              {isLoading ? "Saving..." : "Save Guard Record"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

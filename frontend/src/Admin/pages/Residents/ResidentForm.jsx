@@ -84,7 +84,7 @@ const ResidentForm = () => {
         } catch (error) {
           console.error("Error fetching resident:", error);
           alert("Failed to load resident data for editing.");
-          navigate("/residents"); 
+          navigate("/admin/residents"); 
         } finally {
           setIsLoading(false);
         }
@@ -312,6 +312,15 @@ const ResidentForm = () => {
                   {...register("emergencyContactNumber")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   placeholder="Relative's 10-digit number"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  {...register("password")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                  placeholder="Enter Password"
                 />
               </div>
             </div>

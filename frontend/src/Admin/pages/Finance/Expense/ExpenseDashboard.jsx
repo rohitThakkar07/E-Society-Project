@@ -56,21 +56,21 @@ const ExpenseDashboard = () => {
       {/* ✅ QUICK ACTION BUTTONS */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <button
-          onClick={() => navigate("/expense/add")}
+          onClick={() => navigate("/admin/expense/add")}
           className="bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition"
         >
           Add Expense
         </button>
 
         <button
-          onClick={() => navigate("/expense/list")}
+          onClick={() => navigate("/admin/expense/list")}
           className="bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition"
         >
           Expense List
         </button>
 
         <button
-          onClick={() => navigate("/expense/report")}
+          onClick={() => navigate("/admin/expense/report")}
           className="bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition"
         >
           Expense Report

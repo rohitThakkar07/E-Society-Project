@@ -2,210 +2,105 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 const Sidebar = ({ isOpen }) => {
-  const [openModules, setOpenModules] = useState(false);
-  const [openFacilityMenu, setOpenFacilityMenu] = useState(false);
+  const [openFinance, setOpenFinance] = useState(false);
+  const [openFacility, setOpenFacility] = useState(false);
+
+  const navItemClass = ({ isActive }) =>
+    `flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${
+      isActive 
+        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" 
+        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+    }`;
+
+  const dropdownItemClass = ({ isActive }) =>
+    `text-sm py-2 px-4 rounded-r-lg transition-colors border-l-2 ${
+      isActive 
+        ? "text-blue-500 font-bold border-blue-500 bg-blue-500/5" 
+        : "text-slate-500 border-slate-800 hover:text-white hover:border-slate-600"
+    }`;
 
   return (
-    <aside className={`bg-gray-900 text-white min-h-screen transition-all duration-300 overflow-hidden ${isOpen ? "w-64 p-5" : "w-20 p-3"}`}>
-      <nav className="flex flex-col gap-2">
+    <aside 
+      className={`bg-slate-900 text-white h-screen sticky top-0 left-0 z-40 transition-all duration-300 border-r border-slate-800 flex flex-col ${
+        isOpen ? "w-72" : "w-20"
+      }`}
+    >
+      {/* Branding */}
+      <div className="h-20 flex items-center px-6 border-b border-slate-800 mb-4 overflow-hidden whitespace-nowrap">
+        <div className="w-9 h-9 rounded-xl bg-blue-600 flex-shrink-0 flex items-center justify-center font-black text-xl shadow-inner">
+          E
+        </div>
+        {isOpen && <span className="ml-3 font-bold text-lg tracking-tight">E-SOCIETY</span>}
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3 space-y-1 custom-scrollbar pb-10">
         
-        {/* Dashboard */}
-        <NavLink to="/admin" end className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Dashboard">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
+        {/* --- Single Links --- */}
+        <NavLink to="/admin" end className={navItemClass} title="Dashboard">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
           {isOpen && <span>Dashboard</span>}
         </NavLink>
 
-        {/* Residents */}
-        <NavLink to="/residents" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Residents">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 12a6 6 0 11-12 0 6 6 0 0112 0z" />
-          </svg>
+        <NavLink to="/admin/residents" className={navItemClass} title="Residents">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           {isOpen && <span>Residents</span>}
         </NavLink>
 
-        {/* Guards */}
-        <NavLink to="/guards" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Security Guards">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
+        <NavLink to="/admin/guards" className={navItemClass} title="Guards">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
           {isOpen && <span>Guards</span>}
         </NavLink>
 
-        {/* Finance Dropdown */}
-        <div className="mt-2">
-          <button
-            onClick={() => setOpenModules((prev) => !prev)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition"
-          >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M4 4h12v2H4V4zm0 5h12v2H4V9zm0 5h12v2H4v-2z" />
-            </svg>
-
-            {isOpen && <span className="font-medium">Finance</span>}
-
-            {isOpen && (
-              <svg
-                className={`w-4 h-4 ml-auto transform transition-transform ${openModules ? "rotate-180" : ""
-                  }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
+        {/* --- Finance Dropdown --- */}
+        <div className="pt-1">
+          <button onClick={() => setOpenFinance(!openFinance)} className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800 hover:text-white ${!isOpen && "justify-center"}`}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {isOpen && <><span className="flex-1 text-left">Finance</span><svg className={`w-4 h-4 transition-transform ${openFinance ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/></svg></>}
           </button>
-
-          {/* Dropdown Items including facility submenu */}
-          {isOpen && openModules && (
-            <div className="mt-2 pl-8 flex flex-col gap-1">
-
-              <NavLink
-                to="/maintenance/dashboard"
-                className={({ isActive }) => `text-sm p-2 rounded-md ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800"}`}
-              >
-                Maintenance
-              </NavLink>
-
-              <NavLink
-                to="/expense/dashboard"
-                className={({ isActive }) => `text-sm p-2 rounded-md ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800"}`}
-              >
-                Expense
-              </NavLink>
-
+          {isOpen && openFinance && (
+            <div className="mt-1 ml-6 flex flex-col">
+              <NavLink to="/admin/maintenance/dashboard" className={dropdownItemClass}>Maintenance</NavLink>
+              <NavLink to="/admin/expense/dashboard" className={dropdownItemClass}>Expense</NavLink>
             </div>
           )}
         </div>
 
-        {/* Facility Dropdown */}
-        <div className="mt-2">
-          <button
-            onClick={() => setOpenFacilityMenu((prev) => !prev)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition"
-          >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              {/* generic building icon */}
-              <path d="M4 2h12v16H4V2zm2 2v12h8V4H6z" />
-            </svg>
-
-            {isOpen && <span className="font-medium">Facility</span>}
-
-            {isOpen && (
-              <svg
-                className={`w-4 h-4 ml-auto transform transition-transform ${openFacilityMenu ? "rotate-180" : ""}`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
+        {/* --- Facility Dropdown --- */}
+        <div className="pt-1">
+          <button onClick={() => setOpenFacility(!openFacility)} className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800 hover:text-white ${!isOpen && "justify-center"}`}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            {isOpen && <><span className="flex-1 text-left">Facility</span><svg className={`w-4 h-4 transition-transform ${openFacility ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/></svg></>}
           </button>
-
-          {isOpen && openFacilityMenu && (
-            <div className="mt-2 pl-8 flex flex-col gap-1">
-              <NavLink
-                to="/facility/dashboard"
-                className={({ isActive }) =>
-                  `text-sm p-2 rounded-md ${
-                    isActive
-                      ? "bg-blue-600 text-white font-semibold"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                Dashboard
-              </NavLink>
-
-              <NavLink
-                to="/facility/book"
-                className={({ isActive }) =>
-                  `text-sm p-2 rounded-md ${
-                    isActive
-                      ? "bg-blue-600 text-white font-semibold"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                New Booking
-              </NavLink>
-
-              <NavLink
-                to="/facility/list"
-                className={({ isActive }) =>
-                  `text-sm p-2 rounded-md ${
-                    isActive
-                      ? "bg-blue-600 text-white font-semibold"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                Booking List
-              </NavLink>
-
-              <NavLink
-                to="/facility/calendar"
-                className={({ isActive }) =>
-                  `text-sm p-2 rounded-md ${
-                    isActive
-                      ? "bg-blue-600 text-white font-semibold"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                Calendar
-              </NavLink>
+          {isOpen && openFacility && (
+            <div className="mt-1 ml-6 flex flex-col">
+              <NavLink to="/admin/facility/dashboard" className={dropdownItemClass}>Dashboard</NavLink>
+              <NavLink to="/admin/facility/book" className={dropdownItemClass}>New Booking</NavLink>
+              <NavLink to="/admin/facility/list" className={dropdownItemClass}>Booking List</NavLink>
             </div>
           )}
         </div>
 
-        {/* Visitors */}
-        <NavLink to="/visitors" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Visitors">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-          </svg>
+        {/* --- Remaining Single Links --- */}
+        <NavLink to="/admin/visitors" className={navItemClass} title="Visitors">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
           {isOpen && <span>Visitors</span>}
         </NavLink>
 
-
-        {/* Complaints */}
-        <NavLink to="/complaints" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Complaints">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-          </svg>
+        <NavLink to="/admin/complaints" className={navItemClass} title="Complaints">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
           {isOpen && <span>Complaints</span>}
         </NavLink>
 
-        {/* Roles & Rights */}
-        <NavLink to="/roles" className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white font-semibold" : "text-gray-300 hover:bg-gray-800 hover:text-white"
-          }`} title="Role & Right">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-          </svg>
-          {isOpen && <span>Role & Rights</span>}
+        <NavLink to="/admin/flats" className={navItemClass} title="Flats">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+          {isOpen && <span>Flats</span>}
         </NavLink>
+
+        <NavLink to="/admin/roles" className={navItemClass} title="Roles">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          {isOpen && <span>Roles & Rights</span>}
+        </NavLink>
+
       </nav>
     </aside>
   );

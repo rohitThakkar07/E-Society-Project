@@ -54,7 +54,7 @@ const ComplaintDashboard = () => {
         <h1 className="text-2xl font-bold">Complaint Management</h1>
 
         <button
-          onClick={() => navigate("/complaints/create")}
+          onClick={() => navigate("/admin/complaints/create")}
           className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           New Complaint
@@ -122,11 +122,10 @@ const ComplaintDashboard = () => {
                 <td className="p-4">{complaint.category}</td>
                 <td className="p-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      complaint.priority === "High"
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${complaint.priority === "High"
                         ? "bg-red-100 text-red-600"
                         : "bg-yellow-100 text-yellow-600"
-                    }`}
+                      }`}
                   >
                     {complaint.priority}
                   </span>
@@ -134,13 +133,12 @@ const ComplaintDashboard = () => {
                 <td className="p-4">{complaint.resident}</td>
                 <td className="p-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      complaint.status === "Resolved"
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${complaint.status === "Resolved"
                         ? "bg-green-100 text-green-600"
                         : complaint.status === "In Progress"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : "bg-red-100 text-red-600"
-                    }`}
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-red-100 text-red-600"
+                      }`}
                   >
                     {complaint.status}
                   </span>
@@ -148,7 +146,7 @@ const ComplaintDashboard = () => {
                 <td className="p-4 text-center">
                   <button
                     onClick={() =>
-                      navigate(`/complaints/${complaint.id}`)
+                      navigate(`/admin/complaints/${complaint.id}`)
                     }
                     className="text-blue-600 hover:underline"
                   >

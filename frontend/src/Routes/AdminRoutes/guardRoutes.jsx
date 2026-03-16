@@ -1,14 +1,18 @@
-import React from 'react';
+import React from "react";
 import Guards from "../../Admin/pages/Guards/Guards";
-import AddGuard from '../../Admin/pages/Guards/AddGuard';
+import AddGuard from "../../Admin/pages/Guards/AddGuard";
 
 const guardRoutes = [
   {
-    path: "admin/guards",
+    path: "guards", // Correct: relative to /admin
     element: <Guards />,
   },
   {
-    path: "admin/guards/add",
+    path: "guards/add", // Correct: relative to /admin
+    element: <AddGuard />,
+  },
+  {
+    path: "guards/edit/:id",
     element: <AddGuard />,
   },
 ];

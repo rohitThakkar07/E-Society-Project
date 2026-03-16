@@ -100,7 +100,7 @@ const Guards = () => {
 
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md"
-          onClick={() => navigate("/guards/add")}
+          onClick={() => navigate("/admin/guards/add")}
         >
           + Add Guard
         </button>

@@ -80,7 +80,7 @@ const Residents = () => {
         </div>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
-          onClick={() => navigate("/residents/add")}
+          onClick={() => navigate("add")}
         >
           + Add Resident
         </button>
