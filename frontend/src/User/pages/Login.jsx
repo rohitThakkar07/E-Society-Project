@@ -50,8 +50,8 @@ const handleSubmit = async (e) => {
           navigate("/admin");
         } else if (userRole === "resident") {
           navigate("/");
-        } else if (userRole === "guard" || userRole === "security") {
-          navigate("/guard-dashboard");
+        } else if (userRole === "guard") {
+          navigate("/");
         }
 
       } catch (err) {

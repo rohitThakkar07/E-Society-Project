@@ -1,5 +1,4 @@
 import React, { lazy, Suspense } from "react";
-import { createBrowserRouter } from "react-router-dom";
 
 // Layouts
 const UserLayout = lazy(() => import("../../User/layout/UserLayout"));
@@ -11,6 +10,7 @@ import InvoiceRoutes from "./InvoiceRoutes";
 import complaintRoutes from "./ComplaintRoutes";
 import eventRoutes from "./eventRoutes";
 import Login from "../../User/pages/Login";
+import AuthContext from "../../User/context/AuthContext";
 
 const UserRouter = [
   // USER SECTION
@@ -18,7 +18,9 @@ const UserRouter = [
     path: "/",
     element: (
       <Suspense fallback={<div>Loading App...</div>}>
-        <UserLayout />
+        <AuthContext>
+          <UserLayout />
+        </AuthContext>
       </Suspense>
     ),
     children: [

@@ -13,9 +13,13 @@ import expenseRoutes from "./expenseRoute";
 import roleRoutes from "./roleRoutes";
 import complaintRoutes from "./complaintRoutes";
 import paymentRoutes from "./paymentRoutes";
+import flatRoutes from "./flatRoutes";
+import AuthContext from "../../Admin/context/AuthContext";
 
 // A reusable loader component for the suspense fallback
 const AdminLoader = () => (
+
+  
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
   </div>
@@ -25,18 +29,21 @@ const AdminRouter = [
   {
     path: "/admin",
     element: (
-      // FIX: Wrap Layout in Suspense
       <Suspense fallback={<AdminLoader />}>
-        <AdminLayout />
+        <AuthContext>
+          <AdminLayout />
+        </AuthContext>
       </Suspense>
     ),
     children: [
       { 
         index: true, 
         element: (
-          // FIX: Wrap Dashboard in Suspense
+
           <Suspense fallback={<AdminLoader />}>
-            <AdminDashboard />
+            <AuthContext>
+              <AdminDashboard />
+            </AuthContext>
           </Suspense>
         ) 
       },
@@ -49,6 +56,7 @@ const AdminRouter = [
       ...roleRoutes,
       ...complaintRoutes,
       ...paymentRoutes,
+      ...flatRoutes,
     ],
   },
 ];
