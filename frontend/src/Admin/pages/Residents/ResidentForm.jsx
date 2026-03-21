@@ -1,57 +1,22 @@
-import React, { useEffect, useState } from "react";
+// components/ResidentForm.jsx (Updated for Minimal Slice)
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import {toast} from 'react-toastify';
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchResidentById,
+  createResident,
+  updateResident,
+} from "../../../store/slices/residentSlice";
 
-// --- Helper Components ---
-const Section = ({ title, children }) => (
-  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 transition-shadow hover:shadow-md">
-    <h3 className="text-lg font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3">{title}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">{children}</div>
-  </div>
-);
-
-const Input = ({ label, register, name, rules, error, type = "text", ...rest }) => (
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold text-gray-700 mb-1.5">
-      {label} {rules?.required && <span className="text-red-500">*</span>}
-    </label>
-    <input
-      type={type}
-      {...register(name, rules)}
-      {...rest}
-      className={`border rounded-xl px-4 py-2.5 outline-none transition-all duration-200 ${error ? "border-red-400 bg-red-50 focus:ring-4 focus:ring-red-100" : "border-gray-200 bg-gray-50 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
-        }`}
-    />
-    {error && <span className="text-red-500 text-xs font-medium mt-1.5">{error.message}</span>}
-  </div>
-);
-
-const Select = ({ label, register, name, rules, error, children }) => (
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold text-gray-700 mb-1.5">
-      {label} {rules?.required && <span className="text-red-500">*</span>}
-    </label>
-    <select
-      {...register(name, rules)}
-      className={`border rounded-xl px-4 py-2.5 outline-none transition-all duration-200 appearance-none ${error ? "border-red-400 bg-red-50 focus:ring-4 focus:ring-red-100" : "border-gray-200 bg-gray-50 hover:bg-white focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
-        }`}
-    >
-      {children}
-    </select>
-    {error && <span className="text-red-500 text-xs font-medium mt-1.5">{error.message}</span>}
-  </div>
-);
-
-// --- Main Form Component ---
 const ResidentForm = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
-  const isEditMode = Boolean(id); 
+  const dispatch = useDispatch();
+  const isEditMode = Boolean(id);
 
-  const [isLoading, setIsLoading] = useState(isEditMode);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Redux state
+  const { singleResident, loading } = useSelector((state) => state.resident);
 
   const {
     register,
@@ -59,134 +24,106 @@ const ResidentForm = () => {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: { status: "Active" }
+    defaultValues: { status: "Active", residentType: "Owner", flatType: "1BHK" },
   });
 
-  // Fetch Resident Data if in Edit Mode
+  // Fetch resident data if editing
   useEffect(() => {
     if (isEditMode) {
-      const fetchResidentData = async () => {
-        try {
-          const response = await axios.get(`http://localhost:4000/api/resident/${id}`);
-          const residentData = response.data?.data;
-
-          // Mongoose returns dates as ISO strings (e.g., "1998-05-15T00:00:00.000Z")
-          // We must slice them to "YYYY-MM-DD" for HTML <input type="date"> to read them
-          if (residentData.dateOfBirth) {
-            residentData.dateOfBirth = residentData.dateOfBirth.split('T')[0];
-          }
-          if (residentData.moveInDate) {
-            residentData.moveInDate = residentData.moveInDate.split('T')[0];
-          }
-
-          // Populate the form with the fetched data
-          reset(residentData);
-        } catch (error) {
-          console.error("Error fetching resident:", error);
-          alert("Failed to load resident data for editing.");
-          navigate("/admin/residents"); 
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchResidentData();
+      dispatch(fetchResidentById(id));
     }
-  }, [id, isEditMode, reset, navigate]);
+  }, [id, isEditMode, dispatch]);
 
-  // Handle Form Submission (Both Create and Update)
- const onSubmit = async (data) => {
-  setIsSubmitting(true);
+  // Populate form when singleResident is fetched
+  useEffect(() => {
+    if (singleResident) {
+      const formData = {
+        ...singleResident,
+        dateOfBirth: singleResident.dateOfBirth
+          ? singleResident.dateOfBirth.split("T")[0]
+          : "",
+        moveInDate: singleResident.moveInDate
+          ? singleResident.moveInDate.split("T")[0]
+          : "",
+      };
+      reset(formData);
+    }
+  }, [singleResident, reset]);
 
-  const formattedData = {
-    ...data,
-    floorNumber: parseInt(data.floorNumber, 10),
+  // Handle form submission
+  const onSubmit = async (data) => {
+    const formattedData = {
+      ...data,
+      floorNumber: parseInt(data.floorNumber || 0, 10),
+    };
+
+    if (isEditMode) {
+      const result = await dispatch(updateResident({ id, formData: formattedData }));
+      if (result.type.endsWith('fulfilled')) {
+        setTimeout(() => navigate("/admin/residents"), 1500);
+      }
+    } else {
+      const result = await dispatch(createResident(formattedData));
+      if (result.type.endsWith('fulfilled')) {
+        setTimeout(() => navigate("/admin/residents"), 1500);
+      }
+    }
   };
 
-  try {
-    if (isEditMode) {
-
-      await axios.put(
-        `http://localhost:4000/api/resident/update/${id}`,
-        formattedData,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      toast.success("Resident updated successfully");
-
-    } else {
-
-      await axios.post(
-        "http://localhost:4000/api/resident/create",
-        formattedData,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      toast.success("Resident registered successfully");
-
-    }
-
-    navigate("/residents");
-
-  } catch (error) {
-
-    let message = "Something went wrong. Please try again.";
-
-    if (error.response?.data?.message) {
-      message = error.response.data.message;
-    }
-
-    if (error.response?.data?.errors?.length) {
-      message = error.response.data.errors[0].msg;
-    }
-
-    toast.error(message);
-
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading resident data...</div>;
+  if (loading && isEditMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-600">Loading resident data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
-      <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-        
-        {/* Header */}
+      <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8">
         <div className="mb-8 border-b pb-4">
           <h2 className="text-3xl font-extrabold text-gray-800">
             {isEditMode ? "Edit Resident" : "Add New Resident"}
           </h2>
           <p className="text-gray-500 mt-1">
-            {isEditMode 
-              ? "Update resident information in the system." 
+            {isEditMode
+              ? "Update resident information in the system."
               : "Register a new resident into the society."}
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          
-          {/* --- Section 1: Personal Details --- */}
+          {/* --- Personal Details --- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex justify-center items-center mr-2 text-sm font-bold">1</span>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Personal Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700">First Name <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">
+                  First Name <span className="text-red-500">*</span>
+                </label>
                 <input
-                  {...register("firstName", { required: "First name is required" })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  {...register("firstName", {
+                    required: "First name is required",
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   placeholder="e.g. Rahul"
                 />
-                {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName.message}</p>}
+                {errors.firstName && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.firstName.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Last Name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
                 <input
                   {...register("lastName")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
@@ -195,9 +132,13 @@ const ResidentForm = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">
+                  Gender <span className="text-red-500">*</span>
+                </label>
                 <select
-                  {...register("gender", { required: "Gender is required" })}
+                  {...register("gender", {
+                    required: "Gender is required",
+                  })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 bg-white outline-none transition"
                 >
                   <option value="">Select Gender</option>
@@ -205,34 +146,59 @@ const ResidentForm = () => {
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
-                {errors.gender && <p className="text-xs text-red-500 mt-1">{errors.gender.message}</p>}
+                {errors.gender && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.gender.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  {...register("dateOfBirth")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                />
               </div>
             </div>
           </div>
 
-          {/* --- Section 2: Contact Information --- */}
+          {/* --- Contact Information --- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex justify-center items-center mr-2 text-sm font-bold">2</span>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Contact Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">
+                  Mobile Number <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="tel"
-                  {...register("mobileNumber", { 
+                  {...register("mobileNumber", {
                     required: "Mobile number is required",
-                    pattern: { value: /^[0-9]{10}$/, message: "Must be exactly 10 digits" }
+                    pattern: {
+                      value: /^[0-9]{10}$/,
+                      message: "Must be exactly 10 digits",
+                    },
                   })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   placeholder="10-digit number"
                 />
-                {errors.mobileNumber && <p className="text-xs text-red-500 mt-1">{errors.mobileNumber.message}</p>}
+                {errors.mobileNumber && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.mobileNumber.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   {...register("email")}
@@ -243,35 +209,55 @@ const ResidentForm = () => {
             </div>
           </div>
 
-          {/* --- Section 3: Flat Details --- */}
+          {/* --- Flat Details --- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex justify-center items-center mr-2 text-sm font-bold">3</span>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Flat Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700">Wing <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">
+                  Wing <span className="text-red-500">*</span>
+                </label>
                 <input
                   {...register("wing", { required: "Wing is required" })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="e.g. A"
                 />
+                {errors.wing && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.wing.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Flat No. <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">
+                  Flat No. <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
-                  {...register("flatNumber", { required: "Flat number is required" })}
+                  {...register("flatNumber", {
+                    required: "Flat number is required",
+                  })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="e.g. 203"
                 />
+                {errors.flatNumber && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.flatNumber.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Flat Type</label>
-                <select {...register("flatType")} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <label className="text-sm font-medium text-gray-700">
+                  Flat Type
+                </label>
+                <select
+                  {...register("flatType")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
                   <option value="1BHK">1BHK</option>
                   <option value="2BHK">2BHK</option>
                   <option value="3BHK">3BHK</option>
@@ -280,8 +266,36 @@ const ResidentForm = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Resident Type</label>
-                <select {...register("residentType")} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <label className="text-sm font-medium text-gray-700">
+                  Floor Number
+                </label>
+                <input
+                  type="number"
+                  {...register("floorNumber")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="e.g. 9"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Move In Date
+                </label>
+                <input
+                  type="date"
+                  {...register("moveInDate")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Resident Type
+                </label>
+                <select
+                  {...register("residentType")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
                   <option value="Owner">Owner</option>
                   <option value="Tenant">Tenant</option>
                 </select>
@@ -289,15 +303,16 @@ const ResidentForm = () => {
             </div>
           </div>
 
-          {/* --- Section 4: Emergency Contact --- */}
+          {/* --- Emergency Contact & Security --- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex justify-center items-center mr-2 text-sm font-bold">4</span>
-              Emergency Contact
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              Emergency Contact & Security
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700">Contact Name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Contact Name
+                </label>
                 <input
                   {...register("emergencyContactName")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
@@ -306,7 +321,9 @@ const ResidentForm = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Contact Number</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Contact Number
+                </label>
                 <input
                   type="tel"
                   {...register("emergencyContactNumber")}
@@ -314,30 +331,75 @@ const ResidentForm = () => {
                   placeholder="Relative's 10-digit number"
                 />
               </div>
+
               <div>
-                <label className="text-sm font-medium text-gray-700">Password</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Password {!isEditMode && <span className="text-red-500">*</span>}
+                </label>
                 <input
                   type="password"
-                  {...register("password")}
+                  {...register("password", {
+                    required: isEditMode ? false : "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
+                  })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="Enter Password"
+                  placeholder={
+                    isEditMode
+                      ? "Leave empty to keep current password"
+                      : "Enter Password"
+                  }
                 />
+                {errors.password && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  {...register("status")}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
               </div>
             </div>
           </div>
 
-          {/* --- Submit Button --- */}
-          <div className="pt-6 border-t mt-8 flex justify-end">
+          {/* --- Submit Buttons --- */}
+          <div className="pt-6 border-t flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-8 py-3 rounded-lg text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-all"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={loading}
               className={`px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all shadow-md 
-                ${isSubmitting ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg'}`}
+                ${
+                  loading
+                    ? "bg-indigo-400 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg"
+                }`}
             >
-              {isSubmitting ? "Saving Resident..." : isEditMode ? "Update Resident" : "Save Resident"}
+              {loading
+                ? "Saving Resident..."
+                : isEditMode
+                ? "Update Resident"
+                : "Save Resident"}
             </button>
           </div>
-
         </form>
       </div>
     </div>
