@@ -44,9 +44,9 @@ app.use("/api/facility", authMiddleware, facilityRoutes);
 app.use("/api/facility-booking", authMiddleware, facilityBookingRoutes);
 app.use("/api/complaint", authMiddleware, complaintRoutes);
 app.use("/api/guard", authMiddleware, guardRoutes);
-app.use("/api/flats", authMiddleware, flatRoutes);
+app.use("/api/flat", authMiddleware, flatRoutes);
 app.use("/api/visitor", authMiddleware, visitorRoutes);
-app.use("/api/expenses", authMiddleware, expenseRoutes);
+app.use("/api/expense", authMiddleware, expenseRoutes);
 app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
 app.use("/api/notices", authMiddleware, noticeRoutes);
 
