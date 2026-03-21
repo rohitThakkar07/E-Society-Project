@@ -13,18 +13,25 @@ const getFacilityName = (facility) => {
   return String(facility);
 };
 
+// const getResidentLabel = (resident) => {
+//   if (!resident) return "—";
+//   if (typeof resident === "object") {
+//     // API returns { _id, flatNumber } — use flatNumber as the display label
+//     return resident.flatNumber
+//       || resident.flat
+//       || resident.name
+//       || "—";
+//   }
+//   return String(resident);
+// };
 const getResidentLabel = (resident) => {
-  if (!resident) return "—";
-  if (typeof resident === "object") {
-    // API returns { _id, flatNumber } — use flatNumber as the display label
-    return resident.flatNumber
-      || resident.flat
-      || resident.name
-      || "—";
-  }
-  return String(resident);
-};
+  if (!resident) return "N/A";
 
+  const name = resident?.name || "";
+  const flat = resident?.profileId?.flatNumber || "";
+  if (!name && !flat) return "N/A";
+  return `${name} (${flat})`;
+};
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -144,6 +151,7 @@ const BookingList = () => {
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Flat</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Facility</th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Resident</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
@@ -173,11 +181,16 @@ const BookingList = () => {
                   <td className="px-5 py-4 font-medium text-gray-800">
                     {getResidentLabel(booking.resident)}
                   </td>
+                  
 
                   {/* facility.name — from populated { _id, name, location, ... } */}
                   <td className="px-5 py-4 text-gray-600">
                     {getFacilityName(booking.facility)}
                   </td>
+                  {/* facility.name — from populated { _id, name, location, ... } */}
+                 <td className="px-5 py-4 font-medium text-gray-800">
+                  {getResidentLabel(booking.resident)}
+                </td>
 
                   {/* booking.bookingDate — correct model field */}
                   <td className="px-5 py-4 text-gray-600">
