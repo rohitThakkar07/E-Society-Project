@@ -12,28 +12,55 @@ import eventRoutes from "./eventRoutes";
 import Login from "../../User/pages/Login";
 import AuthContext from "../../User/context/AuthContext";
 
+// const UserRouter = [
+//   // USER SECTION
+//   {
+//     path: "/",
+//     element: (
+//       <Suspense fallback={<div>Loading App...</div>}>
+//         <AuthContext>
+//           <UserLayout />
+//         </AuthContext>
+//       </Suspense>
+//     ),
+//     children: [
+//      ...HomeRoutes,
+//      ...complaintRoutes,
+//      ...eventRoutes,
+//      ...InvoiceRoutes,
+//      ...EventRoutes,
+//     ],
+//   },
+//   {
+//     path:"login",
+//     element:<Login/>
+//   }
+// ];
+
 const UserRouter = [
-  // USER SECTION
   {
     path: "/",
     element: (
       <Suspense fallback={<div>Loading App...</div>}>
-        <AuthContext>
-          <UserLayout />
-        </AuthContext>
+        <AuthContext />   {/* ✅ ONLY THIS */}
       </Suspense>
     ),
     children: [
-     ...HomeRoutes,
-     ...complaintRoutes,
-     ...eventRoutes,
-     ...InvoiceRoutes,
-     ...EventRoutes,
+      {
+        element: <UserLayout />,  // ✅ Layout goes here
+        children: [
+          ...HomeRoutes,
+          ...complaintRoutes,
+          ...eventRoutes,
+          ...InvoiceRoutes,
+          ...EventRoutes,
+        ],
+      },
     ],
   },
   {
-    path:"login",
-    element:<Login/>
-  }
+    path: "/login",
+    element: <Login />,
+  },
 ];
 export default UserRouter;
