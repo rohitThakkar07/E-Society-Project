@@ -122,9 +122,17 @@ const getAllBookings = async (req, res) => {
   try {
     // populate("facility") returns null for deleted facilities — handled in frontend
     const bookings = await FacilityBooking.find()
-      .populate("facility", "name location status openingTime closingTime")
-      .populate("resident", "flatNumber name")
-      .sort({ createdAt: -1 });
+  .populate("facility", "name location status openingTime closingTime")
+  .populate({
+    path: "resident",
+    select: "name profileId",
+    populate: {
+      path: "profileId",
+      model: "Resident",
+      select: "firstName lastName flatNumber"
+    }
+  })
+  .sort({ createdAt: -1 });
 
     res.json({ success: true, data: bookings });
   } catch (error) {
