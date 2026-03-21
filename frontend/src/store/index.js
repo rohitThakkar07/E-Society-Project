@@ -7,6 +7,7 @@ import visitorReducer from "./slices/visitorSlice";
 import complaintReducer from './slices/complaintSlice'
 import facilityReducer from './slices/facilitySlice'
 import bookingReducer from './slices/facilityBookingSlice'
+import maintenanceReducer from './slices/maintenanceSlice'
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     complaint: complaintReducer,
     facility: facilityReducer, 
     booking:bookingReducer,
+    maintenance: maintenanceReducer,
   },
 });
 

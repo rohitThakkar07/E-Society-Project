@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import API from "../../service/api";
 
-// 🔥 GET ALL
+// GET ALL
 export const fetchFacilities = createAsyncThunk(
   "facility/fetchFacilities",
   async () => {
@@ -11,16 +11,17 @@ export const fetchFacilities = createAsyncThunk(
   }
 );
 
-// 🔥 GET ONE
+// GET ONE
 export const fetchFacilityById = createAsyncThunk(
   "facility/fetchFacilityById",
   async (id) => {
+    if (!id) throw new Error("Facility ID is required");
     const res = await API.get(`/facility/${id}`);
     return res.data.data;
   }
 );
 
-// 🔥 CREATE
+// CREATE
 export const createFacility = createAsyncThunk(
   "facility/createFacility",
   async (data) => {
@@ -30,7 +31,7 @@ export const createFacility = createAsyncThunk(
   }
 );
 
-// 🔥 UPDATE
+// UPDATE
 export const updateFacility = createAsyncThunk(
   "facility/updateFacility",
   async ({ id, data }) => {
@@ -40,7 +41,7 @@ export const updateFacility = createAsyncThunk(
   }
 );
 
-// 🔥 DELETE
+// DELETE
 export const deleteFacility = createAsyncThunk(
   "facility/deleteFacility",
   async (id) => {
@@ -50,7 +51,7 @@ export const deleteFacility = createAsyncThunk(
   }
 );
 
-// 🔥 UPDATE STATUS
+// UPDATE STATUS
 export const updateFacilityStatus = createAsyncThunk(
   "facility/updateFacilityStatus",
   async ({ id, status }) => {
@@ -59,54 +60,44 @@ export const updateFacilityStatus = createAsyncThunk(
   }
 );
 
-// 🔥 INITIAL STATE
 const initialState = {
   facilities: [],
   singleFacility: null,
   loading: false,
 };
 
-// 🔥 SLICE
 const facilitySlice = createSlice({
   name: "facility",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
 
-    // GET ALL
     builder.addCase(fetchFacilities.fulfilled, (state, action) => {
       state.loading = false;
       state.facilities = action.payload;
     });
 
-    // GET ONE
     builder.addCase(fetchFacilityById.fulfilled, (state, action) => {
       state.loading = false;
       state.singleFacility = action.payload;
     });
 
-    // CREATE
     builder.addCase(createFacility.fulfilled, (state, action) => {
       state.loading = false;
       state.facilities.unshift(action.payload);
     });
 
-    // UPDATE
     builder.addCase(updateFacility.fulfilled, (state, action) => {
       state.loading = false;
-
       const index = state.facilities.findIndex(
         (f) => f._id === action.payload._id
       );
-
       if (index !== -1) {
         state.facilities[index] = action.payload;
       }
-
       state.singleFacility = action.payload;
     });
 
-    // DELETE
     builder.addCase(deleteFacility.fulfilled, (state, action) => {
       state.loading = false;
       state.facilities = state.facilities.filter(
@@ -114,27 +105,25 @@ const facilitySlice = createSlice({
       );
     });
 
-    // STATUS UPDATE
     builder.addCase(updateFacilityStatus.fulfilled, (state, action) => {
       const index = state.facilities.findIndex(
         (f) => f._id === action.payload.id
       );
-
       if (index !== -1) {
         state.facilities[index].status = action.payload.status;
       }
     });
 
-    // 🔥 COMMON LOADING HANDLER
+    // FIX: Scope matchers to THIS slice only (prefix "facility/")
     builder.addMatcher(
-      (action) => action.type.endsWith("/pending"),
+      (action) => action.type.startsWith("facility/") && action.type.endsWith("/pending"),
       (state) => {
         state.loading = true;
       }
     );
 
     builder.addMatcher(
-      (action) => action.type.endsWith("/rejected"),
+      (action) => action.type.startsWith("facility/") && action.type.endsWith("/rejected"),
       (state) => {
         state.loading = false;
       }

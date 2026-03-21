@@ -6,7 +6,7 @@ import API from "../../service/api";
 export const fetchBookings = createAsyncThunk(
   "booking/fetchBookings",
   async () => {
-    const res = await API.get("/booking/list");
+    const res = await API.get("/facility-booking/list");
     return res.data.data;
   }
 );
@@ -15,7 +15,19 @@ export const fetchBookings = createAsyncThunk(
 export const fetchBookingById = createAsyncThunk(
   "booking/fetchBookingById",
   async (id) => {
-    const res = await API.get(`/booking/${id}`);
+    if (!id) throw new Error("Booking ID is required");
+    const res = await API.get(`/facility-booking/${id}`);
+    return res.data.data;
+  }
+);
+
+// CHECK AVAILABILITY — returns booked slots for a facility+date
+export const checkAvailability = createAsyncThunk(
+  "booking/checkAvailability",
+  async ({ facilityId, bookingDate }) => {
+    const res = await API.get(
+      `/facility-booking/check-availability?facilityId=${facilityId}&bookingDate=${bookingDate}`
+    );
     return res.data.data;
   }
 );
@@ -23,20 +35,30 @@ export const fetchBookingById = createAsyncThunk(
 // CREATE
 export const createBooking = createAsyncThunk(
   "booking/createBooking",
-  async (data) => {
-    const res = await API.post("/booking/create", data);
-    toast.success("Booking created!");
-    return res.data.data;
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await API.post("/facility-booking/create", data);
+      toast.success("Booking created!");
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Booking failed");
+      return rejectWithValue(err.response?.data?.message);
+    }
   }
 );
 
 // UPDATE
 export const updateBooking = createAsyncThunk(
   "booking/updateBooking",
-  async ({ id, data }) => {
-    const res = await API.put(`/booking/update/${id}`, data);
-    toast.success("Booking updated!");
-    return res.data.data;
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await API.put(`/facility-booking/update/${id}`, data);
+      toast.success("Booking updated!");
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Update failed");
+      return rejectWithValue(err.response?.data?.message);
+    }
   }
 );
 
@@ -44,7 +66,7 @@ export const updateBooking = createAsyncThunk(
 export const deleteBooking = createAsyncThunk(
   "booking/deleteBooking",
   async (id) => {
-    await API.delete(`/booking/delete/${id}`);
+    await API.delete(`/facility-booking/delete/${id}`);
     toast.success("Booking deleted!");
     return id;
   }
@@ -53,13 +75,20 @@ export const deleteBooking = createAsyncThunk(
 const initialState = {
   bookings: [],
   singleBooking: null,
+  bookedSlots: [],
+  availabilityLoading: false,
   loading: false,
+  error: null,
 };
 
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
-  reducers: {},
+  reducers: {
+    clearBookedSlots: (state) => {
+      state.bookedSlots = [];
+    },
+  },
   extraReducers: (builder) => {
 
     builder.addCase(fetchBookings.fulfilled, (state, action) => {
@@ -72,23 +101,38 @@ const bookingSlice = createSlice({
       state.singleBooking = action.payload;
     });
 
+    builder.addCase(checkAvailability.pending, (state) => {
+      state.availabilityLoading = true;
+      state.bookedSlots = [];
+    });
+    builder.addCase(checkAvailability.fulfilled, (state, action) => {
+      state.availabilityLoading = false;
+      state.bookedSlots = action.payload;
+    });
+    builder.addCase(checkAvailability.rejected, (state) => {
+      state.availabilityLoading = false;
+    });
+
     builder.addCase(createBooking.fulfilled, (state, action) => {
       state.loading = false;
       state.bookings.unshift(action.payload);
     });
+    builder.addCase(createBooking.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
 
     builder.addCase(updateBooking.fulfilled, (state, action) => {
       state.loading = false;
-
       const index = state.bookings.findIndex(
         (b) => b._id === action.payload._id
       );
-
-      if (index !== -1) {
-        state.bookings[index] = action.payload;
-      }
-
+      if (index !== -1) state.bookings[index] = action.payload;
       state.singleBooking = action.payload;
+    });
+    builder.addCase(updateBooking.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
     });
 
     builder.addCase(deleteBooking.fulfilled, (state, action) => {
@@ -98,15 +142,23 @@ const bookingSlice = createSlice({
       );
     });
 
+    // Scoped pending/rejected — skip checkAvailability (has its own cases)
     builder.addMatcher(
-      (action) => action.type.endsWith("/pending"),
+      (action) =>
+        action.type.startsWith("booking/") &&
+        action.type.endsWith("/pending") &&
+        !action.type.includes("checkAvailability"),
       (state) => {
         state.loading = true;
+        state.error = null;
       }
     );
 
     builder.addMatcher(
-      (action) => action.type.endsWith("/rejected"),
+      (action) =>
+        action.type.startsWith("booking/") &&
+        action.type.endsWith("/rejected") &&
+        !action.type.includes("checkAvailability"),
       (state) => {
         state.loading = false;
       }
@@ -114,4 +166,5 @@ const bookingSlice = createSlice({
   },
 });
 
+export const { clearBookedSlots } = bookingSlice.actions;
 export default bookingSlice.reducer;
