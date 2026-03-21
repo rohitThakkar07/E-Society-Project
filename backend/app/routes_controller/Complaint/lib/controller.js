@@ -93,10 +93,51 @@ const deleteComplaint = async (req, res) => {
   }
 };
 
+const updateComplaintStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    // 1. Basic validation of allowed statuses
+    const allowedStatuses = ["Pending", "In Progress", "Resolved", "Rejected"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${allowedStatuses.join(", ")}`
+      });
+    }
+
+    // 2. Update only the status field
+    const complaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "Complaint not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status updated successfully",
+      data: complaint
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   createComplaint,
   getAllComplaints,
   getComplaintById,
   updateComplaint,
-  deleteComplaint
+  deleteComplaint,
+  updateComplaintStatus,
 };

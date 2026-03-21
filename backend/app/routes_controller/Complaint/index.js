@@ -55,5 +55,9 @@ router.delete(
   "/delete/:id",
   controller.deleteComplaint
 );
+router.patch(
+  "/status-update/:id",
+  controller.updateComplaintStatus
+);
 
 module.exports = router;

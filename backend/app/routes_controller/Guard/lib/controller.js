@@ -120,7 +120,6 @@ exports.getAllGuards = async (req, res) => {
 };
 
 // @desc    Delete a guard
-// @desc    Delete a guard
 exports.deleteGuard = async (req, res) => {
   try {
     const { id } = req.params;

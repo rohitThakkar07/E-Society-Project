@@ -8,6 +8,7 @@ const { sendResidentWelcomeEmail } = require("../../../../utils/sendMail");
  * CREATE RESIDENT
  */
 exports.createResident = async (req, res) => {
+  console.log(req.body);
   try {
     const errors = validationResult(req);
 

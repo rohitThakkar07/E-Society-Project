@@ -7,10 +7,15 @@ const connectDB = require("./app/db/config/db");
 // ROUTES
 const authRoutes = require("./app/routes_controller/Auth")
 const residentRoutes = require("./app/routes_controller/Resident");
+const facilityRoutes = require("./app/routes_controller/Facility");
 const facilityBookingRoutes = require("./app/routes_controller/FacilityBooking");
 const complaintRoutes = require("./app/routes_controller/Complaint");
 const guardRoutes = require("./app/routes_controller/Guard");
 const flatRoutes = require("./app/routes_controller/Flat");
+const visitorRoutes = require("./app/routes_controller/Visitors");
+const expenseRoutes = require("./app/routes_controller/Expanse");
+const maintenanceRoutes = require("./app/routes_controller/Maintenance");
+const noticeRoutes = require("./app/routes_controller/Notice");
 
 // MIDDLEWARE
 const errorHandler = require("./app/middlewares/errorMiddleware");
@@ -30,12 +35,18 @@ app.use(express.json());
 
 /* ---------------- ROUTES ---------------- */
 
-app.use("/api/auth", authRoutes );
-app.use("/api/resident", residentRoutes);
-app.use("/api/facility-booking",authMiddleware, facilityBookingRoutes);
-app.use("/api/complaint",authMiddleware, complaintRoutes);
-app.use("/api/guard",guardRoutes);
-app.use("/api/flat",flatRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/resident", authMiddleware, residentRoutes);
+app.use("/api/facility", authMiddleware, facilityRoutes);
+app.use("/api/facility-booking", authMiddleware, facilityBookingRoutes);
+app.use("/api/complaint", authMiddleware, complaintRoutes);
+app.use("/api/guard", authMiddleware, guardRoutes);
+app.use("/api/flats", authMiddleware, flatRoutes);
+app.use("/api/visitors", authMiddleware, visitorRoutes);
+app.use("/api/expenses", authMiddleware, expenseRoutes);
+app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
+app.use("/api/notices", authMiddleware, noticeRoutes);
+
 /* ---------------- ERROR HANDLER ---------------- */
 
 app.use(errorHandler);

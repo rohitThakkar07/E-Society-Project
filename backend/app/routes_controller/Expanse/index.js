@@ -6,6 +6,7 @@ const controller = require("./lib/controller");
 const validation = require("./lib/validation");
 
 const validate = (req, res, next) => {
+
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -14,16 +15,45 @@ const validate = (req, res, next) => {
       errors: errors.array()
     });
   }
+
   next();
 };
-router.post("/create",validation.createVisitorValidation,validate,controller.createVisitor);
 
-router.get("/list", controller.getAllVisitors);
 
-router.get("/:id", controller.getVisitorById);
+// Create Expense
+router.post(
+  "/create",
+  validation.expenseValidation,
+  validate,
+  controller.createExpense
+);
 
-router.put("/update/:id", controller.updateVisitor);
 
-router.delete("/delete/:id", controller.deleteVisitor);
+// Get All Expenses
+router.get(
+  "/list",
+  controller.getAllExpenses
+);
+
+
+// Get Expense By ID
+router.get(
+  "/:id",
+  controller.getExpenseById
+);
+
+
+// Update Expense
+router.put(
+  "/update/:id",
+  controller.updateExpense
+);
+
+
+// Delete Expense
+router.delete(
+  "/delete/:id",
+  controller.deleteExpense
+);
 
 module.exports = router;
