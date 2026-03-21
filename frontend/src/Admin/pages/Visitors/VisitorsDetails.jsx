@@ -1,38 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchVisitorById,
+  updateVisitorStatus,
+} from "../../../store/slices/visitorSlice";
 
 const VisitorDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Dummy Data (Replace with API later)
-  const [visitor, setVisitor] = useState({
-    id,
-    name: "Raj Patel",
-    phone: "9876543210",
-    flat: "A-101",
-    purpose: "Delivery",
-    vehicleNumber: "GJ01AB1234",
-    entryTime: "10:30 AM",
-    exitTime: null,
-    status: "Checked In", // Pending | Checked In | Checked Out | Blocked
-    approvedBy: "Guard - Amit",
-  });
+  const { singleVisitor: visitor, loading } = useSelector(
+    (state) => state.visitor
+  );
 
+  // 🔥 Fetch visitor
+  useEffect(() => {
+    dispatch(fetchVisitorById(id));
+  }, [id, dispatch]);
+
+  // 🔥 Check Out
   const handleCheckOut = () => {
-    setVisitor({
-      ...visitor,
-      status: "Checked Out",
-      exitTime: new Date().toLocaleTimeString(),
-    });
+    dispatch(updateVisitorStatus({ id, status: "Exited" }));
   };
 
-  const handleBlock = () => {
-    setVisitor({
-      ...visitor,
-      status: "Blocked",
-    });
-  };
+  if (loading || !visitor) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Loading visitor details...
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -56,55 +55,50 @@ const VisitorDetails = () => {
 
           <div>
             <p className="text-gray-500 text-sm">Name</p>
-            <p className="font-semibold">{visitor.name}</p>
+            <p className="font-semibold">{visitor.visitorName}</p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Phone</p>
-            <p>{visitor.phone}</p>
+            <p>{visitor.mobileNumber}</p>
+          </div>
+
+          <div>
+            <p className="text-gray-500 text-sm">Resident</p>
+            <p>{visitor.visitingResident?.fullName || "N/A"}</p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Flat</p>
-            <p>{visitor.flat}</p>
+            <p>{visitor.visitingResident?.flatNumber || "N/A"}</p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Purpose</p>
-            <p>{visitor.purpose}</p>
-          </div>
-
-          <div>
-            <p className="text-gray-500 text-sm">Vehicle Number</p>
-            <p>{visitor.vehicleNumber || "N/A"}</p>
-          </div>
-
-          <div>
-            <p className="text-gray-500 text-sm">Approved By</p>
-            <p>{visitor.approvedBy}</p>
+            <p>{visitor.purpose || "-"}</p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Entry Time</p>
-            <p>{visitor.entryTime}</p>
+            <p>{new Date(visitor.entryTime).toLocaleString()}</p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Exit Time</p>
-            <p>{visitor.exitTime || "Not Checked Out"}</p>
+            <p>
+              {visitor.exitTime
+                ? new Date(visitor.exitTime).toLocaleString()
+                : "Not Checked Out"}
+            </p>
           </div>
 
           <div>
             <p className="text-gray-500 text-sm">Status</p>
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                visitor.status === "Checked In"
+                visitor.status === "Inside"
                   ? "bg-green-100 text-green-600"
-                  : visitor.status === "Checked Out"
-                  ? "bg-gray-200 text-gray-600"
-                  : visitor.status === "Blocked"
-                  ? "bg-red-100 text-red-600"
-                  : "bg-yellow-100 text-yellow-600"
+                  : "bg-gray-200 text-gray-600"
               }`}
             >
               {visitor.status}
@@ -113,24 +107,15 @@ const VisitorDetails = () => {
 
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex flex-wrap gap-4 pt-4 border-t">
+        {/* ACTION BUTTON */}
+        <div className="flex gap-4 pt-4 border-t">
 
-          {visitor.status === "Checked In" && (
+          {visitor.status === "Inside" && (
             <button
               onClick={handleCheckOut}
               className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Check Out
-            </button>
-          )}
-
-          {visitor.status !== "Blocked" && (
-            <button
-              onClick={handleBlock}
-              className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
-            >
-              Block Visitor
             </button>
           )}
 

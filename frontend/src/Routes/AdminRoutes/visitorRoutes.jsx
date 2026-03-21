@@ -2,7 +2,7 @@ import React from 'react';
 import VisitorDashboard from "../../Admin/pages/Visitors/VisitorDashboard";
 import VisitorDetails from "../../Admin/pages/Visitors/VisitorsDetails";
 import VisitorReports from "../../Admin/pages/Visitors/VisitorReports";
-
+import AddVisitor from '../../Admin/pages/Visitors/AddVisitor';
 const visitorRoutes = [
   {
     path: "visitors",
@@ -13,11 +13,19 @@ const visitorRoutes = [
     element: <VisitorDashboard />,
   },
   {
-    path: "visitors/:id",
+    path: "visitor/add",
+    element: <AddVisitor />,
+  },
+  {
+    path: "visitor/edit/:id",
+    element: <AddVisitor />,
+  },
+  {
+    path: "visitor/:id",
     element: <VisitorDetails />,
   },
   {
-    path: "visitors/reports",
+    path: "visitor/reports",
     element: <VisitorReports />,
   },
 ];

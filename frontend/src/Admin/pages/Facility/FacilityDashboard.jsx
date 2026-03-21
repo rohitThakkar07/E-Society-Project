@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PieChart,
@@ -8,31 +8,34 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchFacilities } from "../../../store/slices/facilitySlice";
 
 const FacilityDashboard = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Dummy Summary Data (Replace with API later)
-  const summary = {
-    totalBookings: 120,
-    pendingBookings: 15,
-    approvedBookings: 90,
-    totalRevenue: 45000,
-  };
+  const { facilities, loading } = useSelector((state) => state.facility);
 
+  // 🔥 Fetch facilities
+  useEffect(() => {
+    dispatch(fetchFacilities());
+  }, [dispatch]);
+
+  // 🔥 Summary (derived from data)
+  const total = facilities.length;
+  const available = facilities.filter(f => f.status === "Available").length;
+  const maintenance = facilities.filter(f => f.status === "Maintenance").length;
+  const closed = facilities.filter(f => f.status === "Closed").length;
+
+  // 🔥 Chart Data
   const facilityData = [
-    { name: "Gym", value: 40 },
-    { name: "Hall", value: 50 },
-    { name: "Swimming Pool", value: 30 },
+    { name: "Available", value: available },
+    { name: "Maintenance", value: maintenance },
+    { name: "Closed", value: closed },
   ];
 
-  const recentBookings = [
-    { resident: "Flat A-101", facility: "Hall", date: "05-03-2026", status: "Approved" },
-    { resident: "Flat B-202", facility: "Gym", date: "04-03-2026", status: "Pending" },
-    { resident: "Flat C-303", facility: "Swimming Pool", date: "03-03-2026", status: "Approved" },
-  ];
-
-  const COLORS = ["#3b82f6", "#22c55e", "#f59e0b"];
+  const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -40,68 +43,53 @@ const FacilityDashboard = () => {
       {/* HEADER */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Facility Dashboard</h1>
-        <p className="text-gray-500">Manage and monitor facility bookings</p>
+        <p className="text-gray-500">Manage facilities</p>
       </div>
 
-      {/* QUICK ACTIONS */}
+      {/* ACTIONS */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <button
-          onClick={() => navigate("/facility/book")}
-          className="bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition"
+          onClick={() => navigate("/admin/facility/add")}
+          className="bg-blue-600 text-white p-4 rounded-lg"
         >
-          New Booking
+          Add Facility
         </button>
 
         <button
-          onClick={() => navigate("/facility/list")}
-          className="bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition"
+          onClick={() => navigate("/admin/facility/list")}
+          className="bg-green-600 text-white p-4 rounded-lg"
         >
-          Booking List
-        </button>
-
-        <button
-          onClick={() => navigate("/facility/calendar")}
-          className="bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition"
-        >
-          Calendar View
+          Facility List
         </button>
       </div>
 
-      {/* SUMMARY CARDS */}
+      {/* SUMMARY */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-gray-500 text-sm">Total Bookings</p>
-          <h2 className="text-2xl font-bold mt-2">
-            {summary.totalBookings}
-          </h2>
+        <div className="bg-white p-5 rounded-xl shadow">
+          <p>Total</p>
+          <h2 className="text-2xl font-bold">{total}</h2>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-gray-500 text-sm">Pending Approvals</p>
-          <h2 className="text-2xl font-bold mt-2 text-yellow-600">
-            {summary.pendingBookings}
-          </h2>
+        <div className="bg-white p-5 rounded-xl shadow">
+          <p>Available</p>
+          <h2 className="text-2xl font-bold text-green-600">{available}</h2>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-gray-500 text-sm">Approved Bookings</p>
-          <h2 className="text-2xl font-bold mt-2 text-green-600">
-            {summary.approvedBookings}
-          </h2>
+        <div className="bg-white p-5 rounded-xl shadow">
+          <p>Maintenance</p>
+          <h2 className="text-2xl font-bold text-yellow-600">{maintenance}</h2>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-gray-500 text-sm">Total Revenue</p>
-          <h2 className="text-2xl font-bold mt-2 text-blue-600">
-            ₹{summary.totalRevenue.toLocaleString()}
-          </h2>
+        <div className="bg-white p-5 rounded-xl shadow">
+          <p>Closed</p>
+          <h2 className="text-2xl font-bold text-red-600">{closed}</h2>
         </div>
       </div>
 
-      {/* CHART SECTION */}
-      <div className="mt-8 bg-white rounded-xl shadow p-6">
+      {/* CHART */}
+      <div className="mt-8 bg-white p-6 rounded-xl shadow">
         <h2 className="text-lg font-semibold mb-4">
-          Facility Booking Distribution
+          Facility Status Distribution
         </h2>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -114,7 +102,7 @@ const FacilityDashboard = () => {
               label
             >
               {facilityData.map((entry, index) => (
-                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                <Cell key={index} fill={COLORS[index]} />
               ))}
             </Pie>
             <Tooltip />
@@ -123,39 +111,62 @@ const FacilityDashboard = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* RECENT BOOKINGS */}
-      <div className="mt-8 bg-white rounded-xl shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Bookings</h2>
+      {/* LIST */}
+      <div className="mt-8 bg-white p-6 rounded-xl shadow">
+        <h2 className="text-lg font-semibold mb-4">Facilities</h2>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 border-b">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="p-3">Name</th>
+              <th className="p-3">Location</th>
+              <th className="p-3">Timing</th>
+              <th className="p-3">Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
               <tr>
-                <th className="p-3">Resident</th>
-                <th className="p-3">Facility</th>
-                <th className="p-3">Date</th>
-                <th className="p-3">Status</th>
+                <td colSpan="4" className="text-center p-4">
+                  Loading...
+                </td>
               </tr>
-            </thead>
+            ) : facilities.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="text-center p-4">
+                  No facilities found
+                </td>
+              </tr>
+            ) : (
+              facilities.map((f) => (
+                <tr key={f._id} className="border-b">
 
-            <tbody>
-              {recentBookings.map((booking, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="p-3">{booking.resident}</td>
-                  <td className="p-3">{booking.facility}</td>
-                  <td className="p-3">{booking.date}</td>
-                  <td className={`p-3 font-medium ${
-                    booking.status === "Approved"
-                      ? "text-green-600"
-                      : "text-yellow-600"
-                  }`}>
-                    {booking.status}
+                  <td className="p-3">{f.name}</td>
+                  <td className="p-3">{f.location || "-"}</td>
+                  <td className="p-3">
+                    {f.openingTime} - {f.closingTime}
                   </td>
+
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded ${
+                        f.status === "Available"
+                          ? "bg-green-100 text-green-600"
+                          : f.status === "Maintenance"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-red-100 text-red-600"
+                      }`}
+                    >
+                      {f.status}
+                    </span>
+                  </td>
+
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
     </div>

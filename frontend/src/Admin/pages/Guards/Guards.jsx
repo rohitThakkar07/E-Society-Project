@@ -1,89 +1,37 @@
-import React, { useState, useEffect } from "react";
+// pages/Guards.jsx (Updated with Redux)
+import React, { useEffect } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchGuards,
+  deleteGuard,
+  updateGuardStatus,
+} from "../../../store/slices/guardSlice";
 
-/**
- * Guards Component
- * Logic:
- * - Fetches guard list from backend using mobileNumber, fullName, guardId, etc.
- * - Handles status toggle (Active/Inactive) via PUT request.
- * - Handles deletion of guard records.
- */
 const Guards = () => {
   const navigate = useNavigate();
-  const [guards, setGuards] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
-  // 1. Fetch All Guards from Backend
+  const { guards, loading } = useSelector((state) => state.guard);
+
+  // Fetch guards on component mount
   useEffect(() => {
-    const fetchGuards = async () => {
-      try {
-        // Ensure the URL matches your backend route (e.g., http://localhost:4000/api/guards/all)
-        const response = await axios.get("http://localhost:4000/api/guard/list");
-        const data = response.data.data || response.data;
+    dispatch(fetchGuards());
+  }, [dispatch]);
 
-        if (Array.isArray(data)) {
-          setGuards(data);
-        } else {
-          setGuards([]);
-        }
-      } catch (error) {
-        console.error("Error fetching guards:", error);
-        setGuards([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGuards();
-  }, []);
-
-  // 2. Toggle Guard Status (Active/Inactive)
-  const handleToggle = async (id, currentStatus) => {
-    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
-
-    // Optimistic UI Update: update state immediately
-    setGuards((prev) =>
-      prev.map((guard) =>
-        guard._id === id ? { ...guard, status: newStatus } : guard
-      )
-    );
-
-    try {
-      // API call to update status in DB
-      await axios.put(`http://localhost:4000/api/guards/update/${id}`, {
-        status: newStatus,
-      });
-    } catch (error) {
-      console.error("Failed to update status", error);
-      alert("Failed to update status. Reverting...");
-      // Revert if API fails
-      setGuards((prev) =>
-        prev.map((guard) =>
-          guard._id === id ? { ...guard, status: currentStatus } : guard
-        )
-      );
+  // Handle delete
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this guard?")) {
+      dispatch(deleteGuard(id));
     }
   };
 
-  // 3. Delete Guard Record
- const handleDelete = async (id) => {
-
-  try {
-    await axios.delete(`http://localhost:4000/api/guard/${id}`);
-    setGuards((prev) => prev.filter((guard) => guard._id !== id));
-
-    toast.success("Guard deleted successfully!");
-  } catch (error) {
-    console.error("Delete failed", error);
-
-    toast.error(
-      error.response?.data?.message || "Failed to delete guard record."
-    );
-  }
-};
+  // Handle status toggle
+  const handleToggle = (id, currentStatus) => {
+    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+    dispatch(updateGuardStatus({ id, status: newStatus }));
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -121,7 +69,7 @@ const Guards = () => {
           </thead>
 
           <tbody className="divide-y divide-gray-100 text-sm">
-            {isLoading ? (
+            {loading ? (
               <tr>
                 <td colSpan="6" className="text-center py-10 text-gray-500 italic">
                   Loading guards from server...
@@ -140,10 +88,10 @@ const Guards = () => {
                   {/* Guard Name and System ID */}
                   <td className="px-5 py-4">
                     <div className="font-semibold text-gray-900">
-                      {guard.fullName}
+                      {guard.firstName} {guard.lastName}
                     </div>
                     <div className="text-xs text-indigo-500 font-medium">
-                      UID: {guard.guardId}
+                      UID: {guard._id}
                     </div>
                   </td>
 
@@ -206,7 +154,7 @@ const Guards = () => {
                   <td className="px-5 py-4">
                     <div className="flex gap-4 justify-center">
                       <button
-                        onClick={() => navigate(`/guards/edit/${guard._id}`)}
+                        onClick={() => navigate(`/admin/guards/edit/${guard._id}`)}
                         className="text-blue-500 hover:text-blue-700 transition-colors"
                         title="Edit Guard"
                       >
