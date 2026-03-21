@@ -1,236 +1,223 @@
 const Maintenance = require("../../../db/models/maintenanceModel");
-const PaymentRecord = require("../../../db/models/paymentRecordModal");
-const Resident = require("../../../db/models/residentsModel");
-const { validationResult } = require("express-validator");
 
-// ── Create Maintenance (and auto-generate PaymentRecords for all active residents) ──
-exports.createMaintenance = async (req, res) => {
+// ── CREATE ────────────────────────────────────────────────────────────────────
+const createMaintenance = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
-    }
+    const { resident, month, year, amount, lateFee, dueDate, description } = req.body;
 
-    const { month, year, amount, dueDate, lateFee, description } = req.body;
-
-    // Check duplicate month+year
-    const exists = await Maintenance.findOne({ month, year });
-    if (exists) {
+    if (!resident || !month || !year || !amount || !dueDate) {
       return res.status(400).json({
         success: false,
-        message: `Maintenance for ${month} ${year} already exists`
+        message: "resident, month, year, amount and dueDate are required.",
+      });
+    }
+
+    // Prevent duplicate charge for same resident + month + year
+    const exists = await Maintenance.findOne({ resident, month, year });
+    if (exists) {
+      return res.status(409).json({
+        success: false,
+        message: `Maintenance for ${month} ${year} already exists for this resident.`,
       });
     }
 
     const maintenance = await Maintenance.create({
-      month, year, amount, dueDate,
-      lateFee: lateFee || 0,
-      description
+      resident, month, year, amount, lateFee, dueDate, description,
     });
 
-    // Auto-generate one PaymentRecord per active resident
-    const residents = await Resident.find({ status: "Active" });
+    const populated = await maintenance.populate("resident", "flatNumber name");
 
-    if (residents.length > 0) {
-      const records = residents.map((r) => ({
-        maintenance: maintenance._id,
-        resident: r._id,
-        month,
-        year,
-        amount,
-        lateFee: 0,
-        totalAmount: amount,
-        status: "Pending"
-      }));
-      await PaymentRecord.insertMany(records, { ordered: false });
-    }
-
-    res.status(201).json({
-      success: true,
-      message: `Maintenance created and ${residents.length} payment records generated`,
-      data: maintenance
-    });
-
+    res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ── Get All Maintenance Periods ──
-exports.getAllMaintenance = async (req, res) => {
-  try {
-    const list = await Maintenance.find().sort({ year: -1, createdAt: -1 });
-    res.json({ success: true, data: list });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Get Single Maintenance Period ──
-exports.getMaintenanceById = async (req, res) => {
-  try {
-    const maintenance = await Maintenance.findById(req.params.id);
-    if (!maintenance) {
-      return res.status(404).json({ success: false, message: "Maintenance not found" });
-    }
-    res.json({ success: true, data: maintenance });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Update Maintenance Period ──
-exports.updateMaintenance = async (req, res) => {
-  try {
-    const maintenance = await Maintenance.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
-    if (!maintenance) {
-      return res.status(404).json({ success: false, message: "Maintenance not found" });
-    }
-    res.json({ success: true, message: "Maintenance updated", data: maintenance });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Delete Maintenance Period ──
-exports.deleteMaintenance = async (req, res) => {
-  try {
-    const maintenance = await Maintenance.findByIdAndDelete(req.params.id);
-    if (!maintenance) {
-      return res.status(404).json({ success: false, message: "Maintenance not found" });
-    }
-    // Also remove all related payment records
-    await PaymentRecord.deleteMany({ maintenance: req.params.id });
-
-    res.json({ success: true, message: "Maintenance and related payment records deleted" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Get All Payment Records (with resident info) ──
-exports.getAllPaymentRecords = async (req, res) => {
+// ── GET ALL ───────────────────────────────────────────────────────────────────
+const getAllMaintenance = async (req, res) => {
   try {
     const { month, year, status } = req.query;
     const filter = {};
-    if (month) filter.month = month;
-    if (year) filter.year = Number(year);
+    if (month)  filter.month  = month;
+    if (year)   filter.year   = Number(year);
     if (status) filter.status = status;
 
-    const records = await PaymentRecord.find(filter)
-      .populate("resident", "firstName lastName wing flatNumber mobileNumber email")
-      .populate("maintenance", "month year amount dueDate")
+    const records = await Maintenance.find(filter)
+      .populate("resident", "flatNumber name phone")
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, count: records.length, data: records });
+    res.json({ success: true, data: records });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ── Get Single Payment Record ──
-exports.getPaymentRecordById = async (req, res) => {
+// ── GET ONE ───────────────────────────────────────────────────────────────────
+const getMaintenanceById = async (req, res) => {
   try {
-    const record = await PaymentRecord.findById(req.params.id)
-      .populate("resident")
-      .populate("maintenance");
+    const record = await Maintenance.findById(req.params.id)
+      .populate("resident", "flatNumber name phone");
 
-    if (!record) {
-      return res.status(404).json({ success: false, message: "Payment record not found" });
-    }
+    if (!record)
+      return res.status(404).json({ success: false, message: "Record not found" });
+
     res.json({ success: true, data: record });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ── Mark Payment as Paid ──
-exports.markAsPaid = async (req, res) => {
+// ── UPDATE ────────────────────────────────────────────────────────────────────
+const updateMaintenance = async (req, res) => {
   try {
-    const { paymentMethod, transactionId, remarks } = req.body;
+    const allowed = ["amount", "lateFee", "dueDate", "description", "status"];
+    const updates = {};
+    allowed.forEach((k) => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
-    if (!paymentMethod) {
-      return res.status(400).json({ success: false, message: "Payment method is required" });
+    const record = await Maintenance.findByIdAndUpdate(
+      req.params.id, updates, { new: true, runValidators: true }
+    ).populate("resident", "flatNumber name phone");
+
+    if (!record)
+      return res.status(404).json({ success: false, message: "Record not found" });
+
+    res.json({ success: true, data: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ── ADD PAYMENT (partial payment support) ────────────────────────────────────
+const addPayment = async (req, res) => {
+  try {
+    const { amount, mode, transactionId } = req.body;
+
+    if (!amount || !mode)
+      return res.status(400).json({ success: false, message: "amount and mode are required." });
+
+    const record = await Maintenance.findById(req.params.id)
+      .populate("resident", "flatNumber name");
+
+    if (!record)
+      return res.status(404).json({ success: false, message: "Record not found" });
+
+    if (record.status === "Paid")
+      return res.status(400).json({ success: false, message: "Already fully paid." });
+
+    // Add to payment history
+    record.paymentHistory.push({ amount, mode, transactionId, date: new Date() });
+
+    // Check if fully paid
+    const totalPaid = record.paymentHistory.reduce((sum, p) => sum + p.amount, 0);
+    const totalDue  = record.amount + (record.lateFee || 0);
+
+    if (totalPaid >= totalDue) {
+      record.status   = "Paid";
+      record.paidDate = new Date();
     }
 
-    const record = await PaymentRecord.findById(req.params.id);
-    if (!record) {
-      return res.status(404).json({ success: false, message: "Payment record not found" });
-    }
-    if (record.status === "Paid") {
-      return res.status(400).json({ success: false, message: "Already marked as paid" });
-    }
-
-    // Generate receipt number: RCPT-YEAR-MONTH-ID(last6)
-    const receiptNumber = `RCPT-${record.year}-${record.month.slice(0, 3).toUpperCase()}-${record._id.toString().slice(-6).toUpperCase()}`;
-
-    record.status = "Paid";
-    record.paymentMethod = paymentMethod;
-    record.transactionId = transactionId || null;
-    record.remarks = remarks || null;
-    record.paidAt = new Date();
-    record.receiptNumber = receiptNumber;
     await record.save();
 
-    res.json({ success: true, message: "Payment marked as paid", data: record });
+    res.json({ success: true, data: record, message: record.status === "Paid" ? "Fully paid!" : "Payment recorded." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ── Mark as Overdue ──
-exports.markAsOverdue = async (req, res) => {
+// ── MARK AS PAID (full, one-shot) ─────────────────────────────────────────────
+const markAsPaid = async (req, res) => {
   try {
-    // Mark all pending records past due date as overdue
-    const today = new Date();
-    const result = await PaymentRecord.updateMany(
-      { status: "Pending", dueDate: { $lt: today } },
-      { $set: { status: "Overdue" } }
-    );
-    res.json({ success: true, message: `${result.modifiedCount} records marked as overdue` });
+    const { mode = "Cash", transactionId } = req.body;
+
+    const record = await Maintenance.findById(req.params.id)
+      .populate("resident", "flatNumber name");
+
+    if (!record)
+      return res.status(404).json({ success: false, message: "Record not found" });
+
+    if (record.status === "Paid")
+      return res.status(400).json({ success: false, message: "Already paid." });
+
+    const totalDue  = record.amount + (record.lateFee || 0);
+    const totalPaid = record.paymentHistory.reduce((sum, p) => sum + p.amount, 0);
+    const remaining = totalDue - totalPaid;
+
+    // Record the remaining amount as one payment
+    if (remaining > 0) {
+      record.paymentHistory.push({ amount: remaining, mode, transactionId, date: new Date() });
+    }
+
+    record.status   = "Paid";
+    record.paidDate = new Date();
+    await record.save();
+
+    res.json({ success: true, data: record, message: "Marked as paid." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ── Dashboard Summary ──
-exports.getMaintenanceSummary = async (req, res) => {
+// ── DELETE ────────────────────────────────────────────────────────────────────
+const deleteMaintenance = async (req, res) => {
+  try {
+    const record = await Maintenance.findByIdAndDelete(req.params.id);
+    if (!record)
+      return res.status(404).json({ success: false, message: "Record not found" });
+    res.json({ success: true, message: "Deleted." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ── DASHBOARD SUMMARY ─────────────────────────────────────────────────────────
+const getDashboardSummary = async (req, res) => {
   try {
     const { month, year } = req.query;
     const filter = {};
     if (month) filter.month = month;
-    if (year) filter.year = Number(year);
+    if (year)  filter.year  = Number(year);
 
-    const [paid, pending, overdue, total] = await Promise.all([
-      PaymentRecord.countDocuments({ ...filter, status: "Paid" }),
-      PaymentRecord.countDocuments({ ...filter, status: "Pending" }),
-      PaymentRecord.countDocuments({ ...filter, status: "Overdue" }),
-      PaymentRecord.countDocuments(filter),
-    ]);
+    const all = await Maintenance.find(filter);
 
-    const paidAmount = await PaymentRecord.aggregate([
-      { $match: { ...filter, status: "Paid" } },
-      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
-    ]);
+    const totalCollection = all.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0);
+    const paidRecords     = all.filter((r) => r.status === "Paid");
+    const paidAmount      = paidRecords.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0);
+    const pendingAmount   = totalCollection - paidAmount;
 
-    const pendingAmount = await PaymentRecord.aggregate([
-      { $match: { ...filter, status: { $in: ["Pending", "Overdue"] } } },
-      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+    // Monthly trend (last 6 months)
+    const monthlyTrend = await Maintenance.aggregate([
+      { $match: { status: "Paid" } },
+      { $group: { _id: { month: "$month", year: "$year" }, total: { $sum: { $add: ["$amount", "$lateFee"] } } } },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      { $limit: 6 },
+      { $project: { _id: 0, month: "$_id.month", year: "$_id.year", amount: "$total" } },
     ]);
 
     res.json({
       success: true,
       data: {
-        paid, pending, overdue, total,
-        paidAmount: paidAmount[0]?.total || 0,
-        pendingAmount: pendingAmount[0]?.total || 0,
-      }
+        totalCollection,
+        paidAmount,
+        pendingAmount,
+        totalRecords:  all.length,
+        paidCount:     paidRecords.length,
+        pendingCount:  all.filter((r) => r.status === "Pending").length,
+        overdueCount:  all.filter((r) => r.status === "Overdue").length,
+        monthlyTrend,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+module.exports = {
+  createMaintenance,
+  getAllMaintenance,
+  getMaintenanceById,
+  updateMaintenance,
+  addPayment,
+  markAsPaid,
+  deleteMaintenance,
+  getDashboardSummary,
 };
