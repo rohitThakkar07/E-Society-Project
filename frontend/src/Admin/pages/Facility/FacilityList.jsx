@@ -34,7 +34,7 @@ const FacilityList = () => {
         <h1 className="text-2xl font-bold">Facility Management</h1>
 
         <button
-          onClick={() => navigate("/facility/add")}
+          onClick={() => navigate("/admin/facility/add")}
           className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
         >
           + Add Facility

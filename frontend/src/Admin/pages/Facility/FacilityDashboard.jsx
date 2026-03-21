@@ -61,6 +61,18 @@ const FacilityDashboard = () => {
         >
           Facility List
         </button>
+        <button
+          onClick={() => navigate("/admin/facility-booking/list")}
+          className="bg-green-600 text-white p-4 rounded-lg"
+        >
+          Booking List
+        </button>
+        <button
+          onClick={() => navigate("/admin/facility/calendar")}
+          className="bg-green-600 text-white p-4 rounded-lg"
+        >
+          Booking Calander
+        </button>
       </div>
 
       {/* SUMMARY */}
