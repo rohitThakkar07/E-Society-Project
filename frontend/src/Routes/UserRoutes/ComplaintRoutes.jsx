@@ -1,10 +1,11 @@
 import RaiseComplaint from "../../User/pages/RaiseComplaint";
 
-const complaintRoutes = [
+// Header nav: "Help Desk" → "/raise-complaint"
+const ComplaintRoutes = [
   {
-    path: "complaints",
+    path: "raise-complaint",
     element: <RaiseComplaint />,
-  }
+  },
 ];
 
-export default complaintRoutes;
+export default ComplaintRoutes;
