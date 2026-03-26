@@ -42,7 +42,7 @@ const handleSubmit = async (e) => {
         localStorage.setItem("role", user.role);
         localStorage.setItem("userData", JSON.stringify(user));
 
-        toast.success(response.data.message || "Login successful");
+        // toast.success(response.data.message || "Login successful");
 
         // 2. Redirect based on role (Case-insensitive check)
         const userRole = user.role.toLowerCase();       

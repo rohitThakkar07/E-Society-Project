@@ -1,239 +1,219 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search, ChevronDown } from "lucide-react";
+import { fetchComplaints, createComplaint, updateComplaintStatus } from "../../store/slices/complaintSlice";
+
+const statusConfig = {
+  Pending:    { color: "bg-amber-100 text-amber-700",   icon: <Clock size={12} /> },
+  "In Progress": { color: "bg-blue-100 text-blue-700",  icon: <AlertCircle size={12} /> },
+  Resolved:   { color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle size={12} /> },
+};
+
+const categoryColors = {
+  Plumbing:    "bg-blue-50 text-blue-600",
+  Electrical:  "bg-amber-50 text-amber-600",
+  Cleaning:    "bg-green-50 text-green-600",
+  Security:    "bg-red-50 text-red-600",
+  Lift:        "bg-violet-50 text-violet-600",
+  Other:       "bg-slate-100 text-slate-600",
+};
 
 const RaiseComplaint = () => {
-  const [formData, setFormData] = useState({
-    type: "Maintenance",
-    priority: "Low",
-    description: "",
-    attachment: null,
+  const dispatch = useDispatch();
+  const { complaints, loading } = useSelector((s) => s.complaint);
+  const user = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+
+  const [showForm, setShowForm] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [form, setForm] = useState({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
+
+  useEffect(() => { dispatch(fetchComplaints()); }, [dispatch]);
+
+  const filtered = (complaints || []).filter(c => {
+    const matchStatus = filter === "All" || c.status === filter;
+    const matchSearch = c.title?.toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchSearch;
   });
 
-  const [complaints, setComplaints] = useState([
-    {
-      id: 101,
-      type: "Electrical",
-      desc: "Street light blinking near Block A",
-      priority: "Medium",
-      status: "Resolved",
-      date: "2026-02-01",
-    },
-    {
-      id: 102,
-      type: "Plumbing",
-      desc: "Water leakage in basement pipe",
-      priority: "High",
-      status: "Pending",
-      date: "2026-02-08",
-    },
-  ]);
-
-  const [activeTab, setActiveTab] = useState("new");
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, attachment: e.target.files[0] });
-  };
-
-  const handleSubmit = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-
-    const newComplaint = {
-      id: complaints.length + 101,
-      type: formData.type,
-      desc: formData.description,
-      priority: formData.priority,
-      status: "Pending",
-      date: new Date().toISOString().split("T")[0],
-    };
-
-    setComplaints([newComplaint, ...complaints]);
-    alert("Complaint Registered Successfully! Ticket ID: " + newComplaint.id);
-    setFormData({
-      type: "Maintenance",
-      priority: "Low",
-      description: "",
-      attachment: null,
-    });
-    setActiveTab("history");
+    await dispatch(createComplaint(form));
+    setShowForm(false);
+    setForm({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
   };
 
-  const getStatusBadge = (status) => {
-    return status === "Resolved"
-      ? "bg-green-600 text-white"
-      : "bg-yellow-400 text-black";
-  };
+  const stats = [
+    { label: "Total", value: complaints?.length || 0, color: "text-slate-700", bg: "bg-slate-50" },
+    { label: "Pending", value: complaints?.filter(c => c.status === "Pending").length || 0, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "In Progress", value: complaints?.filter(c => c.status === "In Progress").length || 0, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Resolved", value: complaints?.filter(c => c.status === "Resolved").length || 0, color: "text-emerald-600", bg: "bg-emerald-50" },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto my-12 px-4">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        Help Desk & Complaints
-      </h2>
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-slate-50 p-6">
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
-      {/* TABS */}
-      <div className="flex border-b mb-6">
-        <button
-          onClick={() => setActiveTab("new")}
-          className={`px-5 py-2 font-semibold border-b-2 ${
-            activeTab === "new"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-600"
-          }`}
-        >
-          <i className="fas fa-plus-circle mr-2"></i>
-          Raise New Complaint
-        </button>
+      <div className="max-w-5xl mx-auto">
 
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`px-5 py-2 font-semibold border-b-2 ${
-            activeTab === "history"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-600"
-          }`}
-        >
-          <i className="fas fa-history mr-2"></i>
-          My Complaints History
-        </button>
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Wrench size={20} className="text-orange-500" />
+              <h1 className="text-2xl font-bold text-slate-800">Help Desk</h1>
+            </div>
+            <p className="text-sm text-slate-400">Track and manage your complaints</p>
+          </div>
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-700 transition">
+            <Plus size={16} /> Raise Complaint
+          </button>
+        </div>
+
+        {/* STATS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {stats.map(s => (
+            <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
+              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* SEARCH + FILTER */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6 flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search complaints..."
+              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
+          </div>
+          <div className="flex gap-2">
+            {["All", "Pending", "In Progress", "Resolved"].map(s => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${filter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* COMPLAINTS LIST */}
+        {loading ? (
+          <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}</div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(c => (
+              <div key={c._id} onClick={() => setSelected(c)}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-slate-200 transition">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[c.category] || categoryColors.Other}`}>{c.category}</span>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[c.status]?.color || statusConfig.Pending.color}`}>
+                        {statusConfig[c.status]?.icon} {c.status}
+                      </span>
+                      {c.wing && <span className="text-xs text-slate-400">Wing {c.wing} • Flat {c.flatNumber}</span>}
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">{c.title}</h3>
+                    <p className="text-sm text-slate-400 line-clamp-1">{c.description}</p>
+                  </div>
+                  <p className="text-xs text-slate-300 shrink-0">{new Date(c.createdAt).toLocaleDateString("en-IN")}</p>
+                </div>
+              </div>
+            ))}
+            {!filtered.length && (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 text-slate-400">
+                <Wrench size={40} className="mx-auto mb-3 opacity-30" />
+                <p className="font-medium">No complaints found</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* NEW COMPLAINT FORM */}
-      {activeTab === "new" && (
-        <div className="bg-white shadow-sm rounded p-6">
-          <h5 className="font-bold text-blue-600 mb-4">Describe the Issue</h5>
-
-          <form onSubmit={handleSubmit}>
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* TYPE */}
-              <div>
-                <label className="font-bold block mb-1">
-                  Complaint Type
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="Maintenance">General Maintenance</option>
-                  <option value="Electrical">Electrical</option>
-                  <option value="Plumbing">Plumbing</option>
-                  <option value="Security">Security Concern</option>
-                  <option value="Noise">Noise Complaint</option>
-                </select>
+      {/* DETAIL MODAL */}
+      {selected && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[selected.category] || categoryColors.Other}`}>{selected.category}</span>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[selected.status]?.color}`}>
+                  {statusConfig[selected.status]?.icon} {selected.status}
+                </span>
               </div>
-
-              {/* PRIORITY */}
-              <div>
-                <label className="font-bold block mb-1">
-                  Priority Level
-                </label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="Low">Low (Routine)</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High (Urgent)</option>
-                </select>
-              </div>
-
-              {/* DESCRIPTION */}
-              <div className="md:col-span-2">
-                <label className="font-bold block mb-1">Description</label>
-                <textarea
-                  rows="4"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  placeholder="Please describe the issue in detail..."
-                  className="w-full border rounded px-3 py-2"
-                ></textarea>
-              </div>
-
-              {/* FILE */}
-              <div className="md:col-span-2">
-                <label className="font-bold block mb-1">
-                  Attach Photo (Optional)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-
-              {/* SUBMIT */}
-              <div className="md:col-span-2 text-right">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700"
-                >
-                  Submit Complaint
-                </button>
-              </div>
+              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
             </div>
-          </form>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">{selected.title}</h2>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">{selected.description}</p>
+            {(selected.wing || selected.flatNumber) && (
+              <p className="text-xs text-slate-400 mb-4">Wing {selected.wing} • Flat {selected.flatNumber}</p>
+            )}
+            <p className="text-xs text-slate-300 mb-5">{new Date(selected.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+            {isAdmin && (
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">Update Status</label>
+                <div className="flex gap-2 flex-wrap">
+                  {["Pending", "In Progress", "Resolved"].map(s => (
+                    <button key={s} onClick={() => { dispatch(updateComplaintStatus({ id: selected._id, status: s })); setSelected(null); }}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold border transition ${selected.status === s ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* HISTORY TABLE */}
-      {activeTab === "history" && (
-        <div className="overflow-x-auto">
-          <table className="w-full border">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 border text-left">Ticket ID</th>
-                <th className="p-3 border text-left">Type</th>
-                <th className="p-3 border text-left">Description</th>
-                <th className="p-3 border text-left">Date</th>
-                <th className="p-3 border text-left">Priority</th>
-                <th className="p-3 border text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {complaints.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="p-3 border font-bold">#{item.id}</td>
-                  <td className="p-3 border">{item.type}</td>
-                  <td
-                    className="p-3 border truncate max-w-[250px]"
-                    title={item.desc}
-                  >
-                    {item.desc}
-                  </td>
-                  <td className="p-3 border">{item.date}</td>
-                  <td className="p-3 border">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        item.priority === "High"
-                          ? "bg-red-600 text-white"
-                          : "bg-gray-500 text-white"
-                      }`}
-                    >
-                      {item.priority}
-                    </span>
-                  </td>
-                  <td className="p-3 border">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${getStatusBadge(
-                        item.status
-                      )}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* CREATE MODAL */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-slate-800">Raise Complaint</h2>
+              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Title</label>
+                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+                  placeholder="Brief issue title" className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Category</label>
+                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                  className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  {Object.keys(categoryColors).map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Wing</label>
+                  <input value={form.wing} onChange={e => setForm({ ...form, wing: e.target.value })}
+                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Flat No.</label>
+                  <input value={form.flatNumber} onChange={e => setForm({ ...form, flatNumber: e.target.value })}
+                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</label>
+                <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                  placeholder="Describe the issue in detail..." className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowForm(false)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition">Submit</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
