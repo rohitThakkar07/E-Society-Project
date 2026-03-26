@@ -1,4 +1,4 @@
-const Staff = require("./staffModel");
+const Staff = require("../../../db/models/staffModal");
 
 const createStaff = async (req, res) => {
   try {
