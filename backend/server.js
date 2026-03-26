@@ -22,7 +22,7 @@ const eventRoutes = require('./app/routes_controller/Events');
 const staffRoutes = require("./app/routes_controller/Staff");
 const alertRoutes = require("./app/routes_controller/Alert");
 const pollRoutes = require("./app/routes_controller/Poll");
-
+const paymentRoutes = require("./app/routes_controller/Payment");
 // MIDDLEWARE
 const errorHandler = require("./app/middlewares/errorMiddleware");
 const authMiddleware = require("./app/middlewares/authMiddleware");
@@ -57,6 +57,7 @@ app.use("/api/staff", authMiddleware, staffRoutes);
 app.use("/api/notice", authMiddleware, noticeRoutes);
 app.use("/api/alert", authMiddleware, alertRoutes);
 app.use("/api/poll", authMiddleware, pollRoutes);
+app.use("/api/payment", authMiddleware, paymentRoutes);
 
 /* ============ ERROR HANDLER ============ */
 app.use(errorHandler);
