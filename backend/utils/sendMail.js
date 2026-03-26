@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 /* ================= RESIDENT WELCOME EMAIL ================= */
 
 const sendResidentWelcomeEmail = async (email, residentName, password) => {
+  // ✅ REMOVED: stray `html: ...` line and `console.log(email, residnetName)` that were OUTSIDE the try block
   try {
     const mailOptions = {
       from: `"Society Management" <${process.env.EMAIL_USER}>`,
@@ -54,7 +55,6 @@ const sendResidentWelcomeEmail = async (email, residentName, password) => {
     };
 
     await transporter.sendMail(mailOptions);
-
     return true;
   } catch (error) {
     console.error("Resident Email Error:", error);
@@ -109,7 +109,6 @@ const sendGuardWelcomeEmail = async (email, guardName, guardId, password) => {
     };
 
     await transporter.sendMail(mailOptions);
-
     return true;
   } catch (error) {
     console.error("Guard Email Error:", error);
