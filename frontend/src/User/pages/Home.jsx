@@ -3,29 +3,70 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
   Bell, Calendar, Users, Shield, Wrench, DollarSign,
-  ArrowRight, Building2, CheckCircle, Clock, TrendingUp
+  ArrowRight, Building2, Clock, TrendingUp
 } from "lucide-react";
-import {fetchNotices} from "../../store/slices/noticeSlice"
-import {fetchEvents} from "../../store/slices/eventSlice";
+
+// Import your slices
+import { fetchNotices } from "../../store/slices/noticeSlice";
+import { fetchEvents } from "../../store/slices/eventSlice";
+// If you have these, they make the stats more dynamic:
+// import { fetchComplaints } from "../../store/slices/complaintSlice"; 
+// import { fetchMaintenance } from "../../store/slices/maintenanceSlice";
 
 const Home = () => {
   const dispatch = useDispatch();
-  const notices = useSelector((s) => s.notice?.list   ?? []);
-  const events  = useSelector((s) => s.event?.events  ?? []);
-  const user = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  // 1. SELECTORS: Get data from Redux Store
+  const { list: notices = [], loading: noticeLoading } = useSelector((s) => s.notice || {});
+  const { events = [], loading: eventLoading } = useSelector((s) => s.event || {});
+  
+  // 2. USER CONTEXT: Get from Store or LocalStorage
+  // (Assuming you have an auth slice, it's safer than direct localStorage)
+  const auth = useSelector((s) => s.auth);
+  const user = auth?.user || JSON.parse(localStorage.getItem("userData") || "{}");
   const role = user?.role?.toLowerCase();
   const isLoggedIn = !!localStorage.getItem("token");
 
-  console.log("notice"+notices)
-  console.log(events)
+  // 3. DYNAMIC DATA FETCHING
   useEffect(() => {
     dispatch(fetchNotices());
     dispatch(fetchEvents());
+    // dispatch(fetchComplaints()); // Uncomment if added
   }, [dispatch]);
+
+  // 4. DYNAMIC STATS CALCULATION
+  const upcomingEvents = events?.filter(e => new Date(e.date) >= new Date()) || [];
+  
+  const stats = [
+    { 
+      label: "Latest Notices", 
+      value: notices?.length || 0, 
+      icon: <Bell size={16} />, 
+      color: "text-rose-500" 
+    },
+    { 
+      label: "Upcoming Events", 
+      value: upcomingEvents.length, 
+      icon: <Calendar size={16} />, 
+      color: "text-blue-500" 
+    },
+    { 
+      label: "Your Wing", 
+      value: user?.wing || user?.block || "—", 
+      icon: <Building2 size={16} />, 
+      color: "text-emerald-500" 
+    },
+    { 
+      label: "Flat Number", 
+      value: user?.flatNumber || user?.unit || "—", 
+      icon: <TrendingUp size={16} />, 
+      color: "text-amber-500" 
+    },
+  ];
 
   const quickLinks = [
     { label: "Pay Maintenance", icon: <DollarSign size={22} />, to: "/maintenance", color: "bg-emerald-50 text-emerald-600 border-emerald-100", roles: ["resident", "admin"] },
-    { label: "Raise Complaint", icon: <Wrench size={22} />, to: "/raise-complaint", color: "bg-orange-50 text-orange-600 border-orange-100", roles: ["resident", "admin"] },
+    { label: "Raise Complaint", icon: <Wrench size={22} />, to: "/complaints", color: "bg-orange-50 text-orange-600 border-orange-100", roles: ["resident", "admin"] },
     { label: "Book Facility", icon: <Building2 size={22} />, to: "/facilities", color: "bg-blue-50 text-blue-600 border-blue-100", roles: ["resident"] },
     { label: "Visitor Log", icon: <Users size={22} />, to: "/visitors", color: "bg-violet-50 text-violet-600 border-violet-100", roles: ["resident", "admin"] },
     { label: "Notice Board", icon: <Bell size={22} />, to: "/notices", color: "bg-rose-50 text-rose-600 border-rose-100", roles: ["resident", "admin"] },
@@ -34,7 +75,7 @@ const Home = () => {
 
   const visibleLinks = isLoggedIn
     ? quickLinks.filter((l) => l.roles.includes(role))
-    : quickLinks;
+    : quickLinks.slice(0, 3); // Show subset for visitors
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-slate-50">
@@ -50,7 +91,7 @@ const Home = () => {
         .stagger-3 { animation-delay: 0.3s; }
       `}</style>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <section className="hero-gradient text-white px-6 py-20">
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm mb-6 fade-in">
@@ -58,7 +99,7 @@ const Home = () => {
             <span className="text-blue-100">Smart Society Management</span>
           </div>
           <h1 className="fade-in stagger-1 text-5xl md:text-6xl font-bold mb-5 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Welcome{isLoggedIn && user?.name ? `, ${user.name.split(" ")[0]}` : ""} 👋
+            Welcome{isLoggedIn && user?.firstName ? `, ${user.firstName}` : user?.name ? `, ${user.name.split(" ")[0]}` : ""} 👋
           </h1>
           <p className="fade-in stagger-2 text-lg text-blue-100 max-w-xl mx-auto mb-10">
             Everything your society needs — payments, complaints, visitors, events — all in one place.
@@ -73,20 +114,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* STATS BAR */}
+      {/* STATS BAR - Fully Dynamic */}
       {isLoggedIn && (
         <section className="bg-white border-b border-slate-100 px-6 py-5">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: "Notices", value: notices?.length || 0, icon: <Bell size={16} />, color: "text-rose-500" },
-              { label: "Upcoming Events", value: events?.filter(e => new Date(e.date) >= new Date()).length || 0, icon: <Calendar size={16} />, color: "text-blue-500" },
-              { label: "Your Wing", value: user?.wing || "—", icon: <Building2 size={16} />, color: "text-emerald-500" },
-              { label: "Flat", value: user?.flatNumber || "—", icon: <TrendingUp size={16} />, color: "text-amber-500" },
-            ].map((s) => (
+            {stats.map((s) => (
               <div key={s.label} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
                 <div className={`${s.color} bg-white p-2 rounded-lg shadow-sm`}>{s.icon}</div>
                 <div>
-                  <p className="text-xl font-bold text-slate-800">{s.value}</p>
+                  <p className="text-xl font-bold text-slate-800">{noticeLoading || eventLoading ? "..." : s.value}</p>
                   <p className="text-xs text-slate-400">{s.label}</p>
                 </div>
               </div>
@@ -110,12 +146,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* NOTICES + EVENTS */}
+      {/* DYNAMIC FEED: NOTICES + EVENTS */}
       {isLoggedIn && (
         <section className="px-6 pb-16">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
 
-            {/* NOTICES */}
+            {/* LATEST NOTICES */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div className="flex items-center gap-2">
@@ -131,15 +167,16 @@ const Home = () => {
                   <div key={n._id} className="px-5 py-3 hover:bg-slate-50 transition">
                     <p className="text-sm font-medium text-slate-700 truncate">{n.title}</p>
                     <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                      <Clock size={10} /> {new Date(n.createdAt).toLocaleDateString()}
+                      <Clock size={10} /> {new Date(n.createdAt).toLocaleDateString("en-IN")}
                     </p>
                   </div>
                 ))}
-                {!notices?.length && <p className="px-5 py-6 text-sm text-slate-400 text-center">No notices yet</p>}
+                {!notices?.length && !noticeLoading && <p className="px-5 py-6 text-sm text-slate-400 text-center">No notices yet</p>}
+                {noticeLoading && <p className="px-5 py-6 text-sm text-slate-300 text-center animate-pulse">Loading notices...</p>}
               </div>
             </div>
 
-            {/* EVENTS */}
+            {/* UPCOMING EVENTS */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div className="flex items-center gap-2">
@@ -151,28 +188,27 @@ const Home = () => {
                 </Link>
               </div>
               <div className="divide-y divide-slate-50">
-                {events?.filter(e => new Date(e.date) >= new Date()).slice(0, 4).map((e) => (
+                {upcomingEvents.slice(0, 4).map((e) => (
                   <div key={e._id} className="px-5 py-3 hover:bg-slate-50 transition flex items-center gap-3">
                     <div className="bg-blue-50 text-blue-600 rounded-xl px-3 py-2 text-center min-w-[48px]">
                       <p className="text-lg font-bold leading-none">{new Date(e.date).getDate()}</p>
-                      <p className="text-xs">{new Date(e.date).toLocaleString("default", { month: "short" })}</p>
+                      <p className="text-xs uppercase font-bold">{new Date(e.date).toLocaleString("default", { month: "short" })}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-700">{e.title}</p>
-                      <p className="text-xs text-slate-400">{e.location || "Society Premises"}</p>
+                      <p className="text-xs text-slate-400 truncate max-w-[150px]">{e.location || "Society Premises"}</p>
                     </div>
                   </div>
                 ))}
-                {!events?.filter(e => new Date(e.date) >= new Date()).length && (
-                  <p className="px-5 py-6 text-sm text-slate-400 text-center">No upcoming events</p>
-                )}
+                {!upcomingEvents.length && !eventLoading && <p className="px-5 py-6 text-sm text-slate-400 text-center">No upcoming events</p>}
+                {eventLoading && <p className="px-5 py-6 text-sm text-slate-300 text-center animate-pulse">Loading events...</p>}
               </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* FEATURES FOR VISITORS */}
+      {/* VISITOR FEATURES */}
       {!isLoggedIn && (
         <section className="px-6 pb-20">
           <div className="max-w-5xl mx-auto">
