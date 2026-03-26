@@ -19,9 +19,11 @@ const Home = () => {
   console.log("notice"+notices)
   console.log(events)
   useEffect(() => {
-    dispatch(fetchNotices());
-    dispatch(fetchEvents());
-  }, [dispatch]);
+    if (isLoggedIn) {
+      dispatch(fetchNotices());
+      dispatch(fetchEvents());
+    }
+  }, [dispatch, isLoggedIn]);
 
   const quickLinks = [
     { label: "Pay Maintenance", icon: <DollarSign size={22} />, to: "/maintenance", color: "bg-emerald-50 text-emerald-600 border-emerald-100", roles: ["resident", "admin"] },
