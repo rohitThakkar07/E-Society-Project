@@ -225,17 +225,16 @@ const AddEditFlat = () => {
               type="submit"
               disabled={isLoading}
               className={`px-8 py-3 rounded-lg text-white font-semibold transition-all shadow-md 
-              ${
-                isLoading
+              ${isLoading
                   ? "bg-indigo-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
+                }`}
             >
               {isLoading
                 ? "Saving..."
                 : isEditMode
-                ? "Update Flat"
-                : "Save Flat"}
+                  ? "Update Flat"
+                  : "Save Flat"}
             </button>
           </div>
 
