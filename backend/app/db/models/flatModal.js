@@ -4,7 +4,7 @@ const flatSchema = new mongoose.Schema({
   flatNumber: { type: String, required: true, unique: true, trim: true },
   floor:      { type: Number, required: true },
   block:      { type: String, trim: true },
-  type:       { type: String, enum: ["1BHK", "2BHK", "3BHK", "4BHK", "Studio", "Penthouse"], required: true },
+  type:       { type: String, enum: ["1BHK", "2BHK", "3BHK", "4BHK"], required: true },
   area:       { type: Number }, // sq ft
   owner: {
     name:  { type: String },
@@ -22,7 +22,7 @@ const flatSchema = new mongoose.Schema({
     default: "Vacant",
   },
   resident: { type: mongoose.Schema.Types.ObjectId, ref: "Resident" },
-  parkingSlot: { type: String },
+  //parkingSlot: { type: String },
   monthlyMaintenance: { type: Number, default: 0 },
 }, { timestamps: true });
 

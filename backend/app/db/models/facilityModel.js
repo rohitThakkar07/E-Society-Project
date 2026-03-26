@@ -1,35 +1,9 @@
 const mongoose = require("mongoose");
 
+// FACILITY
 const facilitySchema = new mongoose.Schema({
-
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-
-  description: {
-    type: String
-  },
-
-  location: {
-    type: String
-  },
-
-  openingTime: {
-    type: String
-  },
-
-  closingTime: {
-    type: String
-  },
-
-  status: {
-    type: String,
-    enum: ["Available", "Maintenance", "Closed"],
-    default: "Available"
-  }
-
+  name: { type: String, required: true },
+  description: { type: String },
+  status: { type: String, enum: ["Available", "Maintenance", "Closed"], default: "Available" }
 }, { timestamps: true });
-
 module.exports = mongoose.model("Facility", facilitySchema);
