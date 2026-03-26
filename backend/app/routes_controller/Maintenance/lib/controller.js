@@ -1,62 +1,86 @@
 const Maintenance = require("../../../db/models/maintenanceModel");
+const Resident = require("../../../db/models/residentsModel");
 
 // ── CREATE ────────────────────────────────────────────────────────────────────
+// const createMaintenance = async (req, res) => {
+//   try {
+//     const { resident, month, year, amount, lateFee, dueDate, description } = req.body;
+
+//     if (!resident || !month || !year || !amount || !dueDate) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "resident, month, year, amount and dueDate are required.",
+//       });
+//     }
+
+//     // Prevent duplicate charge for same resident + month + year
+//     const exists = await Maintenance.findOne({ resident, month, year });
+//     if (exists) {
+//       return res.status(409).json({
+//         success: false,
+//         message: `Maintenance for ${month} ${year} already exists for this resident.`,
+//       });
+//     }
+
+//     const maintenance = await Maintenance.create({
+//       resident, month, year, amount, lateFee, dueDate, description,
+//     });
+
+//     const populated = await maintenance.populate("resident", "flatNumber name");
+
+//     res.status(201).json({ success: true, data: populated });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 const createMaintenance = async (req, res) => {
   try {
-    const { resident, month, year, amount, lateFee, dueDate, description } = req.body;
+    const { resident, month, year, amount, dueDate } = req.body;
 
-    if (!resident || !month || !year || !amount || !dueDate) {
-      return res.status(400).json({
-        success: false,
-        message: "resident, month, year, amount and dueDate are required.",
-      });
-    }
-
-    // Prevent duplicate charge for same resident + month + year
-    const exists = await Maintenance.findOne({ resident, month, year });
-    if (exists) {
-      return res.status(409).json({
-        success: false,
-        message: `Maintenance for ${month} ${year} already exists for this resident.`,
-      });
-    }
+    // Fetch resident to get their flat ID automatically
+    const residentDoc = await Resident.findById(resident);
+    if (!residentDoc) return res.status(404).json({ success: false, message: "Resident not found" });
 
     const maintenance = await Maintenance.create({
-      resident, month, year, amount, lateFee, dueDate, description,
+      resident,
+      flat: residentDoc.flat, // Correctly linked to Flat
+      month,
+      year,
+      amount,
+      dueDate,
     });
 
-    const populated = await maintenance.populate("resident", "flatNumber name");
-
-    res.status(201).json({ success: true, data: populated });
+    res.status(201).json({ success: true, data: maintenance });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-const getMyMaintenance  = async (req, res) => {
-  console.log(req.user)
-   try {
+const getMyMaintenance = async (req, res) => {
+  console.log("profile id : "+req.user.profileId);
+  try {
     const data = await Maintenance.find({
-      resident: req.user.profileId,
-    }).populate("resident", "flatNumber name");
+      resident: req.user.profileId, 
+    })
+    .populate("resident", "firstName lastName flatNumber wing")
+    .populate("flat", "flatNumber wing floor type");
 
+    console.log(data);
     res.json({
       success: true,
       data,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
+    res.status(500).json({ success: false, message: err.message });
+  }d
 }
 
 const getDashboardSummary = async (req, res) => {
   try {
     const all = await Maintenance.find();
 
-    const paid    = all.filter(r => r.status === "Paid");
+    const paid = all.filter(r => r.status === "Paid");
     const pending = all.filter(r => r.status === "Pending");
     const overdue = all.filter(r => r.status === "Overdue");
 
@@ -75,14 +99,14 @@ const getDashboardSummary = async (req, res) => {
     });
 
     const summary = {
-      total:          all.length,
-      paid:           paid.length,
-      pending:        pending.length,
-      overdue:        overdue.length,
+      total: all.length,
+      paid: paid.length,
+      pending: pending.length,
+      overdue: overdue.length,
       totalCollected: paid.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0),
-      totalPending:   pending.reduce((sum, r) => sum + r.amount, 0),
-      totalOverdue:   overdue.reduce((sum, r) => sum + r.amount, 0),
-      monthlyData:    Object.values(monthlyMap),
+      totalPending: pending.reduce((sum, r) => sum + r.amount, 0),
+      totalOverdue: overdue.reduce((sum, r) => sum + r.amount, 0),
+      monthlyData: Object.values(monthlyMap),
     };
 
     res.json({ success: true, data: summary });
@@ -95,12 +119,13 @@ const getAllMaintenance = async (req, res) => {
   try {
     const { month, year, status } = req.query;
     const filter = {};
-    if (month)  filter.month  = month;
-    if (year)   filter.year   = Number(year);
+    if (month) filter.month = month;
+    if (year) filter.year = Number(year);
     if (status) filter.status = status;
 
     const records = await Maintenance.find(filter)
-      .populate("resident", "flatNumber name phone")
+      .populate("resident", "firstName lastName mobileNumber wing flatNumber") 
+      .populate("flat", "wing flatNumber type") 
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: records });
@@ -166,10 +191,10 @@ const addPayment = async (req, res) => {
 
     // Check if fully paid
     const totalPaid = record.paymentHistory.reduce((sum, p) => sum + p.amount, 0);
-    const totalDue  = record.amount + (record.lateFee || 0);
+    const totalDue = record.amount + (record.lateFee || 0);
 
     if (totalPaid >= totalDue) {
-      record.status   = "Paid";
+      record.status = "Paid";
       record.paidDate = new Date();
     }
 
@@ -195,7 +220,7 @@ const markAsPaid = async (req, res) => {
     if (record.status === "Paid")
       return res.status(400).json({ success: false, message: "Already paid." });
 
-    const totalDue  = record.amount + (record.lateFee || 0);
+    const totalDue = record.amount + (record.lateFee || 0);
     const totalPaid = record.paymentHistory.reduce((sum, p) => sum + p.amount, 0);
     const remaining = totalDue - totalPaid;
 
@@ -204,7 +229,7 @@ const markAsPaid = async (req, res) => {
       record.paymentHistory.push({ amount: remaining, mode, transactionId, date: new Date() });
     }
 
-    record.status   = "Paid";
+    record.status = "Paid";
     record.paidDate = new Date();
     await record.save();
 

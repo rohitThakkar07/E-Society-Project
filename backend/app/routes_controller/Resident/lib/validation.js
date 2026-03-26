@@ -4,20 +4,20 @@ const ResidentValidation = [
   // Personal Info
   body("firstName").trim().notEmpty().withMessage("First name is required"),
   body("lastName").optional({ checkFalsy: true }).trim(),
-  body("gender").notEmpty().withMessage("Gender is required").isIn(["Male", "Female"]).withMessage("Gender must be Male or Female"),
-  body("dateOfBirth").optional({ checkFalsy: true }).isISO8601().withMessage("Invalid date of birth"),
+body("gender")
+  .notEmpty().withMessage("Gender is required")
+  .isIn(["Male", "Female"]).withMessage("Invalid selection"), 
+   body("dateOfBirth").optional({ checkFalsy: true }).isISO8601().withMessage("Invalid date of birth"),
   
   // Contact Info
   body("mobileNumber").notEmpty().withMessage("Mobile number is required").matches(/^[0-9]{10}$/).withMessage("Mobile number must be exactly 10 digits"),
   // Note: checkFalsy prevents empty strings from triggering 'Invalid email' errors
   body("email").optional({ checkFalsy: true }).trim().isEmail().withMessage("Invalid email").normalizeEmail(),
 
-  // Flat Details
-  body("wing").trim().notEmpty().withMessage("Wing is required"),
-  body("flatNumber").trim().notEmpty().withMessage("Flat number is required"),
-  body("floorNumber").optional({ checkFalsy: true }).isNumeric().withMessage("Floor number must be a number"),
-  body("flatType").notEmpty().withMessage("Flat type is required").isIn(["1BHK", "2BHK", "3BHK", "4BHK"]).withMessage("Invalid flat type"),
-  
+ // Flat Details - Allow fallback for denormalization
+body("wing").trim().notEmpty().withMessage("Wing/Block is required"),
+body("flatNumber").trim().notEmpty().withMessage("Flat number is required"),
+ 
   // Resident Details
   body("residentType").notEmpty().withMessage("Resident type is required").isIn(["Owner", "Tenant"]).withMessage("Resident type must be Owner or Tenant"),
   body("moveInDate").optional({ checkFalsy: true }).isISO8601().withMessage("Invalid move in date"),

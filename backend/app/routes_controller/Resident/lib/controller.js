@@ -7,135 +7,178 @@ const { sendResidentWelcomeEmail } = require("../../../../utils/sendMail");
 /**
  * CREATE RESIDENT
  */
+// exports.createResident = async (req, res) => {
+//   console.log(req.body);
+//   try {
+//     const errors = validationResult(req);
+
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: errors.array()[0].msg
+//       });
+//     }
+
+//     const {
+//       firstName,
+//       lastName,
+//       gender,
+//       dateOfBirth,
+//       mobileNumber,
+//       email,
+//       wing,
+//       flatNumber,
+//       floorNumber,
+//       flatType,
+//       residentType,
+//       moveInDate,
+//       emergencyContactName,
+//       emergencyContactNumber,
+//       status,
+//       password,
+//     } = req.body;
+
+//     if (!password) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Password is required"
+//       });
+//     }
+
+//     // check existing user
+//     if (email) {
+//       const existingUser = await User.findOne({ email });
+
+//       if (existingUser) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Email already registered"
+//         });
+//       }
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const resident = await Resident.create({
+//       firstName,
+//       lastName,
+//       gender,
+//       dateOfBirth,
+//       mobileNumber,
+//       email,
+//       wing,
+//       flatNumber,
+//       floorNumber,
+//       flatType,
+//       residentType,
+//       moveInDate,
+//       emergencyContactName,
+//       emergencyContactNumber,
+//       status,
+//     });
+
+//     const residentName = `${firstName} ${lastName || ""}`.trim();
+
+//     const user = await User.create({
+//       name: residentName,
+//       email: email,
+//       password: hashedPassword,
+//       role: "resident",
+//       profileId: resident._id,
+//     });
+
+//     // send mail but don't break API if it fails
+//     console.log(residentName)
+//     try {
+//       await sendResidentWelcomeEmail(email, residentName, password);
+//     } catch (mailError) {
+//       console.error("Mail error:", mailError.message);
+//     }
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Resident created successfully",
+//       data: resident,
+//     });
+
+//   } catch (error) {
+//     console.error("Create resident error:", error);
+
+//     res.status(500).json({
+//       success: false,
+//       message: "Unable to create resident. Please try again later."
+//     });
+//   }
+// };
 exports.createResident = async (req, res) => {
-  console.log(req.body);
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: errors.array()[0].msg
-      });
-    }
-
-    const {
-      firstName,
-      lastName,
-      gender,
-      dateOfBirth,
-      mobileNumber,
-      email,
-      wing,
-      flatNumber,
-      floorNumber,
-      flatType,
-      residentType,
-      moveInDate,
-      emergencyContactName,
-      emergencyContactNumber,
-      status,
-      password,
-    } = req.body;
-
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Password is required"
-      });
-    }
-
-    // check existing user
-    if (email) {
-      const existingUser = await User.findOne({ email });
-
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: "Email already registered"
-        });
-      }
-    }
+    const { firstName, lastName, email, password, flat, ...rest } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 1. Create Resident Profile
     const resident = await Resident.create({
       firstName,
       lastName,
-      gender,
-      dateOfBirth,
-      mobileNumber,
       email,
-      wing,
-      flatNumber,
-      floorNumber,
-      flatType,
-      residentType,
-      moveInDate,
-      emergencyContactName,
-      emergencyContactNumber,
-      status,
+      flat, // ID of the Flat
+      ...rest
     });
 
-    const residentName = `${firstName} ${lastName || ""}`.trim();
-
-    const user = await User.create({
-      name: residentName,
-      email: email,
+    // 2. Create Auth User
+    await User.create({
+      name: `${firstName} ${lastName}`,
+      email,
       password: hashedPassword,
       role: "resident",
-      profileId: resident._id,
-    });
-    
-    // send mail but don't break API if it fails
-    console.log(residentName)
-    try {
-      await sendResidentWelcomeEmail(email, residentName, password);
-    } catch (mailError) {
-      console.error("Mail error:", mailError.message);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: "Resident created successfully",
-      data: resident,
+      profileId: resident._id, // LINKED HERE
     });
 
+    res.status(201).json({ success: true, data: resident });
   } catch (error) {
-    console.error("Create resident error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to create resident. Please try again later."
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 /**
  * GET ALL RESIDENTS
  */
+// exports.getAllResidents = async (req, res) => {
+//   try {
+
+//     const residents = await Resident.find().sort({ createdAt: -1 });
+
+//     res.json({
+//       success: true,
+//       data: residents,
+//     });
+
+//   } catch (error) {
+
+//     res.status(500).json({
+//       success: false,
+//       message: "Unable to fetch residents"
+//     });
+
+//   }
+// };
+
+// In your getAllResidents function:
 exports.getAllResidents = async (req, res) => {
   try {
-
-    const residents = await Resident.find().sort({ createdAt: -1 });
+    // Add .populate("flat") here!
+    const residents = await Resident.find()
+      .populate("flat") 
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
       data: residents,
     });
-
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to fetch residents"
-    });
-
+    res.status(500).json({ success: false, message: "Unable to fetch residents" });
   }
 };
-
-
 /**
  * GET RESIDENT BY ID
  */
