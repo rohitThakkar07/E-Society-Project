@@ -18,6 +18,10 @@ const visitorRoutes = require("./app/routes_controller/Visitors");
 const expenseRoutes = require("./app/routes_controller/Expanse");
 const maintenanceRoutes = require("./app/routes_controller/Maintenance");
 const noticeRoutes = require("./app/routes_controller/Notice");
+const eventRoutes = require('./app/routes_controller/Events');
+const staffRoutes = require("./app/routes_controller/Staff");
+const alertRoutes = require("./app/routes_controller/Alert");
+const pollRoutes = require("./app/routes_controller/Poll");
 
 // MIDDLEWARE
 const errorHandler = require("./app/middlewares/errorMiddleware");
@@ -48,7 +52,11 @@ app.use("/api/flat", authMiddleware, flatRoutes);
 app.use("/api/visitor", authMiddleware, visitorRoutes);
 app.use("/api/expense", authMiddleware, expenseRoutes);
 app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
-app.use("/api/notices", authMiddleware, noticeRoutes);
+app.use("/api/event", authMiddleware, eventRoutes);
+app.use("/api/staff", authMiddleware, staffRoutes);
+app.use("/api/notice", authMiddleware, noticeRoutes);
+app.use("/api/alert", authMiddleware, alertRoutes);
+app.use("/api/poll", authMiddleware, pollRoutes);
 
 /* ============ ERROR HANDLER ============ */
 app.use(errorHandler);
