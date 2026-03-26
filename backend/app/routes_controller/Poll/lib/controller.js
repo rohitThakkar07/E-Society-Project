@@ -1,4 +1,4 @@
-const Poll = require("./pollModel");
+const Poll = require("../../../db/models/pollModal");
 
 const createPoll = async (req, res) => {
   try {
