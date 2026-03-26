@@ -18,15 +18,20 @@ const CreatePoll = () => {
   const updateOption = (i, val) => { const o = [...options]; o[i] = val; setOptions(o); };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    if (!question.trim()) return setError("Question is required.");
-    const validOpts = options.filter(o => o.trim());
-    if (validOpts.length < 2) return setError("At least 2 options are required.");
-    if (!expiresAt) return setError("Expiry date is required.");
-    const res = await dispatch(createPoll({ question: question.trim(), options: validOpts, expiresAt }));
-    if (res.type.endsWith("fulfilled")) navigate("/admin/poll/list");
-  };
+  e.preventDefault();
+  setError("");
+  if (!question.trim()) return setError("Question is required.");
+  const validOpts = options.filter(o => o.trim());
+  if (validOpts.length < 2) return setError("At least 2 options are required.");
+  if (!expiresAt) return setError("Expiry date is required.");
+
+  const res = await dispatch(createPoll({
+    question: question.trim(),
+    options: validOpts,
+    expiresAt: new Date(expiresAt).toISOString(), // ← fix: convert to ISO
+  }));
+  if (res.type.endsWith("fulfilled")) navigate("/admin/poll/list");
+};
 
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   const minDate  = tomorrow.toISOString().split("T")[0];

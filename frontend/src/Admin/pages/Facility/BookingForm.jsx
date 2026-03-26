@@ -9,6 +9,7 @@ import {
   checkAvailability,
   clearBookedSlots,
 } from "../../../store/slices/facilityBookingSlice";
+
 import { fetchFacilities } from "../../../store/slices/facilitySlice";
 
 // Time slots available for booking

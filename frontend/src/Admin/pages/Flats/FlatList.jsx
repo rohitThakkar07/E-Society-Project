@@ -17,6 +17,7 @@ const FlatList = () => {
   useEffect(() => { dispatch(fetchFlats()); dispatch(fetchFlatSummary()); }, [dispatch]);
 
   const filtered = useMemo(() =>
+    
     (flats || []).filter((f) => {
       const matchSearch = f.flatNumber.toLowerCase().includes(search.toLowerCase()) || (f.owner?.name || "").toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "All" || f.status === statusFilter;
