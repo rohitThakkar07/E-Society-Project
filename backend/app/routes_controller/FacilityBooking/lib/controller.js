@@ -4,7 +4,7 @@ const Facility = require("../../../db/models/facilityModel");
 // ── Create Booking — saves a facility snapshot so data survives deletion ─────
 const createBooking = async (req, res) => {
   try {
-    const { facility, resident, bookingDate, startTime, endTime, purpose } = req.body;
+    const { facility, resident, participantModel, bookingDate, startTime, endTime, purpose } = req.body;
 
     if (!facility || !resident || !bookingDate || !startTime || !endTime) {
       return res.status(400).json({
@@ -13,14 +13,11 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Verify facility still exists and is Available
     const facilityDoc = await Facility.findById(facility);
     if (!facilityDoc) {
-      return res.status(404).json({
-        success: false,
-        message: "Selected facility no longer exists.",
-      });
+      return res.status(404).json({ success: false, message: "Selected facility no longer exists." });
     }
+    
     if (facilityDoc.status !== "Available") {
       return res.status(400).json({
         success: false,
@@ -30,7 +27,7 @@ const createBooking = async (req, res) => {
 
     // Conflict check
     const dateStart = new Date(bookingDate); dateStart.setHours(0, 0, 0, 0);
-    const dateEnd   = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
+    const dateEnd = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
 
     const conflict = await FacilityBooking.findOne({
       facility,
@@ -38,8 +35,8 @@ const createBooking = async (req, res) => {
       status: { $nin: ["Cancelled", "Rejected"] },
       $or: [
         { startTime: { $lte: startTime }, endTime: { $gt: startTime } },
-        { startTime: { $lt: endTime },    endTime: { $gte: endTime }  },
-        { startTime: { $gte: startTime }, endTime: { $lte: endTime }  },
+        { startTime: { $lt: endTime }, endTime: { $gte: endTime } },
+        { startTime: { $gte: startTime }, endTime: { $lte: endTime } },
       ],
     });
 
@@ -50,31 +47,27 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Save a snapshot of the facility at booking time
-    // This means even if the facility is deleted later, the booking still has its details
     const booking = await FacilityBooking.create({
       facility,
       resident,
+      participantModel: participantModel || 'Resident', // Supports dynamic ref for Admin/Resident
       bookingDate,
       startTime,
       endTime,
       purpose,
       facilitySnapshot: {
-        name:        facilityDoc.name,
-        location:    facilityDoc.location,
-        openingTime: facilityDoc.openingTime,
-        closingTime: facilityDoc.closingTime,
+        name: facilityDoc.name,
+        location: facilityDoc.location,
       },
     });
 
-    const populated = await booking.populate(["facility", "resident"]);
+    // Populate simply without reaching into non-existent profileId
+    const populated = await booking.populate([
+      { path: "facility", select: "name status" },
+      { path: "resident", select: "firstName lastName name flatNumber email" }
+    ]);
 
-    res.status(201).json({
-      success: true,
-      message: "Facility booked successfully",
-      data: populated,
-    });
-
+    res.status(201).json({ success: true, message: "Facility booked successfully", data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -102,7 +95,7 @@ const checkAvailability = async (req, res) => {
     }
 
     const dateStart = new Date(bookingDate); dateStart.setHours(0, 0, 0, 0);
-    const dateEnd   = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
+    const dateEnd = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
 
     const bookedSlots = await FacilityBooking.find({
       facility: facilityId,
@@ -120,35 +113,33 @@ const checkAvailability = async (req, res) => {
 // ── Get All Bookings ──────────────────────────────────────────────────────────
 const getAllBookings = async (req, res) => {
   try {
-    // populate("facility") returns null for deleted facilities — handled in frontend
     const bookings = await FacilityBooking.find()
-  .populate("facility", "name location status openingTime closingTime")
-  .populate({
-    path: "resident",
-    select: "name profileId",
-    populate: {
-      path: "profileId",
-      model: "Resident",
-      select: "firstName lastName flatNumber"
-    }
-  })
-  .sort({ createdAt: -1 });
+      .populate("facility", "name location status")
+      // ✅ FIX: Populate the 'resident' path directly. 
+      // Mongoose handles the dynamic ref (Resident vs User) automatically.
+      .populate({
+        path: "resident",
+        select: "firstName lastName name flatNumber email wing"
+      })
+      .sort({ bookingDate: -1 });
 
     res.json({ success: true, data: bookings });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // ── Get Booking by ID ─────────────────────────────────────────────────────────
 const getBookingById = async (req, res) => {
   try {
     const booking = await FacilityBooking.findById(req.params.id)
-      .populate("facility", "name location openingTime closingTime status")
-      .populate("resident", "flatNumber name");
+      .populate("facility", "name description status location") 
+      .populate({
+        path: "resident",
+        select: "firstName lastName name flatNumber wing mobileNumber email"
+      })
+      .populate("approvedBy", "name email");
 
-    if (!booking)
-      return res.status(404).json({ success: false, message: "Booking not found" });
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
 
     res.json({ success: true, data: booking });
   } catch (error) {
@@ -161,12 +152,13 @@ const updateBooking = async (req, res) => {
   try {
     const allowedUpdates = {
       bookingDate: req.body.bookingDate,
-      startTime:   req.body.startTime,
-      endTime:     req.body.endTime,
-      purpose:     req.body.purpose,
-      status:      req.body.status,
-      approvedBy:  req.body.approvedBy,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+      purpose: req.body.purpose,
+      status: req.body.status,
+      approvedBy: req.body.approvedBy,
     };
+    
     Object.keys(allowedUpdates).forEach(
       (k) => allowedUpdates[k] === undefined && delete allowedUpdates[k]
     );
@@ -176,11 +168,10 @@ const updateBooking = async (req, res) => {
       allowedUpdates,
       { new: true, runValidators: true }
     )
-      .populate("facility", "name location status")
-      .populate("resident", "flatNumber name");
+    .populate("facility", "name location status")
+    .populate("resident", "firstName lastName name flatNumber"); // ✅ Standardized population
 
-    if (!booking)
-      return res.status(404).json({ success: false, message: "Booking not found" });
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
 
     res.json({ success: true, message: "Booking updated", data: booking });
   } catch (error) {
