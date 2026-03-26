@@ -8,13 +8,19 @@ const STATUS_STYLE = { Active: "bg-green-100 text-green-700", Inactive: "bg-red-
 const StaffList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { list: staff, loading, summary, summaryLoading } = useSelector((s) => s.staff) ?? {};
+  // const { list: staff, loading, summary, summaryLoading } = useSelector((s) => s.staff) ?? {};
+  const staff = useSelector((s) => s.staff.list ?? []);
+  const loading = useSelector((s) => s.staff.loading);
+  const summary = useSelector((s) => s.staff.summary);
+  const summaryLoading = useSelector((s) => s.staff.summaryLoading);
+
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => { dispatch(fetchStaff()); dispatch(fetchStaffSummary()); }, [dispatch]);
 
+  console.log(staff);
   const filtered = useMemo(() =>
     (staff || []).filter((s) => {
       const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.phone.includes(search);
