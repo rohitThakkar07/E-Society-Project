@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchDashboardSummary, fetchMaintenanceList } from "../../../../store/slices/maintenanceSlice";
+import { fetchMaintenanceList ,fetchDashboardSummary} from "../../../../store/slices/maintainenceSlice";
+
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   CartesianGrid, ResponsiveContainer,
@@ -12,17 +13,16 @@ const MaintenanceDashboard = () => {
   const dispatch = useDispatch();
 
   const { summary, summaryLoading, list } = useSelector((s) => s.maintenance);
-
-  console.log(list);
-  useEffect(() => {
-    dispatch(fetchDashboardSummary());
-    dispatch(fetchMaintenanceList());
-  }, [dispatch]);
+  
+ useEffect(() => {
+  dispatch(fetchDashboardSummary());
+  dispatch(fetchMaintenanceList());
+}, [dispatch]);
 
   // Recent 5 payments from list (Paid ones, sorted newest first)
-  const recentPayments = list
-    .filter((r) => r.status === "Paid")
-    .slice(0, 5);
+  const recentPayments = (list || [])
+  .filter((r) => r.status === "Paid")
+  .slice(0, 5);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">

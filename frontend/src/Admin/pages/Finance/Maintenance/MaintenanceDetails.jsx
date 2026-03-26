@@ -6,10 +6,10 @@ import {
   markAsPaid,
   addPayment,
   clearSingleRecord,
-} from "../../../../store/slices/maintenanceSlice";
+} from "../../../../store/slices/maintainenceSlice";
 
 const STATUS_STYLE = {
-  Paid:    "bg-green-100 text-green-700",
+  Paid: "bg-green-100 text-green-700",
   Pending: "bg-yellow-100 text-yellow-700",
   Overdue: "bg-red-100 text-red-600",
 };
@@ -22,7 +22,7 @@ const Field = ({ label, children }) => (
 );
 
 const MaintenanceDetails = () => {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -30,9 +30,9 @@ const MaintenanceDetails = () => {
 
   // Payment modal state
   const [showPayModal, setShowPayModal] = useState(false);
-  const [payAmount,    setPayAmount]    = useState("");
-  const [payMode,      setPayMode]      = useState("Cash");
-  const [payTxn,       setPayTxn]       = useState("");
+  const [payAmount, setPayAmount] = useState("");
+  const [payMode, setPayMode] = useState("Cash");
+  const [payTxn, setPayTxn] = useState("");
 
   useEffect(() => {
     if (id) dispatch(fetchMaintenanceById(id));
@@ -59,17 +59,22 @@ const MaintenanceDetails = () => {
     );
   }
 
-  const totalDue  = maintenance.amount + (maintenance.lateFee || 0);
+  const totalDue = maintenance.amount + (maintenance.lateFee || 0);
   const totalPaid = (maintenance.paymentHistory || []).reduce((s, p) => s + p.amount, 0);
   const remaining = Math.max(0, totalDue - totalPaid);
 
   const handleMarkPaid = () => {
-    dispatch(markAsPaid({ id, data: { mode: "Cash" } }));
+dispatch(markAsPaid({ id, notes: "Manual payment" }));
   };
-
+  
   const handleAddPayment = () => {
     if (!payAmount || Number(payAmount) <= 0) return;
-    dispatch(addPayment({ id, data: { amount: Number(payAmount), mode: payMode, transactionId: payTxn } }));
+    dispatch(addPayment({
+      id,
+      amount: Number(payAmount),
+      mode: payMode,
+      transactionId: payTxn
+    }));
     setShowPayModal(false);
     setPayAmount(""); setPayMode("Cash"); setPayTxn("");
   };
@@ -111,8 +116,8 @@ const MaintenanceDetails = () => {
             <Field label="Due Date">
               {maintenance.dueDate
                 ? new Date(maintenance.dueDate).toLocaleDateString("en-IN", {
-                    day: "2-digit", month: "long", year: "numeric",
-                  })
+                  day: "2-digit", month: "long", year: "numeric",
+                })
                 : "—"}
             </Field>
 
