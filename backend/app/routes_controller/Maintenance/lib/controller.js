@@ -33,6 +33,63 @@ const createMaintenance = async (req, res) => {
   }
 };
 
+const getMyMaintenance  = async (req, res) => {
+  console.log(req.user)
+   try {
+    const data = await Maintenance.find({
+      resident: req.user.profileId,
+    }).populate("resident", "flatNumber name");
+
+    res.json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+const getDashboardSummary = async (req, res) => {
+  try {
+    const all = await Maintenance.find();
+
+    const paid    = all.filter(r => r.status === "Paid");
+    const pending = all.filter(r => r.status === "Pending");
+    const overdue = all.filter(r => r.status === "Overdue");
+
+    // Monthly breakdown for chart
+    const monthlyMap = {};
+    all.forEach(r => {
+      const key = `${r.month}-${r.year}`;
+      if (!monthlyMap[key]) {
+        monthlyMap[key] = { month: `${r.month} ${r.year}`, collected: 0, pending: 0 };
+      }
+      if (r.status === "Paid") {
+        monthlyMap[key].collected += r.amount + (r.lateFee || 0);
+      } else {
+        monthlyMap[key].pending += r.amount;
+      }
+    });
+
+    const summary = {
+      total:          all.length,
+      paid:           paid.length,
+      pending:        pending.length,
+      overdue:        overdue.length,
+      totalCollected: paid.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0),
+      totalPending:   pending.reduce((sum, r) => sum + r.amount, 0),
+      totalOverdue:   overdue.reduce((sum, r) => sum + r.amount, 0),
+      monthlyData:    Object.values(monthlyMap),
+    };
+
+    res.json({ success: true, data: summary });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 // ── GET ALL ───────────────────────────────────────────────────────────────────
 const getAllMaintenance = async (req, res) => {
   try {
@@ -91,7 +148,7 @@ const updateMaintenance = async (req, res) => {
 const addPayment = async (req, res) => {
   try {
     const { amount, mode, transactionId } = req.body;
-
+    console.log(req.body)
     if (!amount || !mode)
       return res.status(400).json({ success: false, message: "amount and mode are required." });
 
@@ -169,50 +226,10 @@ const deleteMaintenance = async (req, res) => {
   }
 };
 
-// ── DASHBOARD SUMMARY ─────────────────────────────────────────────────────────
-const getDashboardSummary = async (req, res) => {
-  try {
-    const { month, year } = req.query;
-    const filter = {};
-    if (month) filter.month = month;
-    if (year)  filter.year  = Number(year);
-
-    const all = await Maintenance.find(filter);
-
-    const totalCollection = all.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0);
-    const paidRecords     = all.filter((r) => r.status === "Paid");
-    const paidAmount      = paidRecords.reduce((sum, r) => sum + r.amount + (r.lateFee || 0), 0);
-    const pendingAmount   = totalCollection - paidAmount;
-
-    // Monthly trend (last 6 months)
-    const monthlyTrend = await Maintenance.aggregate([
-      { $match: { status: "Paid" } },
-      { $group: { _id: { month: "$month", year: "$year" }, total: { $sum: { $add: ["$amount", "$lateFee"] } } } },
-      { $sort: { "_id.year": 1, "_id.month": 1 } },
-      { $limit: 6 },
-      { $project: { _id: 0, month: "$_id.month", year: "$_id.year", amount: "$total" } },
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        totalCollection,
-        paidAmount,
-        pendingAmount,
-        totalRecords:  all.length,
-        paidCount:     paidRecords.length,
-        pendingCount:  all.filter((r) => r.status === "Pending").length,
-        overdueCount:  all.filter((r) => r.status === "Overdue").length,
-        monthlyTrend,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
 
 module.exports = {
   createMaintenance,
+  getMyMaintenance,
   getAllMaintenance,
   getMaintenanceById,
   updateMaintenance,
