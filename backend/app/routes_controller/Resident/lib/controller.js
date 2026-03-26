@@ -86,8 +86,9 @@ exports.createResident = async (req, res) => {
       role: "resident",
       profileId: resident._id,
     });
-
+    
     // send mail but don't break API if it fails
+    console.log(residentName)
     try {
       await sendResidentWelcomeEmail(email, residentName, password);
     } catch (mailError) {
@@ -139,6 +140,7 @@ exports.getAllResidents = async (req, res) => {
  * GET RESIDENT BY ID
  */
 exports.getResidentById = async (req, res) => {
+  console.log("controller resident get by id");
   try {
 
     const resident = await Resident.findById(req.params.id);
