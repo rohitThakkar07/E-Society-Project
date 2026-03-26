@@ -1,91 +1,61 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMaintenanceById } from "../../../../store/slices/maintenanceSlice";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const InvoiceGenerator = () => {
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const { singleRecord: data, loading } = useSelector((s) => s.maintenance);
 
-  // Dummy Invoice Data (Later fetch from backend)
-  const invoiceData = {
-    societyName: "Green Valley Society",
-    address: "Ahmedabad, Gujarat",
-    invoiceNo: "INV-2026-03-001",
-    date: "01-03-2026",
-    resident: "Flat A-101",
-    ownerName: "Rohit Sharma",
-    month: "March 2026",
-    maintenanceAmount: 2000,
-    lateFee: 100,
-  };
+  useEffect(() => {
+    if (id) dispatch(fetchMaintenanceById(id));
+  }, [id, dispatch]);
 
   const generatePDF = () => {
+    if (!data) return;
     const doc = new jsPDF();
+    const total = data.amount + (data.lateFee || 0);
 
-    // Title
-    doc.setFontSize(18);
-    doc.text(invoiceData.societyName, 14, 20);
+    doc.setFontSize(18).text("E-SOCIETY MANAGEMENT", 14, 20);
+    doc.setFontSize(10).text("Maintenance Invoice", 14, 30);
+    doc.text(`Invoice Date: ${new Date().toLocaleDateString()}`, 140, 20);
+    doc.text(`Status: ${data.status}`, 140, 26);
 
-    doc.setFontSize(10);
-    doc.text(invoiceData.address, 14, 26);
+    doc.setFontSize(11).text("Billed To:", 14, 45);
+    doc.text(`Name: ${data.resident?.firstName} ${data.resident?.lastName}`, 14, 52);
+    doc.text(`Flat: ${data.resident?.wing}-${data.resident?.flatNumber}`, 14, 58);
+    doc.text(`Period: ${data.month} ${data.year}`, 14, 64);
 
-    doc.setFontSize(14);
-    doc.text("Maintenance Invoice", 14, 40);
-
-    // Invoice Details
-    doc.setFontSize(10);
-    doc.text(`Invoice No: ${invoiceData.invoiceNo}`, 140, 20);
-    doc.text(`Date: ${invoiceData.date}`, 140, 26);
-
-    doc.text(`Resident: ${invoiceData.resident}`, 14, 50);
-    doc.text(`Owner Name: ${invoiceData.ownerName}`, 14, 56);
-    doc.text(`Month: ${invoiceData.month}`, 14, 62);
-
-    const total =
-      invoiceData.maintenanceAmount + invoiceData.lateFee;
-
-    // Table
     autoTable(doc, {
       startY: 75,
-      head: [["Description", "Amount (₹)"]],
+      head: [["Description", "Amount"]],
       body: [
-        ["Maintenance Charge", invoiceData.maintenanceAmount],
-        ["Late Fee", invoiceData.lateFee],
-        ["Total", total],
+        ["Monthly Maintenance Charge", `INR ${data.amount}`],
+        ["Late Fee / Penalties", `INR ${data.lateFee || 0}`],
+        ["Total Payable", `INR ${total}`],
       ],
+      theme: 'striped'
     });
 
-    doc.save(`Invoice_${invoiceData.invoiceNo}.pdf`);
+    doc.save(`Invoice_${data.month}_${data.resident?.flatNumber}.pdf`);
   };
 
+  if (loading) return <div className="p-10 text-center">Loading Invoice Data...</div>;
+  if (!data) return <div className="p-10 text-center text-red-500">Invoice not found.</div>;
+
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-
-      <div className="bg-white rounded-xl shadow p-6 max-w-3xl mx-auto">
-
-        <h1 className="text-2xl font-bold mb-4">
-          Invoice Generator
-        </h1>
-
-        <div className="space-y-2 text-gray-700">
-          <p><strong>Society:</strong> {invoiceData.societyName}</p>
-          <p><strong>Resident:</strong> {invoiceData.resident}</p>
-          <p><strong>Owner:</strong> {invoiceData.ownerName}</p>
-          <p><strong>Month:</strong> {invoiceData.month}</p>
-          <p>
-            <strong>Total Amount:</strong> ₹
-            {(
-              invoiceData.maintenanceAmount +
-              invoiceData.lateFee
-            ).toLocaleString()}
-          </p>
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border max-w-xl w-full">
+        <h2 className="text-xl font-bold mb-4">Invoice for {data.month} {data.year}</h2>
+        <div className="text-sm space-y-2 border-b pb-4 mb-4">
+           <p><strong>Resident:</strong> {data.resident?.firstName} {data.resident?.lastName}</p>
+           <p><strong>Flat:</strong> {data.resident?.wing}-{data.resident?.flatNumber}</p>
+           <p><strong>Amount:</strong> ₹{data.amount + data.lateFee}</p>
         </div>
-
-        <button
-          onClick={generatePDF}
-          className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Download Invoice PDF
-        </button>
-
+        <button onClick={generatePDF} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Download Invoice PDF</button>
       </div>
     </div>
   );

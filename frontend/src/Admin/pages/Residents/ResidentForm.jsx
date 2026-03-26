@@ -1,13 +1,9 @@
-// components/ResidentForm.jsx (Updated for Minimal Slice)
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchResidentById,
-  createResident,
-  updateResident,
-} from "../../../store/slices/residentSlice";
+import { fetchResidentById, createResident, updateResident } from "../../../store/slices/residentSlice";
+import { fetchFlats } from "../../../store/slices/flatSlice"; // Import flat fetcher
 
 const ResidentForm = () => {
   const { id } = useParams();
@@ -15,389 +11,103 @@ const ResidentForm = () => {
   const dispatch = useDispatch();
   const isEditMode = Boolean(id);
 
-  // Redux state
   const { singleResident, loading } = useSelector((state) => state.resident);
+  const { list: flats } = useSelector((state) => state.flat); // Get flats from store
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: { status: "Active", residentType: "Owner", flatType: "1BHK" },
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+    defaultValues: { status: "Active", residentType: "Owner" },
   });
 
-  // Fetch resident data if editing
   useEffect(() => {
-    if (isEditMode) {
-      dispatch(fetchResidentById(id));
-    }
+    dispatch(fetchFlats()); // Fetch flats to populate dropdown
+    if (isEditMode) dispatch(fetchResidentById(id));
   }, [id, isEditMode, dispatch]);
 
-  // Populate form when singleResident is fetched
   useEffect(() => {
-    if (singleResident) {
-      const formData = {
+    if (singleResident && isEditMode) {
+      reset({
         ...singleResident,
-        dateOfBirth: singleResident.dateOfBirth
-          ? singleResident.dateOfBirth.split("T")[0]
-          : "",
-        moveInDate: singleResident.moveInDate
-          ? singleResident.moveInDate.split("T")[0]
-          : "",
-      };
-      reset(formData);
+        flat: singleResident.flat?._id || singleResident.flat,
+        dateOfBirth: singleResident.dateOfBirth?.split("T")[0] || "",
+        moveInDate: singleResident.moveInDate?.split("T")[0] || "",
+      });
     }
-  }, [singleResident, reset]);
+  }, [singleResident, isEditMode, reset]);
 
-  // Handle form submission
   const onSubmit = async (data) => {
-    const formattedData = {
-      ...data,
-      floorNumber: parseInt(data.floorNumber || 0, 10),
-    };
+  // 1. Find the full flat object from the list using the selected ID
+  const selectedFlat = flats.find((f) => f._id === data.flat);
 
-    if (isEditMode) {
-      const result = await dispatch(updateResident({ id, formData: formattedData }));
-      if (result.type.endsWith('fulfilled')) {
-        setTimeout(() => navigate("/admin/residents"), 1500);
-      }
-    } else {
-      const result = await dispatch(createResident(formattedData));
-      if (result.type.endsWith('fulfilled')) {
-        setTimeout(() => navigate("/admin/residents"), 1500);
-      }
-    }
+  if (!selectedFlat) {
+    alert("Please select a valid flat");
+    return;
+  }
+
+  // 2. Prepare the payload exactly as the backend validation expects
+  const formattedData = {
+    ...data,
+    // Add these fields explicitly so express-validator doesn't fail
+    wing: selectedFlat.wing || selectedFlat.block, // Fallback if you use block/wing interchangeably
+    flatNumber: selectedFlat.flatNumber,
+    floorNumber: Number(selectedFlat.floor),
+    flatType: selectedFlat.type,
+    
+    // Ensure numbers are numbers
+    mobileNumber: data.mobileNumber.toString(),
   };
 
-  if (loading && isEditMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading resident data...</p>
-        </div>
-      </div>
-    );
+  if (isEditMode) {
+    const result = await dispatch(updateResident({ id, formData: formattedData }));
+    if (result.type.endsWith('fulfilled')) navigate("/admin/residents");
+  } else {
+    const result = await dispatch(createResident(formattedData));
+    if (result.type.endsWith('fulfilled')) navigate("/admin/residents");
   }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
       <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8">
-        <div className="mb-8 border-b pb-4">
-          <h2 className="text-3xl font-extrabold text-gray-800">
-            {isEditMode ? "Edit Resident" : "Add New Resident"}
-          </h2>
-          <p className="text-gray-500 mt-1">
-            {isEditMode
-              ? "Update resident information in the system."
-              : "Register a new resident into the society."}
-          </p>
-        </div>
+        <h2 className="text-2xl font-bold mb-6">{isEditMode ? "Edit" : "Add"} Resident</h2>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Names */}
+          <Input label="First Name *" name="firstName" reg={register} req="Required" err={errors.firstName} />
+          <Input label="Last Name" name="lastName" reg={register} />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* --- Personal Details --- */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Personal Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register("firstName", {
-                    required: "First name is required",
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="e.g. Rahul"
-                />
-                {errors.firstName && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.firstName.message}
-                  </p>
-                )}
-              </div>
+          {/* Identity */}
+          <Select label="Gender *" name="gender" reg={register} req="Required" err={errors.gender} options={["Male", "Female"]} />
+          <Input label="DOB" name="dateOfBirth" type="date" reg={register} />
 
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Last Name
-                </label>
-                <input
-                  {...register("lastName")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="e.g. Sharma"
-                />
-              </div>
+          {/* Contact */}
+          <Input label="Mobile *" name="mobileNumber" reg={register} req="10 digits required" pattern={/^[0-9]{10}$/} err={errors.mobileNumber} />
+          <Input label="Email" name="email" type="email" reg={register} />
 
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Gender <span className="text-red-500">*</span>
-                </label>
-                <select
-                  {...register("gender", {
-                    required: "Gender is required",
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 bg-white outline-none transition"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.gender && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.gender.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  {...register("dateOfBirth")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* --- Contact Information --- */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Contact Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Mobile Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  {...register("mobileNumber", {
-                    required: "Mobile number is required",
-                    pattern: {
-                      value: /^[0-9]{10}$/,
-                      message: "Must be exactly 10 digits",
-                    },
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="10-digit number"
-                />
-                {errors.mobileNumber && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.mobileNumber.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  {...register("email")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="e.g. rahul@example.com"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* --- Flat Details --- */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Flat Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Wing <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register("wing", { required: "Wing is required" })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="e.g. A"
-                />
-                {errors.wing && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.wing.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Flat No. <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  {...register("flatNumber", {
-                    required: "Flat number is required",
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="e.g. 203"
-                />
-                {errors.flatNumber && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.flatNumber.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Flat Type
-                </label>
-                <select
-                  {...register("flatType")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="1BHK">1BHK</option>
-                  <option value="2BHK">2BHK</option>
-                  <option value="3BHK">3BHK</option>
-                  <option value="4BHK">4BHK</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Floor Number
-                </label>
-                <input
-                  type="number"
-                  {...register("floorNumber")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="e.g. 9"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Move In Date
-                </label>
-                <input
-                  type="date"
-                  {...register("moveInDate")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Resident Type
-                </label>
-                <select
-                  {...register("residentType")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="Owner">Owner</option>
-                  <option value="Tenant">Tenant</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* --- Emergency Contact & Security --- */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Emergency Contact & Security
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Contact Name
-                </label>
-                <input
-                  {...register("emergencyContactName")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="Name of relative"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Contact Number
-                </label>
-                <input
-                  type="tel"
-                  {...register("emergencyContactNumber")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder="Relative's 10-digit number"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Password {!isEditMode && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="password"
-                  {...register("password", {
-                    required: isEditMode ? false : "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters",
-                    },
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  placeholder={
-                    isEditMode
-                      ? "Leave empty to keep current password"
-                      : "Enter Password"
-                  }
-                />
-                {errors.password && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <select
-                  {...register("status")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* --- Submit Buttons --- */}
-          <div className="pt-6 border-t flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-8 py-3 rounded-lg text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-all"
+          {/* IMPORTANT: Flat Selection */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">Assign Flat *</label>
+            <select 
+              {...register("flat", { required: "Assigning a flat is required" })}
+              className="mt-1 border border-gray-300 rounded-lg p-2.5 bg-white"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all shadow-md 
-                ${
-                  loading
-                    ? "bg-indigo-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg"
-                }`}
-            >
-              {loading
-                ? "Saving Resident..."
-                : isEditMode
-                ? "Update Resident"
-                : "Save Resident"}
+              <option value="">Select a Flat</option>
+              {flats.map(f => (
+                <option key={f._id} value={f._id}>{f.wing}-{f.flatNumber} ({f.type})</option>
+              ))}
+            </select>
+            {errors.flat && <span className="text-red-500 text-xs">{errors.flat.message}</span>}
+          </div>
+
+          <Select label="Resident Type *" name="residentType" reg={register} options={["Owner", "Tenant"]} />
+          <Input label="Move In Date" name="moveInDate" type="date" reg={register} />
+          <Select label="Status" name="status" reg={register} options={["Active", "Inactive"]} />
+
+          {!isEditMode && <Input label="Password *" name="password" type="password" reg={register} req="Min 6 chars" minL={6} err={errors.password} />}
+
+          <div className="md:col-span-2 flex justify-end gap-4 mt-4">
+            <button type="button" onClick={() => navigate(-1)} className="px-6 py-2 bg-gray-100 rounded-lg">Cancel</button>
+            <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 text-white rounded-lg">
+              {loading ? "Saving..." : "Save Resident"}
             </button>
           </div>
         </form>
@@ -405,5 +115,24 @@ const ResidentForm = () => {
     </div>
   );
 };
+
+// Helper Mini-Components
+const Input = ({ label, name, type="text", reg, req=false, err, pattern, minL }) => (
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700">{label}</label>
+    <input type={type} {...reg(name, { required: req, pattern, minLength: minL })} className={`mt-1 border rounded-lg p-2.5 ${err ? 'border-red-500' : 'border-gray-300'}`} />
+    {err && <span className="text-red-500 text-xs">{err.message}</span>}
+  </div>
+);
+
+const Select = ({ label, name, reg, options, req=false, err }) => (
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700">{label}</label>
+    <select {...reg(name, { required: req })} className="mt-1 border border-gray-300 rounded-lg p-2.5 bg-white">
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+    {err && <span className="text-red-500 text-xs">{err.message}</span>}
+  </div>
+);
 
 export default ResidentForm;

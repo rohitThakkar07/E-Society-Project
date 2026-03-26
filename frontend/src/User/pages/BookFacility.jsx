@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Building2, Calendar, Clock, Plus, X, CheckCircle, Users, Star } from "lucide-react";
 import { fetchFacilities } from "../../store/slices/facilitySlice";
-// ✅ UPDATED IMPORTS to match your new slice names
 import { 
   fetchBookings, 
   createBooking, 
@@ -12,12 +11,14 @@ import {
 const BookFacility = () => {
   const dispatch = useDispatch();
   
-  // ✅ UPDATE SELECTORS: Ensure these keys match your store.js (usually 'facility' and 'facilityBooking')
-  const { facilities, loading: facilityLoading } = useSelector((s) => s.facility);
-  const { bookings, loading: bookingLoading } = useSelector((s) => s.facilityBooking);
+  // ✅ FIX 1: Robust selectors with fallback to prevent 'undefined' errors
+  // Check your store.js - if the slice is named 'booking', use s.booking
+  const { facilities = [], loading: facilityLoading } = useSelector((s) => s.facility || {});
+  const { bookings = [], loading: bookingLoading } = useSelector((s) => s.booking || s.facilityBooking || {});
   
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const profileId = user?.profileId;
+  // Use the ID field that matches your backend (usually _id)
+  const profileId = user?._id || user?.profileId;
 
   const [selected, setSelected] = useState(null);
   const [bookingForm, setBookingForm] = useState({ date: "", timeSlot: "", purpose: "" });
@@ -25,29 +26,49 @@ const BookFacility = () => {
 
   useEffect(() => {
     dispatch(fetchFacilities());
-    // ✅ Updated to new function name
     dispatch(fetchBookings());
   }, [dispatch]);
 
-  // Logic to filter user's specific bookings
-  const myBookings = (bookings || []).filter(b => b.residentId === profileId || b.resident?._id === profileId);
+  // ✅ FIX 2: Filter logic to ensure we only see our own bookings
+  const myBookings = Array.isArray(bookings) 
+    ? bookings.filter(b => {
+        const residentId = b.resident?._id || b.resident;
+        return residentId === profileId;
+      })
+    : [];
 
   const handleBook = async (e) => {
     e.preventDefault();
-    // ✅ Updated to new function name
-    await dispatch(createBooking({ facilityId: selected._id, ...bookingForm }));
-    setSelected(null);
-    setBookingForm({ date: "", timeSlot: "", purpose: "" });
-    setActiveTab("bookings");
+    
+    // Construct payload to match Mongoose Schema
+    const payload = {
+      facility: selected._id,
+      bookingDate: bookingForm.date,
+      startTime: bookingForm.timeSlot.split(" - ")[0],
+      endTime: bookingForm.timeSlot.split(" - ")[1],
+      purpose: bookingForm.purpose,
+      resident: profileId,
+      participantModel: "Resident" // Explicitly tell backend this is a Resident booking
+    };
+
+    const res = await dispatch(createBooking(payload));
+    
+    // ✅ FIX 3: Re-fetch bookings immediately after a successful creation
+    if (res.type.endsWith("fulfilled")) {
+      await dispatch(fetchBookings()); // <--- This calls the API to refresh the list
+      setSelected(null);
+      setBookingForm({ date: "", timeSlot: "", purpose: "" });
+      setActiveTab("bookings");
+    }
   };
 
   const facilityIcons = { "Swimming Pool": "🏊", "Gym": "💪", "Clubhouse": "🏛️", "Tennis Court": "🎾", "Garden": "🌿", "Parking": "🅿️" };
 
   const statusColors = {
     Pending:   "bg-amber-100 text-amber-700",
-    Confirmed: "bg-emerald-100 text-emerald-700",
-    Cancelled: "bg-red-100 text-red-600",
-    Completed: "bg-slate-100 text-slate-500",
+    Approved:  "bg-emerald-100 text-emerald-700", 
+    Rejected:  "bg-red-100 text-red-600",
+    Cancelled: "bg-gray-100 text-gray-500",
   };
 
   const timeSlots = ["06:00 - 08:00", "08:00 - 10:00", "10:00 - 12:00", "12:00 - 14:00",
@@ -58,7 +79,6 @@ const BookFacility = () => {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
       <div className="max-w-5xl mx-auto">
-        {/* HEADER */}
         <div className="flex items-center gap-2 mb-8">
           <Building2 size={20} className="text-blue-500" />
           <div>
@@ -67,7 +87,6 @@ const BookFacility = () => {
           </div>
         </div>
 
-        {/* TABS */}
         <div className="bg-white border border-slate-200 rounded-2xl flex p-1 mb-8 w-fit">
           {[["facilities", "Browse Facilities"], ["bookings", "My Bookings"]].map(([v, l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
@@ -77,7 +96,6 @@ const BookFacility = () => {
           ))}
         </div>
 
-        {/* FACILITIES GRID */}
         {activeTab === "facilities" && (
           facilityLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -85,7 +103,7 @@ const BookFacility = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(facilities || []).map(f => (
+              {facilities.map(f => (
                 <div key={f._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition group">
                   <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 text-center text-4xl">
                     {facilityIcons[f.name] || "🏢"}
@@ -95,17 +113,16 @@ const BookFacility = () => {
                     <p className="text-sm text-slate-400 mb-3 line-clamp-2">{f.description}</p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 text-xs text-slate-400">
-                        {f.capacity && <span className="flex items-center gap-1"><Users size={11} />{f.capacity} max</span>}
-                        {f.rating && <span className="flex items-center gap-1"><Star size={11} className="text-amber-400 fill-amber-400" />{f.rating}</span>}
+                        <span className={`px-2 py-0.5 rounded uppercase font-bold text-[10px] ${f.status === 'Available' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{f.status}</span>
                       </div>
                       <button onClick={() => setSelected(f)}
                         className={`text-sm font-semibold px-4 py-2 rounded-xl transition ${
-                          f.available === false
+                          f.status !== "Available"
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                             : "bg-slate-900 text-white hover:bg-slate-700"
                         }`}
-                        disabled={f.available === false}>
-                        {f.available === false ? "Unavailable" : "Book"}
+                        disabled={f.status !== "Available"}>
+                        {f.status !== "Available" ? "Unavailable" : "Book"}
                       </button>
                     </div>
                   </div>
@@ -115,7 +132,6 @@ const BookFacility = () => {
           )
         )}
 
-        {/* MY BOOKINGS */}
         {activeTab === "bookings" && (
           <div>
             {bookingLoading ? (
@@ -131,19 +147,22 @@ const BookFacility = () => {
                       <div>
                         <p className="font-semibold text-slate-800">{b.facility?.name || "Facility"}</p>
                         <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 flex-wrap">
-                          <span className="flex items-center gap-1"><Calendar size={11} />{new Date(b.date).toLocaleDateString("en-IN")}</span>
-                          {b.timeSlot && <span className="flex items-center gap-1"><Clock size={11} />{b.timeSlot}</span>}
+                          <span className="flex items-center gap-1"><Calendar size={11} />{new Date(b.bookingDate).toLocaleDateString("en-IN")}</span>
+                          <span className="flex items-center gap-1"><Clock size={11} />{b.startTime} - {b.endTime}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${statusColors[b.status] || statusColors.Pending}`}>{b.status}</span>
-                      {b.status === "Pending" || b.status === "Confirmed" ? (
-                        <button onClick={() => dispatch(cancelBooking(b._id))}
+                      <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg ${statusColors[b.status] || statusColors.Pending}`}>{b.status}</span>
+                      {b.status === "Pending" && (
+                        <button onClick={async () => {
+                           await dispatch(cancelBooking(b._id));
+                           dispatch(fetchBookings()); // Refresh after cancel
+                        }}
                           className="text-xs text-red-500 hover:text-red-700 font-medium border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition">
                           Cancel
                         </button>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 ))}
@@ -159,7 +178,6 @@ const BookFacility = () => {
         )}
       </div>
 
-      {/* BOOKING MODAL */}
       {selected && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
