@@ -1,10 +1,11 @@
 import EventsCalendar from "../../User/pages/EventsCalander";
 
-const eventRoutes = [
+// Header nav: Community → "Events Calendar" → "/events"
+const EventRoutes = [
   {
     path: "events",
     element: <EventsCalendar />,
-  }
+  },
 ];
 
-export default eventRoutes;
+export default EventRoutes;
