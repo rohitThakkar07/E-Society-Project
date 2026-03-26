@@ -2,15 +2,24 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import API from "../../service/api";
 
-export const fetchPolls = createAsyncThunk("poll/fetchPolls", async (params = {}) => {
-  const q = new URLSearchParams(params).toString();
-  const res = await API.get(`/poll/list${q ? `?${q}` : ""}`);
-  return res.data.data;
+// --- Thunks ---
+export const fetchPolls = createAsyncThunk("poll/fetchPolls", async (params = {}, { rejectWithValue }) => {
+  try {
+    const q = new URLSearchParams(params).toString();
+    const res = await API.get(`/poll/list${q ? `?${q}` : ""}`);
+    return res.data.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || "Failed");
+  }
 });
 
-export const fetchPollById = createAsyncThunk("poll/fetchPollById", async (id) => {
-  const res = await API.get(`/poll/${id}`);
-  return res.data.data;
+export const fetchPollById = createAsyncThunk("poll/fetchPollById", async (id, { rejectWithValue }) => {
+  try {
+    const res = await API.get(`/poll/${id}`);
+    return res.data.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || "Failed");
+  }
 });
 
 export const createPoll = createAsyncThunk("poll/createPoll", async (data, { rejectWithValue }) => {
@@ -19,7 +28,7 @@ export const createPoll = createAsyncThunk("poll/createPoll", async (data, { rej
     toast.success("Poll created!");
     return res.data.data;
   } catch (err) {
-    toast.error(err.response?.data?.message || "Failed");
+    toast.error(err.response?.data?.message || "Failed to create poll");
     return rejectWithValue(err.response?.data?.message);
   }
 });
@@ -35,41 +44,94 @@ export const castVote = createAsyncThunk("poll/castVote", async ({ id, data }, {
   }
 });
 
-export const closePoll = createAsyncThunk("poll/closePoll", async (id) => {
-  const res = await API.put(`/poll/${id}/close`);
-  toast.success("Poll closed.");
-  return res.data.data;
+export const closePoll = createAsyncThunk("poll/closePoll", async (id, { rejectWithValue }) => {
+  try {
+    const res = await API.put(`/poll/${id}/close`);
+    toast.success("Poll closed.");
+    return res.data.data;
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed");
+    return rejectWithValue(err.response?.data?.message);
+  }
 });
 
-export const deletePoll = createAsyncThunk("poll/deletePoll", async (id) => {
-  await API.delete(`/poll/delete/${id}`);
-  toast.success("Poll deleted.");
-  return id;
+export const deletePoll = createAsyncThunk("poll/deletePoll", async (id, { rejectWithValue }) => {
+  try {
+    await API.delete(`/poll/delete/${id}`);
+    toast.success("Poll deleted.");
+    return id;
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed");
+    return rejectWithValue(err.response?.data?.message);
+  }
 });
 
-const initialState = { list: [], singlePoll: null, loading: false, error: null };
-
+// --- Slice ---
 const pollSlice = createSlice({
   name: "poll",
-  initialState,
-  reducers: { clearSinglePoll: (s) => { s.singlePoll = null; } },
+  initialState: {
+    list: [],
+    singlePoll: null,
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    clearSinglePoll: (state) => { state.singlePoll = null; },
+    clearError:      (state) => { state.error = null; },
+  },
   extraReducers: (builder) => {
-    builder.addCase(fetchPolls.fulfilled,    (s, a) => { s.loading = false; s.list = a.payload; });
-    builder.addCase(fetchPollById.fulfilled, (s, a) => { s.loading = false; s.singlePoll = a.payload; });
-    builder.addCase(createPoll.fulfilled,    (s, a) => { s.loading = false; s.list.unshift(a.payload); });
-    builder.addCase(castVote.fulfilled,      (s, a) => { s.loading = false; s.singlePoll = a.payload; const i = s.list.findIndex(x => x._id === a.payload._id); if (i !== -1) s.list[i] = a.payload; });
-    builder.addCase(closePoll.fulfilled,     (s, a) => { s.loading = false; const i = s.list.findIndex(x => x._id === a.payload._id); if (i !== -1) s.list[i] = a.payload; s.singlePoll = a.payload; });
-    builder.addCase(deletePoll.fulfilled,    (s, a) => { s.loading = false; s.list = s.list.filter(x => x._id !== a.payload); });
-    builder.addMatcher(
-      (a) => a.type.startsWith("poll/") && a.type.endsWith("/pending"),
-      (s) => { s.loading = true; s.error = null; }
-    );
-    builder.addMatcher(
-      (a) => a.type.startsWith("poll/") && a.type.endsWith("/rejected"),
-      (s) => { s.loading = false; }
-    );
+    builder
+
+      // ── fetchPolls ────────────────────────────────────────────────────────
+      .addCase(fetchPolls.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(fetchPolls.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(fetchPolls.rejected,  (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // ── fetchPollById ─────────────────────────────────────────────────────
+      .addCase(fetchPollById.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(fetchPollById.fulfilled, (state, action) => { state.loading = false; state.singlePoll = action.payload; })
+      .addCase(fetchPollById.rejected,  (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // ── createPoll ────────────────────────────────────────────────────────
+      .addCase(createPoll.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(createPoll.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list.unshift(action.payload);
+      })
+      .addCase(createPoll.rejected,  (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // ── castVote ──────────────────────────────────────────────────────────
+      .addCase(castVote.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(castVote.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singlePoll = action.payload;
+        const i = state.list.findIndex(p => p._id === action.payload._id);
+        if (i !== -1) state.list[i] = action.payload;
+      })
+      .addCase(castVote.rejected,  (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // ── closePoll ─────────────────────────────────────────────────────────
+      .addCase(closePoll.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(closePoll.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singlePoll = action.payload;
+        const i = state.list.findIndex(p => p._id === action.payload._id);
+        if (i !== -1) state.list[i] = action.payload;
+      })
+      .addCase(closePoll.rejected,  (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // ── deletePoll ────────────────────────────────────────────────────────
+      .addCase(deletePoll.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(deletePoll.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = state.list.filter(p => p._id !== action.payload);
+      })
+      .addCase(deletePoll.rejected,  (state, action) => { state.loading = false; state.error = action.payload; });
   },
 });
 
-export const { clearSinglePoll } = pollSlice.actions;
+export const { clearSinglePoll, clearError } = pollSlice.actions;
 export default pollSlice.reducer;

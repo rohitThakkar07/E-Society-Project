@@ -16,6 +16,7 @@ export const fetchResidentById = createAsyncThunk(
   "resident/fetchResidentById",
   async (id) => {
     const response = await API.get(`/resident/${id}`);
+    console.log(response);
     return response.data.data;
   }
 );

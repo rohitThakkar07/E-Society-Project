@@ -11,7 +11,7 @@ export const login = createAsyncThunk(
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
     }
-    toast.success("Login successful!");
+    // toast.success("Login successful!");
     return response.data;
   }
 );

@@ -4,12 +4,13 @@ import API from "../../service/api";
 
 export const fetchStaffSummary = createAsyncThunk("staff/fetchStaffSummary", async () => {
   const res = await API.get("/staff/dashboard");
+  console.log(res.data)
   return res.data.data;
 });
 
 export const fetchStaff = createAsyncThunk("staff/fetchStaff", async (params = {}) => {
   const q = new URLSearchParams(params).toString();
-  const res = await API.get(`/staff/list${q ? `?${q}` : ""}`);
+  const res = await API.get(`/staff/list${q ? `?${q}` : ""}`); 
   return res.data.data;
 });
 
@@ -74,6 +75,7 @@ const staffSlice = createSlice({
       (a) => a.type.startsWith("staff/") && a.type.endsWith("/rejected") && !a.type.includes("fetchStaffSummary"),
       (s) => { s.loading = false; }
     );
+    
   },
 });
 

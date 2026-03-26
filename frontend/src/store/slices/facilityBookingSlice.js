@@ -72,6 +72,35 @@ export const deleteBooking = createAsyncThunk(
   }
 );
 
+// ✅ cancelBooking — imported in BookFacility.jsx
+export const cancelBooking = createAsyncThunk(
+  "facilityBooking/cancel",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await API.put(`/facilitybooking/cancel/${id}`);
+      toast.success("Booking cancelled!");
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to cancel");
+      return rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+ 
+// export const updateBookingStatus = createAsyncThunk(
+//   "facilityBooking/updateStatus",
+//   async ({ id, status }, { rejectWithValue }) => {
+//     try {
+//       const res = await API.put(`/facilitybooking/update/${id}`, { status });
+//       toast.success(`Booking ${status}!`);
+//       return res.data.data;
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed");
+//       return rejectWithValue(err.response?.data?.message);
+//     }
+//   }
+// );
+ 
 const initialState = {
   bookings: [],
   singleBooking: null,

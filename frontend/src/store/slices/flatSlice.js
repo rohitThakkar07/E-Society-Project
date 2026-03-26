@@ -4,6 +4,7 @@ import API from "../../service/api";
 
 export const fetchFlatSummary = createAsyncThunk("flat/fetchFlatSummary", async () => {
   const res = await API.get("/flat/dashboard");
+  console.log(res.data.data);
   return res.data.data;
 });
 
