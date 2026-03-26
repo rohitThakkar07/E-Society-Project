@@ -124,8 +124,7 @@ const BookingForm = () => {
 
   // Styling helpers
   const inputClass = (hasError) =>
-    `w-full px-4 py-2.5 rounded-lg border text-sm text-gray-800 bg-white transition-all duration-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-      hasError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"
+    `w-full px-4 py-2.5 rounded-lg border text-sm text-gray-800 bg-white transition-all duration-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${hasError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"
     }`;
   const labelClass =
     "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
@@ -200,7 +199,8 @@ const BookingForm = () => {
                 </option>
                 {residents.map((r) => (
                   <option key={r._id} value={r._id}>
-                    {r.name} — {r.flatNumber || r.flat || ""}
+                    {/* ✅ Fix: Use firstName and lastName instead of r.name */}
+                    {r.firstName} {r.lastName} — {r.flatNumber || r.flat?.flatNumber || "No Flat"}
                   </option>
                 ))}
               </select>
@@ -296,11 +296,10 @@ const BookingForm = () => {
                   return (
                     <label
                       key={slot.start}
-                      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${
-                        booked
+                      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${booked
                           ? "bg-red-50 border-red-100 opacity-60 cursor-not-allowed"
                           : "bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"

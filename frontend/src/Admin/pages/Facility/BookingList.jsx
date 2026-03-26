@@ -3,46 +3,39 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBookings } from "../../../store/slices/facilityBookingSlice";
 
-// ── Helpers matched to EXACT API response shape ───────────────────────────────
-// facility  = { _id, name, location, openingTime, closingTime, status }
-// resident  = { _id, flatNumber }   ← no "name" field per console log
+// ── HELPERS ──────────────────────────────────────────────────────────────────
 
 const getFacilityName = (facility) => {
   if (!facility) return "—";
-  if (typeof facility === "object") return facility.name || "—";
-  return String(facility);
+  return typeof facility === "object" ? facility.name : String(facility);
 };
 
-// const getResidentLabel = (resident) => {
-//   if (!resident) return "—";
-//   if (typeof resident === "object") {
-//     // API returns { _id, flatNumber } — use flatNumber as the display label
-//     return resident.flatNumber
-//       || resident.flat
-//       || resident.name
-//       || "—";
-//   }
-//   return String(resident);
-// };
-const getResidentLabel = (resident) => {
-  if (!resident) return "N/A";
+const getResidentData = (resident) => {
+  if (!resident) return { name: "N/A", flat: "N/A" };
 
-  const name = resident?.name || "";
-  const flat = resident?.profileId?.flatNumber || "";
-  if (!name && !flat) return "N/A";
-  return `${name} (${flat})`;
+  // Handle Resident model (firstName/lastName) vs User model (name)
+  const name = resident.firstName 
+    ? `${resident.firstName} ${resident.lastName || ""}` 
+    : resident.name || "Admin";
+
+  const flat = resident.flatNumber || "Office";
+
+  return { name, flat };
 };
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
 const STATUS_STYLE = {
-  Approved:  "bg-green-100 text-green-700",
-  Rejected:  "bg-red-100 text-red-600",
-  Pending:   "bg-yellow-100 text-yellow-700",
+  Approved: "bg-green-100 text-green-700",
+  Rejected: "bg-red-100 text-red-600",
+  Pending: "bg-yellow-100 text-yellow-700",
   Cancelled: "bg-gray-100 text-gray-500",
 };
 
@@ -50,17 +43,17 @@ const BookingList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { bookings, loading } = useSelector((state) => state.booking);
+  const { bookings = [], loading } = useSelector((state) => state.booking);
 
-  const [search,         setSearch]         = useState("");
-  const [statusFilter,   setStatusFilter]   = useState("All");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [facilityFilter, setFacilityFilter] = useState("All");
 
   useEffect(() => {
     dispatch(fetchBookings());
   }, [dispatch]);
 
-  // Facility dropdown built from real API data
+  // Generate unique facility list for the dropdown
   const facilityNames = useMemo(() => [
     ...new Set(
       bookings
@@ -69,14 +62,15 @@ const BookingList = () => {
     ),
   ], [bookings]);
 
-  // Filter — search checks flatNumber since resident has no name field
+  // Filter logic
   const filtered = useMemo(() =>
     bookings.filter((b) => {
-      const residentStr  = getResidentLabel(b.resident).toLowerCase();
+      const { name, flat } = getResidentData(b.resident);
       const facilityName = getFacilityName(b.facility);
 
-      const matchSearch   = residentStr.includes(search.toLowerCase());
-      const matchStatus   = statusFilter   === "All" || b.status === statusFilter;
+      const searchStr = `${name} ${flat}`.toLowerCase();
+      const matchSearch = searchStr.includes(search.toLowerCase());
+      const matchStatus = statusFilter === "All" || b.status === statusFilter;
       const matchFacility = facilityFilter === "All" || facilityName === facilityFilter;
 
       return matchSearch && matchStatus && matchFacility;
@@ -85,7 +79,6 @@ const BookingList = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-
       {/* HEADER */}
       <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
@@ -104,7 +97,7 @@ const BookingList = () => {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
         <input
           type="text"
-          placeholder="Search by flat number..."
+          placeholder="Search name or flat..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border border-gray-200 px-4 py-2 rounded-lg text-sm w-full sm:w-64 outline-none focus:ring-2 focus:ring-blue-500"
@@ -161,82 +154,46 @@ const BookingList = () => {
 
           <tbody className="divide-y divide-gray-50">
             {loading ? (
-              // Skeleton rows
               [...Array(5)].map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  {[...Array(7)].map((_, j) => (
-                    <td key={j} className="px-5 py-4">
-                      <div className="h-3 bg-gray-100 rounded w-3/4" />
-                    </td>
+                  {[...Array(8)].map((_, j) => (
+                    <td key={j} className="px-5 py-4"><div className="h-3 bg-gray-100 rounded w-3/4" /></td>
                   ))}
                 </tr>
               ))
             ) : filtered.length > 0 ? (
-              filtered.map((booking, index) => (
-                <tr key={booking._id} className="hover:bg-gray-50 transition-colors">
-
-                  <td className="px-5 py-4 text-gray-400 text-xs">{index + 1}</td>
-
-                  {/* resident.flatNumber — from populated { _id, flatNumber } */}
-                  <td className="px-5 py-4 font-medium text-gray-800">
-                    {getResidentLabel(booking.resident)}
-                  </td>
-                  
-
-                  {/* facility.name — from populated { _id, name, location, ... } */}
-                  <td className="px-5 py-4 text-gray-600">
-                    {getFacilityName(booking.facility)}
-                  </td>
-                  {/* facility.name — from populated { _id, name, location, ... } */}
-                 <td className="px-5 py-4 font-medium text-gray-800">
-                  {getResidentLabel(booking.resident)}
-                </td>
-
-                  {/* booking.bookingDate — correct model field */}
-                  <td className="px-5 py-4 text-gray-600">
-                    {formatDate(booking.bookingDate)}
-                  </td>
-
-                  {/* startTime + endTime — correct model fields */}
-                  <td className="px-5 py-4 text-gray-600 font-mono text-xs">
-                    {booking.startTime && booking.endTime
-                      ? `${booking.startTime} – ${booking.endTime}`
-                      : "—"}
-                  </td>
-
-                  {/* booking.status — correct model field */}
-                  <td className="px-5 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      STATUS_STYLE[booking.status] || "bg-gray-100 text-gray-500"
-                    }`}>
-                      {booking.status || "—"}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-center">
-                    <button
-                      onClick={() => navigate(`/admin/facility/booking/${booking._id}`)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
-                    >
-                      View
-                    </button>
-                  </td>
-
-                </tr>
-              ))
+              filtered.map((booking, index) => {
+                const { name, flat } = getResidentData(booking.resident);
+                return (
+                  <tr key={booking._id} className="hover:bg-gray-50 transition-colors text-gray-700">
+                    <td className="px-5 py-4 text-gray-400 text-xs">{index + 1}</td>
+                    <td className="px-5 py-4 font-medium">{flat}</td>
+                    <td className="px-5 py-4">{getFacilityName(booking.facility)}</td>
+                    <td className="px-5 py-4 font-medium">{name}</td>
+                    <td className="px-5 py-4">{formatDate(booking.bookingDate)}</td>
+                    <td className="px-5 py-4 font-mono text-xs">
+                      {booking.startTime && booking.endTime ? `${booking.startTime} – ${booking.endTime}` : "—"}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[booking.status] || "bg-gray-100 text-gray-500"}`}>
+                        {booking.status || "Pending"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <button
+                        onClick={() => navigate(`/admin/facility/booking/${booking._id}`)}
+                        className="text-blue-600 hover:text-blue-800 text-xs font-bold hover:underline"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="7" className="px-5 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2 text-gray-400">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <p className="text-sm">No bookings found</p>
-                    {(search || statusFilter !== "All" || facilityFilter !== "All") && (
-                      <p className="text-xs">Try adjusting your filters</p>
-                    )}
-                  </div>
+                <td colSpan="8" className="px-5 py-20 text-center text-gray-400">
+                  <p className="text-sm font-medium">No bookings found</p>
                 </td>
               </tr>
             )}
@@ -244,7 +201,7 @@ const BookingList = () => {
         </table>
 
         {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+          <div className="px-5 py-3 border-t border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
             Showing {filtered.length} of {bookings.length} bookings
           </div>
         )}

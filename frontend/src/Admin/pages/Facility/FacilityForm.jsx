@@ -12,13 +12,10 @@ const AddFacility = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { id } = useParams();
-
   const isEditMode = Boolean(id);
 
-  const { singleFacility, loading } = useSelector(
-    (state) => state.facility
-  );
-
+  const { singleFacility, loading } = useSelector((state) => state.facility);
+  
   const {
     register,
     handleSubmit,
@@ -26,123 +23,100 @@ const AddFacility = () => {
     formState: { errors },
   } = useForm();
 
-  // 🔥 Fetch facility (edit)
+  // 1. Fetch data if in Edit Mode
   useEffect(() => {
     if (isEditMode) {
       dispatch(fetchFacilityById(id));
     }
   }, [id, isEditMode, dispatch]);
 
-  // 🔥 Populate form
+  // 2. Sync form with Redux state
   useEffect(() => {
     if (singleFacility && isEditMode) {
       reset({
         name: singleFacility.name || "",
         description: singleFacility.description || "",
-        location: singleFacility.location || "",
-        openingTime: singleFacility.openingTime || "",
-        closingTime: singleFacility.closingTime || "",
         status: singleFacility.status || "Available",
       });
     }
   }, [singleFacility, isEditMode, reset]);
 
-  // 🔥 Submit
+  // 3. Form Submission
   const onSubmit = async (data) => {
-    if (isEditMode) {
-      const res = await dispatch(updateFacility({ id, data }));
-      if (res.type.endsWith("fulfilled")) {
-        navigate("/admin/facility/list");
-      }
-    } else {
-      const res = await dispatch(createFacility(data));
-      if (res.type.endsWith("fulfilled")) {
-        reset();
-        navigate("/admin/facility/list");
-      }
+    const action = isEditMode
+      ? updateFacility({ id, data })
+      : createFacility(data);
+
+    const res = await dispatch(action);
+    
+    if (res.type.endsWith("fulfilled")) {
+      navigate("/admin/facility/list");
     }
   };
 
+  // 4. Loading Guard for better UX
+  if (isEditMode && loading && !singleFacility) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 font-medium animate-pulse">Loading Facility Data...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
-      <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8">
-
+      <div className="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-8">
+        
         {/* HEADER */}
         <div className="mb-6 border-b pb-4">
-          <h2 className="text-2xl font-bold">
-            {isEditMode ? "Edit Facility" : "Add Facility"}
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEditMode ? "Edit Facility" : "Add New Facility"}
           </h2>
-          <p className="text-gray-500">
-            Manage facility details
-          </p>
+          <p className="text-gray-500">Configure resources available for society residents</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
-          {/* NAME */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          
+          {/* NAME - Required by Model */}
           <div>
-            <label>Facility Name *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Facility Name *
+            </label>
             <input
-              {...register("name", { required: "Required" })}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="Gym / Hall / Pool"
+              {...register("name", { required: "Facility name is required" })}
+              className={`w-full border px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition ${
+                errors.name ? "border-red-400" : "border-gray-300"
+              }`}
+              placeholder="e.g. Gym, Community Hall"
             />
             {errors.name && (
-              <span className="text-red-500 text-xs">
+              <span className="text-red-500 text-xs mt-1 block">
                 {errors.name.message}
               </span>
             )}
           </div>
 
-          {/* DESCRIPTION */}
+          {/* DESCRIPTION - Optional in Model */}
           <div>
-            <label>Description</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Description
+            </label>
             <textarea
               {...register("description")}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="Facility details..."
+              rows={4}
+              className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition resize-none"
+              placeholder="Capacity, equipment details, or usage rules..."
             />
           </div>
 
-          {/* LOCATION */}
+          {/* STATUS - Enum in Model */}
           <div>
-            <label>Location</label>
-            <input
-              {...register("location")}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="e.g. Block A Ground Floor"
-            />
-          </div>
-
-          {/* TIME */}
-          <div className="grid md:grid-cols-2 gap-6">
-
-            <div>
-              <label>Opening Time</label>
-              <input
-                type="time"
-                {...register("openingTime")}
-                className="w-full border px-4 py-2 mt-1 rounded"
-              />
-            </div>
-
-            <div>
-              <label>Closing Time</label>
-              <input
-                type="time"
-                {...register("closingTime")}
-                className="w-full border px-4 py-2 mt-1 rounded"
-              />
-            </div>
-
-          </div>
-
-          {/* STATUS */}
-          <div>
-            <label>Status</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Current Status
+            </label>
             <select
               {...register("status")}
-              className="w-full border px-4 py-2 mt-1 rounded"
+              className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition bg-white"
             >
               <option value="Available">Available</option>
               <option value="Maintenance">Maintenance</option>
@@ -151,32 +125,34 @@ const AddFacility = () => {
           </div>
 
           {/* ACTIONS */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-
+          <div className="flex justify-end gap-3 pt-4 border-t mt-6">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-5 py-2 bg-gray-200 rounded"
+              className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-medium"
             >
               Cancel
             </button>
-
+            
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 bg-blue-600 text-white rounded"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm disabled:opacity-50 min-w-[120px]"
             >
-              {loading
-                ? "Saving..."
-                : isEditMode
-                ? "Update Facility"
-                : "Save Facility"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </span>
+              ) : isEditMode ? (
+                "Update Facility"
+              ) : (
+                "Create Facility"
+              )}
             </button>
-
           </div>
 
         </form>
-
       </div>
     </div>
   );
