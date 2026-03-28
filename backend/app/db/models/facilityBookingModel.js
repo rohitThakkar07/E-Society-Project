@@ -7,7 +7,7 @@ const facilityBookingSchema = new mongoose.Schema({
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
   status: { type: String, enum: ["Pending", "Approved", "Rejected", "Cancelled"], default: "Pending" },
-  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" } // Admin who approved
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" } 
 }, { timestamps: true });
 
 module.exports = mongoose.model("FacilityBooking", facilityBookingSchema);

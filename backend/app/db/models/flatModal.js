@@ -5,7 +5,7 @@ const flatSchema = new mongoose.Schema({
   floor:      { type: Number, required: true },
   block:      { type: String, trim: true },
   type:       { type: String, enum: ["1BHK", "2BHK", "3BHK", "4BHK"], required: true },
-  area:       { type: Number }, // sq ft
+  area:       { type: Number },
   owner: {
     name:  { type: String },
     phone: { type: String },
