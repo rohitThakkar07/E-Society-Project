@@ -72,14 +72,11 @@ export const deleteMaintenance = createAsyncThunk("maintenance/delete", async (i
   } catch (err) { return rejectWithValue(err.response?.data?.message); }
 });
 
-// ✅ PAY MAINTENANCE (USER FLOW)
 export const payMaintenance = createAsyncThunk(
   "maintenance/pay",
   async ({ id, method }, { rejectWithValue }) => {
     try {
-      const res = await API.put(`/maintenance/pay/${id}`, {
-        paymentMethod: method,
-      });
+      const res = await API.put(`/maintenance/pay/${id}`, { paymentMethod: method });
       toast.success("Payment successful");
       return res.data.data;
     } catch (err) {
@@ -96,61 +93,61 @@ const maintenanceSlice = createSlice({
     list: [],
     singleRecord: null,
     summary: null,
-    loading: false, // Essential for skeleton loaders
+    loading: false,
     error: null
   },
   reducers: {
     clearSingleRecord: (state) => { state.singleRecord = null; },
   },
-  // maintenanceSlice.js
+  extraReducers: (builder) => {
+    builder
+      // 1. All SPECIFIC FULFILLED CASES
+      .addCase(fetchMaintenanceList.fulfilled, (state, action) => {
+        state.list = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(fetchMyMaintenance.fulfilled, (state, action) => {
+        state.list = action.payload; 
+      })
+      .addCase(fetchMaintenanceById.fulfilled, (state, action) => {
+        state.singleRecord = action.payload;
+      })
+      .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
+        state.summary = action.payload;
+      })
+      .addCase(createMaintenance.fulfilled, (state, action) => {
+        state.list.unshift(action.payload);
+      })
+      .addCase(deleteMaintenance.fulfilled, (state, action) => {
+        state.list = state.list.filter(item => item._id !== action.payload);
+      })
+      // ✅ Handle Payment updates in the list AND single record simultaneously
+      .addMatcher(
+        (action) => [payMaintenance.fulfilled.type, markAsPaid.fulfilled.type, addPayment.fulfilled.type].includes(action.type),
+        (state, action) => {
+          state.singleRecord = action.payload;
+          const index = state.list.findIndex(item => item._id === action.payload._id);
+          if (index !== -1) state.list[index] = action.payload;
+        }
+      )
 
-extraReducers: (builder) => {
-  builder
-    // 1. ALL addCase calls must come FIRST
-    .addCase(fetchMaintenanceList.fulfilled, (state, action) => {
-      state.loading = false;
-      state.list = Array.isArray(action.payload) ? action.payload : [];
-    })
-    // maintenanceSlice.js
-
-.addCase(fetchMyMaintenance.fulfilled, (state, action) => {
-    state.loading = false;
-    state.list = action.payload; 
-})
-    .addCase(fetchMaintenanceById.fulfilled, (state, action) => {
-      state.loading = false;
-      state.singleRecord = action.payload;
-    })
-    .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
-      state.loading = false;
-      state.summary = action.payload;
-    })
-    .addCase(createMaintenance.fulfilled, (state, action) => {
-      state.loading = false;
-      state.list.unshift(action.payload);
-    })
-    .addCase(deleteMaintenance.fulfilled, (state, action) => {
-      state.loading = false;
-      state.list = state.list.filter(item => item._id !== action.payload);
-    })
-    // Add any other specific cases (markAsPaid, etc.) here...
-
-    // 2. Matchers MUST come AFTER all addCase calls
-    .addMatcher(
-      (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/pending"),
-      (state) => { 
-        state.loading = true; 
-        state.error = null; 
-      }
-    )
-    .addMatcher(
-      (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/rejected"),
-      (state, action) => { 
-        state.loading = false; 
-        state.error = action.payload; 
-      }
-    );
-},
+      // 2. GLOBAL MATCHERS (Must be at the very bottom)
+      // Handles 'loading = true' for ALL maintenance thunks
+      .addMatcher(
+        (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/pending"),
+        (state) => { 
+          state.loading = true; 
+          state.error = null; 
+        }
+      )
+      // Handles 'loading = false' for ALL maintenance thunks (Success or Failure)
+      .addMatcher(
+        (action) => action.type.startsWith("maintenance/") && (action.type.endsWith("/fulfilled") || action.type.endsWith("/rejected")),
+        (state, action) => { 
+          state.loading = false; 
+          if (action.type.endsWith("/rejected")) state.error = action.payload;
+        }
+      );
+  },
 });
 
 export const { clearSingleRecord } = maintenanceSlice.actions;

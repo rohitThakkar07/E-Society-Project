@@ -13,16 +13,14 @@ export const fetchMaintenanceList = createAsyncThunk("maintenance/fetchList", as
 export const fetchMaintenanceById = createAsyncThunk("maintenance/fetchById", async (id, { rejectWithValue }) => {
     try {
         const res = await API.get(`/maintenance/${id}`);
-        return res.data.data;
+        return res.data.data; // Ensure this returns the full object { _id, resident: {...}, amount, etc }
     } catch (err) { return rejectWithValue(err.response?.data?.message); }
 });
 
 export const fetchMyMaintenance = createAsyncThunk("maintenance/fetchMy", async (_, { rejectWithValue }) => {
     try {
         const res = await API.get("/maintenance/my");
-        console.log(res.data.data)
         return res.data.data;
-
     } catch (err) { return rejectWithValue(err.response?.data?.message); }
 });
 
@@ -89,7 +87,7 @@ export const deleteMaintenance = createAsyncThunk("maintenance/delete", async (i
 const maintenanceSlice = createSlice({
     name: "maintenance",
     initialState: {
-        list: [],           // <--- Ensure components use 'list'
+        list: [],
         singleRecord: null,
         summary: null,
         loading: false,
@@ -100,17 +98,14 @@ const maintenanceSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // 1. All SPECIFIC CASES (Must be defined first)
             .addCase(fetchMaintenanceList.fulfilled, (state, action) => {
                 state.list = Array.isArray(action.payload) ? action.payload : [];
             })
             .addCase(fetchMyMaintenance.fulfilled, (state, action) => {
-                state.loading = false;
-                // Ensure you are assigning the payload to the exact key 'list'
                 state.list = action.payload; 
-                console.log("State list updated to:", state.list); // Add this for debugging
             })
             .addCase(fetchMaintenanceById.fulfilled, (state, action) => {
+                // ✅ Ensure singleRecord is populated correctly for the Invoice UI
                 state.singleRecord = action.payload;
             })
             .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
@@ -123,9 +118,13 @@ const maintenanceSlice = createSlice({
                 state.list = state.list.filter(item => item._id !== action.payload);
             })
             
-            // Unified Update Handler (Pay, AddPayment, MarkPaid)
+            // ✅ Unified Update Matcher
             .addMatcher(
-                (action) => [payMaintenance.fulfilled.type, markAsPaid.fulfilled.type, addPayment.fulfilled.type].includes(action.type),
+                (action) => [
+                    payMaintenance.fulfilled.type, 
+                    markAsPaid.fulfilled.type, 
+                    addPayment.fulfilled.type
+                ].includes(action.type),
                 (state, action) => {
                     state.singleRecord = action.payload;
                     const index = state.list.findIndex(item => item._id === action.payload._id);
@@ -133,7 +132,7 @@ const maintenanceSlice = createSlice({
                 }
             )
 
-            // 2. GLOBAL MATCHERS (Must be at the very bottom)
+            // GLOBAL PENDING
             .addMatcher(
                 (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/pending"),
                 (state) => { 
@@ -141,6 +140,7 @@ const maintenanceSlice = createSlice({
                     state.error = null; 
                 }
             )
+            // GLOBAL FULFILLED/REJECTED
             .addMatcher(
                 (action) => action.type.startsWith("maintenance/") && (action.type.endsWith("/fulfilled") || action.type.endsWith("/rejected")),
                 (state, action) => { 
