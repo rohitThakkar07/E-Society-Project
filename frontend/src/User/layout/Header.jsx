@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Home, LogOut, Menu, X, ChevronDown,
-  Wrench, DollarSign, Users, Shield, Bell, User
+  Wrench, DollarSign, Users, Shield, Bell, User, Settings
 } from "lucide-react";
 
 const Header = () => {
@@ -75,109 +75,131 @@ const Header = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:wght@700;800&display=swap');
+        
         .header-nav { font-family: 'Outfit', sans-serif; }
-        .nav-dropdown { animation: dropIn 0.18s ease; }
+        .brand-text { font-family: 'Fraunces', serif; }
+        
+        .nav-dropdown { 
+          animation: dropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        }
+        
         @keyframes dropIn {
-          from { opacity: 0; transform: translateY(-6px); }
+          from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .nav-link-active { color: #60a5fa !important; }
+
+        .active-link {
+          color: #2563eb !important;
+          background: #eff6ff !important;
+        }
+
+        .glass-header {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
       `}</style>
 
-      <nav className={`header-nav sticky top-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-gray-950/95 backdrop-blur shadow-xl" : "bg-gray-900"
+      <nav className={`header-nav sticky top-0 z-[100] transition-all duration-300 ${
+        scrolled ? "glass-header shadow-sm py-1" : "bg-white border-b border-slate-100 py-2"
       }`}>
-        <div className="max-w-7xl mx-auto px-4 py-0">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
 
             {/* LOGO */}
-            <NavLink to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg group-hover:bg-blue-400 transition-colors">
-                <Shield size={16} className="text-white" />
+            <NavLink to="/" className="flex items-center gap-3 group transition-transform active:scale-95">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:bg-blue-700 transition-all">
+                <Shield size={20} className="text-white" />
               </div>
-              <span className="text-white font-bold text-lg tracking-tight">
-                e-Society <span className="text-blue-400">Management</span>
-              </span>
+              <div className="flex flex-col">
+                <span className="brand-text text-slate-900 text-xl font-extrabold leading-none tracking-tight">
+                  e-Society
+                </span>
+                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mt-1">
+                  Management
+                </span>
+              </div>
             </NavLink>
 
-            {/* DESKTOP MENU */}
-            <div ref={dropdownRef} className="hidden lg:flex items-center gap-1">
-
+            {/* DESKTOP NAV */}
+            <div ref={dropdownRef} className="hidden lg:flex items-center gap-2">
               <NavLink
                 to="/"
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive ? "bg-gray-700 text-white" : "text-gray-300 hover:text-white hover:bg-gray-800"
+                  `flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    isActive ? "active-link" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                   }`
                 }
               >
-                <Home size={14} /> Home
+                <Home size={16} /> Home
               </NavLink>
 
-              {/* DROPDOWN ITEMS */}
               {isLoggedIn && navItems.map((item) =>
                 hasAccess(item.roles) ? (
                   <div key={item.label} className="relative">
                     <button
+                      onMouseEnter={() => setOpenDropdown(item.label)}
                       onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                         openDropdown === item.label
-                          ? "bg-gray-700 text-white"
-                          : "text-gray-300 hover:text-white hover:bg-gray-800"
+                          ? "bg-slate-100 text-slate-900"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
-                      {item.icon}
                       {item.label}
                       <ChevronDown
-                        size={13}
-                        className={`transition-transform ${openDropdown === item.label ? "rotate-180" : ""}`}
+                        size={14}
+                        className={`transition-transform duration-300 ${openDropdown === item.label ? "rotate-180 text-blue-600" : "text-slate-400"}`}
                       />
                     </button>
 
                     {openDropdown === item.label && (
-                      <ul className="nav-dropdown absolute top-full left-0 mt-1 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                      <div 
+                        onMouseLeave={() => setOpenDropdown(null)}
+                        className="nav-dropdown absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl p-2 z-50"
+                      >
                         {item.children
                           .filter((c) => hasAccess(c.roles))
                           .map((child) => (
-                            <li key={child.to}>
-                              <Link
-                                to={child.to}
-                                onClick={() => setOpenDropdown(null)}
-                                className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                              >
-                                {child.label}
-                              </Link>
-                            </li>
+                            <Link
+                              key={child.to}
+                              to={child.to}
+                              onClick={() => setOpenDropdown(null)}
+                              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-400" />
+                              {child.label}
+                            </Link>
                           ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
                 ) : null
               )}
 
-              {/* HELP DESK */}
               {isLoggedIn && hasAccess(["resident", "admin"]) && (
                 <NavLink
                   to="/raise-complaint"
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      isActive ? "bg-gray-700 text-white" : "text-gray-300 hover:text-white hover:bg-gray-800"
+                    `flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                      isActive ? "active-link" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                     }`
                   }
                 >
-                  <Bell size={14} /> Help Desk
+                  <Bell size={16} /> Help Desk
                 </NavLink>
               )}
 
-              {/* DIVIDER */}
-              <div className="w-px h-6 bg-gray-700 mx-1" />
+              {/* VERTICAL DIVIDER */}
+              <div className="w-px h-6 bg-slate-200 mx-2" />
 
-              {/* AUTH */}
+              {/* USER ACTIONS */}
               {!isLoggedIn ? (
                 <Link
                   to="/login"
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                  className="bg-slate-900 text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-md shadow-slate-200 active:scale-95"
                 >
                   Login
                 </Link>
@@ -186,86 +208,90 @@ const Header = () => {
                   <NavLink
                     to="/profile"
                     className={({ isActive }) =>
-                      `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        isActive ? "bg-gray-700 text-white" : "text-gray-300 hover:text-white hover:bg-gray-800"
+                      `flex items-center gap-2 px-2 py-1.5 rounded-2xl transition-all ${
+                        isActive ? "bg-blue-50 ring-1 ring-blue-100" : "hover:bg-slate-50"
                       }`
                     }
                   >
-                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                      <User size={12} className="text-white" />
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                      <User size={18} className="text-white" />
                     </div>
-                    <span>{user?.name?.split(" ")[0] || "Profile"}</span>
+                    <div className="hidden xl:flex flex-col pr-2">
+                        <span className="text-xs font-black text-slate-800 leading-none">
+                            {user?.name?.split(" ")[0] || "Account"}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase mt-1 tracking-wider">
+                            {role}
+                        </span>
+                    </div>
                   </NavLink>
 
                   <button
                     onClick={logout}
-                    className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition-all border border-red-500/20 hover:border-red-500"
+                    className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                    title="Logout"
                   >
-                    <LogOut size={14} /> Logout
+                    <LogOut size={18} />
                   </button>
                 </div>
               )}
             </div>
 
-            {/* MOBILE BUTTON */}
+            {/* MOBILE TOGGLE */}
             <button
-              className="lg:hidden text-gray-300 hover:text-white p-2 rounded-lg hover:bg-gray-800 transition"
+              className="lg:hidden text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition"
               onClick={() => setMenuOpen(!menuOpen)}
             >
-              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
 
         {/* MOBILE MENU */}
         {menuOpen && (
-          <div className="lg:hidden bg-gray-900 border-t border-gray-800 px-4 pb-4 pt-2 space-y-1">
-            <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg text-sm">
-              <Home size={15} /> Home
-            </Link>
+          <div className="lg:hidden bg-white border-t border-slate-100 animate-revealUp px-6 pb-8 pt-4 space-y-2 max-h-[80vh] overflow-y-auto">
+            <NavLink to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-600 font-bold hover:bg-slate-50 rounded-2xl">
+              <Home size={18} /> Home
+            </NavLink>
 
             {isLoggedIn && navItems.map((item) =>
               hasAccess(item.roles) ? (
-                <div key={item.label}>
-                  <p className="px-3 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div key={item.label} className="pt-2">
+                  <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
                     {item.label}
                   </p>
-                  {item.children
-                    .filter((c) => hasAccess(c.roles))
-                    .map((child) => (
-                      <Link
-                        key={child.to}
-                        to={child.to}
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-3 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg text-sm ml-2"
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
+                  <div className="grid grid-cols-1 gap-1">
+                    {item.children
+                      .filter((c) => hasAccess(c.roles))
+                      .map((child) => (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          onClick={() => setMenuOpen(false)}
+                          className="block px-4 py-3 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-2xl ml-2"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                  </div>
                 </div>
               ) : null
             )}
 
-            {isLoggedIn && hasAccess(["resident", "admin"]) && (
-              <Link to="/raise-complaint" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg text-sm">
-                <Bell size={15} /> Help Desk
-              </Link>
-            )}
-
-            <div className="pt-2 border-t border-gray-800 mt-2">
+            <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
               {!isLoggedIn ? (
-                <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-center bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition">
-                  Login
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-center bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100">
+                  Login to Account
                 </Link>
               ) : (
-                <div className="space-y-1">
-                  <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg text-sm">
-                    <User size={15} /> Profile
+                <>
+                  <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-600 font-bold hover:bg-slate-50 rounded-2xl">
+                    <User size={18} /> My Profile
                   </Link>
-                  <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2.5 text-red-400 hover:text-white hover:bg-red-600 rounded-lg text-sm transition">
-                    <LogOut size={15} /> Logout
+                  <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition">
+                    <LogOut size={18} /> Logout
                   </button>
-                </div>
+                </>
               )}
             </div>
           </div>

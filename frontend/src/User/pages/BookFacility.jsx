@@ -5,7 +5,7 @@ import { fetchFacilities } from "../../store/slices/facilitySlice";
 import { 
   fetchBookings, 
   createBooking, 
-  cancelBooking 
+  cancelBooking,
 } from "../../store/slices/facilityBookingSlice";
 
 const BookFacility = () => {

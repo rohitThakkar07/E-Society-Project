@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FiEye, FiFileText, FiTrash2 } from "react-icons/fi";
 // ✅ Ensure path is correct (maintenance spelled correctly)
 import {
   fetchMaintenanceList,
@@ -38,22 +39,22 @@ const MaintenanceList = () => {
 
   // ✅ RELATIONSHIP-AWARE FILTER
   const filtered = useMemo(() => {
-  return (maintenanceData || []).filter((item) => {
-    // Combine all searchable terms into one string
-    const wing = item.flat?.wing || item.resident?.wing || "";
-    const flatNo = item.flat?.flatNumber || item.resident?.flatNumber || "";
-    const firstName = item.resident?.firstName || "";
-    const lastName = item.resident?.lastName || "";
-    
-    const searchSource = `${wing} ${flatNo} ${firstName} ${lastName}`.toLowerCase();
-    const matchSearch = searchSource.includes(search.toLowerCase());
+    return (maintenanceData || []).filter((item) => {
+      // Combine all searchable terms into one string
+      const wing = item.flat?.wing || item.resident?.wing || "";
+      const flatNo = item.flat?.flatNumber || item.resident?.flatNumber || "";
+      const firstName = item.resident?.firstName || "";
+      const lastName = item.resident?.lastName || "";
 
-    const matchMonth = monthFilter === "All" || item.month === monthFilter;
-    const matchStatus = statusFilter === "All" || item.status === statusFilter;
+      const searchSource = `${wing} ${flatNo} ${firstName} ${lastName}`.toLowerCase();
+      const matchSearch = searchSource.includes(search.toLowerCase());
 
-    return matchSearch && matchMonth && matchStatus;
-  });
-}, [maintenanceData, search, monthFilter, statusFilter]);
+      const matchMonth = monthFilter === "All" || item.month === monthFilter;
+      const matchStatus = statusFilter === "All" || item.status === statusFilter;
+
+      return matchSearch && matchMonth && matchStatus;
+    });
+  }, [maintenanceData, search, monthFilter, statusFilter]);
 
 
   const handleDelete = (id) => {
@@ -151,7 +152,7 @@ const MaintenanceList = () => {
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">
                         {/* Try to get from populated flat object, then fallback to resident's denormalized fields */}
-                        {item.flat?.wing || item.resident?.wing || "—"}
+                        {item.flat?.wing || item.resident?.wing || "B"}
                         -
                         {item.flat?.flatNumber || item.resident?.flatNumber || "—"}
                       </div>
@@ -162,7 +163,7 @@ const MaintenanceList = () => {
 
                     <td className="px-6 py-4">
                       <div className="text-gray-700 font-medium">
-                        {item.resident?.firstName} {item.resident?.lastName}
+                        {item.resident?.firstName || "Resident"} {item.resident?.lastName}
                       </div>
                       <div className="text-xs text-gray-400">{item.resident?.mobileNumber}</div>
                     </td>
@@ -182,28 +183,33 @@ const MaintenanceList = () => {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
+                        {/* VIEW DETAILS */}
                         <button
                           onClick={() => navigate(`/admin/maintenance/${item._id}`)}
-                          className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                          className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm active:scale-95"
                           title="View Details"
                         >
-                          View
+                          <FiEye size={16} />
                         </button>
+
+                        {/* GENERATE INVOICE */}
                         <button
                           onClick={() => navigate(`/admin/maintenance/${item._id}/invoice`)}
-                          className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                          className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all shadow-sm active:scale-95"
                           title="Generate Invoice"
                         >
-                          Invoice
+                          <FiFileText size={16} />
                         </button>
+
+                        {/* DELETE RECORD */}
                         <button
                           onClick={() => handleDelete(item._id)}
-                          className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                          className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all shadow-sm active:scale-95"
                           title="Delete"
                         >
-                          Delete
+                          <FiTrash2 size={16} />
                         </button>
                       </div>
                     </td>
