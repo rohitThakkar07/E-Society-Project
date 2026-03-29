@@ -5,7 +5,7 @@ import AddMaintenance       from "../../Admin/pages/Finance/Maintenance/AddMaint
 import MaintenanceDetails   from "../../Admin/pages/Finance/Maintenance/MaintenanceDetails";
 import InvoiceGenerator     from "../../Admin/pages/Finance/Maintenance/InvoiceGenerator";
 import ReceiptGenerator     from "../../Admin/pages/Finance/Maintenance/ReceiptGenerator";
-
+import GenerateMaintenance  from "../../Admin/pages/Finance/Maintenance/GenerateMaintenance";
 // All paths are relative to the /admin parent route
 const maintenanceRoutes = [
   { path: "maintenance/dashboard", element: <MaintenanceDashboard /> },
@@ -14,6 +14,7 @@ const maintenanceRoutes = [
   { path: "maintenance/:id",       element: <MaintenanceDetails /> },
   { path: "maintenance/:id/invoice", element: <InvoiceGenerator /> },
   { path: "maintenance/:id/receipt", element: <ReceiptGenerator /> },
+  { path: "maintenance/generate",  element: <GenerateMaintenance /> },
 ];
 
 export default maintenanceRoutes;
