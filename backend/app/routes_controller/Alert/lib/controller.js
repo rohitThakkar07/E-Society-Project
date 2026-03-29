@@ -1,16 +1,42 @@
 const Alert = require("../../../db/models/alertModal");
+const { sendAlertEmail } = require("../../../../utils/sendAlertEmail");
+const Resident = require("../../../db/models/residentsModel"); 
 
 const createAlert = async (req, res) => {
   try {
     const { title, message, type } = req.body;
+ 
     if (!title || !message || !type)
-      return res.status(400).json({ success: false, message: "title, message and type are required." });
+      return res.status(400).json({
+        success: false,
+        message: "title, message and type are required.",
+      });
+ 
+    // 1. Save alert to DB
     const alert = await Alert.create(req.body);
+ 
+    console.log("alert created successfully");   
+    // 2. Fetch all active resident emails (non-blocking)
+    Resident.find({ status: "Active" }, "email")
+      .then((residents) => {
+        const emails = residents
+          .map((r) => r.email)
+          .filter(Boolean); // remove null/empty
+ 
+        if (emails.length > 0) {
+          sendAlertEmail(emails, { title, message, type }).catch((err) =>
+            console.error("Alert email send failed (non-critical):", err)
+          );
+        }
+      })
+      .catch((err) => console.error("Failed to fetch resident emails:", err));
+ 
     res.status(201).json({ success: true, data: alert });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 const getAllAlerts = async (req, res) => {
   try {

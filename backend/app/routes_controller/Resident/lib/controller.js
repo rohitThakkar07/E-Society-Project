@@ -3,165 +3,71 @@ const User = require("../../../db/models/userModel");
 const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const { sendResidentWelcomeEmail } = require("../../../../utils/sendMail");
+const Flat = require("../../../db/models/flatModal");
 
-/**
- * CREATE RESIDENT
- */
-// exports.createResident = async (req, res) => {
-//   console.log(req.body);
-//   try {
-//     const errors = validationResult(req);
-
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({
-//         success: false,
-//         message: errors.array()[0].msg
-//       });
-//     }
-
-//     const {
-//       firstName,
-//       lastName,
-//       gender,
-//       dateOfBirth,
-//       mobileNumber,
-//       email,
-//       wing,
-//       flatNumber,
-//       floorNumber,
-//       flatType,
-//       residentType,
-//       moveInDate,
-//       emergencyContactName,
-//       emergencyContactNumber,
-//       status,
-//       password,
-//     } = req.body;
-
-//     if (!password) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Password is required"
-//       });
-//     }
-
-//     // check existing user
-//     if (email) {
-//       const existingUser = await User.findOne({ email });
-
-//       if (existingUser) {
-//         return res.status(400).json({
-//           success: false,
-//           message: "Email already registered"
-//         });
-//       }
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const resident = await Resident.create({
-//       firstName,
-//       lastName,
-//       gender,
-//       dateOfBirth,
-//       mobileNumber,
-//       email,
-//       wing,
-//       flatNumber,
-//       floorNumber,
-//       flatType,
-//       residentType,
-//       moveInDate,
-//       emergencyContactName,
-//       emergencyContactNumber,
-//       status,
-//     });
-
-//     const residentName = `${firstName} ${lastName || ""}`.trim();
-
-//     const user = await User.create({
-//       name: residentName,
-//       email: email,
-//       password: hashedPassword,
-//       role: "resident",
-//       profileId: resident._id,
-//     });
-
-//     // send mail but don't break API if it fails
-//     console.log(residentName)
-//     try {
-//       await sendResidentWelcomeEmail(email, residentName, password);
-//     } catch (mailError) {
-//       console.error("Mail error:", mailError.message);
-//     }
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Resident created successfully",
-//       data: resident,
-//     });
-
-//   } catch (error) {
-//     console.error("Create resident error:", error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to create resident. Please try again later."
-//     });
-//   }
-// };
 exports.createResident = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, flat, ...rest } = req.body;
+    const { firstName, lastName, email, password, flat, residentType, ...rest } = req.body;
+
+    // 🔹 Check flat exists
+    const flatDoc = await Flat.findById(flat);
+    if (!flatDoc) {
+      return res.status(404).json({ success: false, message: "Flat not found" });
+    }
+
+    // 🔹 Prevent assigning if already occupied
+    if (flatDoc.status === "Occupied") {
+      return res.status(400).json({
+        success: false,
+        message: "Flat already occupied",
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 1. Create Resident Profile
+    // 1️⃣ Create Resident
     const resident = await Resident.create({
       firstName,
       lastName,
       email,
-      flat, // ID of the Flat
-      ...rest
+      flat,
+      residentType,
+      ...rest,
     });
 
-    // 2. Create Auth User
+    // 2️⃣ Create User
     await User.create({
       name: `${firstName} ${lastName}`,
       email,
       password: hashedPassword,
       role: "resident",
-      profileId: resident._id, // LINKED HERE
+      profileId: resident._id,
     });
 
+    // 3️⃣ 🔥 UPDATE FLAT (MAIN FIX)
+    flatDoc.resident = resident._id;
+    flatDoc.status = "Occupied";
+    flatDoc.occupancyType = residentType; // Owner or Tenant
+
+    await flatDoc.save();
+
+    // 4️⃣ Email
+    sendResidentWelcomeEmail(email, `${firstName} ${lastName}`, password)
+      .catch(err => console.error("Email failed:", err));
+
     res.status(201).json({ success: true, data: resident });
+
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate data exists",
+      });
+    }
+
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-/**
- * GET ALL RESIDENTS
- */
-// exports.getAllResidents = async (req, res) => {
-//   try {
-
-//     const residents = await Resident.find().sort({ createdAt: -1 });
-
-//     res.json({
-//       success: true,
-//       data: residents,
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to fetch residents"
-//     });
-
-//   }
-// };
 
 // In your getAllResidents function:
 exports.getAllResidents = async (req, res) => {
@@ -186,7 +92,7 @@ exports.getResidentById = async (req, res) => {
   console.log("controller resident get by id");
   try {
 
-    const resident = await Resident.findById(req.params.id);
+    const resident = await Resident.findById(req.params.id).populate('flat');
 
     if (!resident) {
       return res.status(404).json({
@@ -258,7 +164,6 @@ exports.updateResident = async (req, res) => {
  */
 exports.deleteResident = async (req, res) => {
   try {
-
     const { id } = req.params;
 
     const resident = await Resident.findById(id);
@@ -270,6 +175,13 @@ exports.deleteResident = async (req, res) => {
       });
     }
 
+    // 🔥 UPDATE FLAT BACK TO VACANT
+    await Flat.findByIdAndUpdate(resident.flat, {
+      resident: null,
+      status: "Vacant",
+      occupancyType: "Vacant",
+    });
+
     await User.findOneAndDelete({
       profileId: resident._id,
       role: "resident",
@@ -277,19 +189,15 @@ exports.deleteResident = async (req, res) => {
 
     await Resident.findByIdAndDelete(id);
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Resident deleted successfully",
+      message: "Resident deleted & flat vacated",
     });
 
   } catch (error) {
-
-    console.error("Delete resident error:", error);
-
     res.status(500).json({
       success: false,
-      message: "Unable to delete resident"
+      message: "Unable to delete resident",
     });
-
   }
 };
