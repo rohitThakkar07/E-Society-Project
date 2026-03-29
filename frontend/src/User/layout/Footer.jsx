@@ -1,10 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
+// ✅ Import only utility icons from lucide
 import { 
   Shield, Mail, Phone, MapPin, 
-  Facebook, Twitter, Linkedin, Instagram, 
   ArrowUpRight, Heart 
 } from "lucide-react";
+// ✅ Import brand icons from react-icons/fa (Standard for social media)
+import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -12,6 +14,8 @@ const Footer = () => {
   return (
     <footer style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="bg-white border-t border-slate-100 pt-20 pb-10">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;800;900&display=swap');
+        
         .footer-label {
           font-size: 10px;
           font-weight: 900;
@@ -58,12 +62,19 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-slate-500 text-sm leading-relaxed">
-              Elevating community living through smart automation, robust security, and seamless financial transparency. Built for modern neighborhoods.
+              Elevating community living through smart automation, robust security, and seamless financial transparency.
             </p>
+            
+            {/* ✅ FIXED SOCIAL LINKS: Using Fa Icons */}
             <div className="flex gap-3">
-              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
-                  <Icon size={16} />
+              {[
+                { Icon: FaFacebook, href: "#" },
+                { Icon: FaTwitter, href: "#" },
+                { Icon: FaLinkedin, href: "#" },
+                { Icon: FaInstagram, href: "#" }
+              ].map((item, i) => (
+                <a key={i} href={item.href} className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
+                  <item.Icon size={16} />
                 </a>
               ))}
             </div>
@@ -105,7 +116,6 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Emergency Box */}
             <div className="emergency-card p-5 rounded-2xl text-white">
               <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">Security Response</p>
               <a href="tel:+919999988888" className="flex items-center justify-between group">
