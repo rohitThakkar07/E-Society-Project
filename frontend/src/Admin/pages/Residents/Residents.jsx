@@ -108,7 +108,7 @@ const ResidentList = () => {
                       <div className="flex items-center gap-2">
                         <FiHome className="text-indigo-400" size={14} />
                         <span className="font-bold text-indigo-600">
-                          {r.wing ? `${r.wing} - ` : ""}{r.flatNumber}
+                        {r.flatNumber}
                         </span>
                       </div>
                     </td>
