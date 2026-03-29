@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -11,7 +12,7 @@ const transporter = nodemailer.createTransport({
 /* ================= RESIDENT WELCOME EMAIL ================= */
 
 const sendResidentWelcomeEmail = async (email, residentName, password) => {
-  // ✅ REMOVED: stray `html: ...` line and `console.log(email, residnetName)` that were OUTSIDE the try block
+  console.log("email send "+email);
   try {
     const mailOptions = {
       from: `"Society Management" <${process.env.EMAIL_USER}>`,
