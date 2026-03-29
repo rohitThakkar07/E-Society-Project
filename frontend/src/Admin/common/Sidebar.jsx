@@ -172,6 +172,7 @@ const Sidebar = ({ isOpen }) => {
             <div className="mt-1 ml-6 flex flex-col space-y-0.5">
               <NavLink to="/admin/maintenance/dashboard" className={dropItem}>Maintenance</NavLink>
               <NavLink to="/admin/maintenance/list"      className={dropItem}>Maintenance List</NavLink>
+              <NavLink to="/admin/maintenance/generate"      className={dropItem}>Generate Maintenance</NavLink>
               <NavLink to="/admin/expense/dashboard"     className={dropItem}>Expense</NavLink>
               <NavLink to="/admin/expense/list"          className={dropItem}>Expense List</NavLink>
               <NavLink to="/admin/expense/report"        className={dropItem}>Expense Report</NavLink>
@@ -205,14 +206,14 @@ const Sidebar = ({ isOpen }) => {
         </div>
 
         {/* ── SETTINGS ─────────────────────────────────────────────── */}
-        <SectionLabel label="Settings" />
+        {/* <SectionLabel label="Settings" /> */}
 
-        <NavLink to="/admin/roles" className={navItem} title="Roles & Rights">
+        {/* <NavLink to="/admin/roles" className={navItem} title="Roles & Rights">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           {isOpen && <span>Roles & Rights</span>}
-        </NavLink>
+        </NavLink> */}
 
       </nav>
     </aside>
