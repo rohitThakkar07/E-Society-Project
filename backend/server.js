@@ -45,6 +45,9 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ SERVE UPLOADED FILES
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+//upload image
+app.use("/uploads", express.static("uploads"));
+
 /* ============ ROUTES ============ */
 app.use("/api/auth", authRoutes);
 app.use("/api/resident", authMiddleware, residentRoutes);
