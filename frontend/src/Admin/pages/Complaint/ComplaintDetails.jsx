@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   FiArrowLeft, FiAlertCircle, FiClock, 
-  FiCheckCircle, FiInfo, FiTag, FiAlertTriangle 
+  FiCheckCircle, FiInfo, FiTag, FiAlertTriangle,
+  FiMaximize, FiDownload
 } from "react-icons/fi";
 import {
   fetchComplaintById,
@@ -21,6 +22,8 @@ const PRIORITY_STYLE = {
   Medium: "bg-blue-50 text-blue-600 border-blue-100",
   Low: "bg-gray-50 text-gray-600 border-gray-100",
 };
+
+const BASE_URL = "http://localhost:4000";
 
 const ComplaintDetails = () => {
   const { id } = useParams();
@@ -50,9 +53,7 @@ const ComplaintDetails = () => {
 
   if (!complaint) {
     return (
-      <div className="p-12 text-center text-gray-500">
-        Complaint not found or has been removed.
-      </div>
+      <div className="p-12 text-center text-gray-500">Complaint not found.</div>
     );
   }
 
@@ -69,7 +70,7 @@ const ComplaintDetails = () => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Complaint Details</h1>
-            <p className="text-sm text-gray-500">Ticket ID: #{complaint._id?.slice(-6).toUpperCase()}</p>
+            <p className="text-sm text-gray-500 font-mono">ID: {complaint._id?.toUpperCase()}</p>
           </div>
         </div>
 
@@ -93,10 +94,8 @@ const ComplaintDetails = () => {
         </div>
       </div>
 
-      {/* CONTENT GRID */}
       <div className="grid lg:grid-cols-3 gap-6">
-        
-        {/* MAIN INFO CARD */}
+        {/* MAIN CONTENT */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="flex items-center gap-2 mb-4 text-blue-600">
@@ -107,20 +106,50 @@ const ComplaintDetails = () => {
             <div className="bg-slate-50 border border-slate-100 p-6 rounded-2xl text-gray-700 leading-relaxed">
               {complaint.description}
             </div>
+
+            {/* ✅ ATTACHMENT SECTION */}
+            {complaint.attachment && (
+              <div className="mt-10 pt-10 border-t border-gray-50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <FiMaximize size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Evidence Attachment</span>
+                  </div>
+                  <a 
+                    href={`${BASE_URL}${complaint.attachment}`} 
+                    download 
+                    className="text-blue-600 hover:underline text-xs font-bold flex items-center gap-1"
+                  >
+                    <FiDownload size={14}/> Download Original
+                  </a>
+                </div>
+
+                <div className="relative group max-w-lg rounded-3xl overflow-hidden border-4 border-white shadow-xl ring-1 ring-gray-100">
+                  <img 
+                    src={`${BASE_URL}${complaint.attachment}`} 
+                    alt="Evidence" 
+                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 cursor-zoom-in"
+                    onClick={() => window.open(`${BASE_URL}${complaint.attachment}`, "_blank")}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <p className="text-white text-xs font-medium">Click to expand</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* SIDEBAR METADATA */}
+        {/* SIDEBAR */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b pb-4">Classification</h3>
-            
             <div className="space-y-5">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500 flex items-center gap-2 font-medium">
                   <FiTag className="text-gray-400" /> Category
                 </span>
-                <span className="font-bold text-gray-900 text-sm bg-gray-50 px-3 py-1 rounded-lg">
+                <span className="font-bold text-gray-900 text-sm bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
                   {complaint.category}
                 </span>
               </div>
@@ -145,8 +174,7 @@ const ComplaintDetails = () => {
             </div>
           </div>
 
-          {/* SYSTEM INFO */}
-          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Submission Details</p>
             <div className="space-y-3">
               <div>
@@ -160,7 +188,6 @@ const ComplaintDetails = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

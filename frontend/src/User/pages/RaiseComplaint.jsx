@@ -1,38 +1,67 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search, ChevronDown } from "lucide-react";
-import { fetchComplaints, createComplaint, updateComplaintStatus } from "../../store/slices/complaintSlice";
+import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search } from "lucide-react";
+import { fetchComplaints, createComplaint } from "../../store/slices/complaintSlice";
+import { fetchResidentById } from "../../store/slices/residentSlice";
 
 const statusConfig = {
-  Pending:    { color: "bg-amber-100 text-amber-700",   icon: <Clock size={12} /> },
-  "In Progress": { color: "bg-blue-100 text-blue-700",  icon: <AlertCircle size={12} /> },
-  Resolved:   { color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle size={12} /> },
+  Pending:      { color: "bg-amber-100 text-amber-700",    icon: <Clock size={12} /> },
+  "In Progress":{ color: "bg-blue-100 text-blue-700",     icon: <AlertCircle size={12} /> },
+  Resolved:     { color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle size={12} /> },
 };
 
 const categoryColors = {
-  Plumbing:    "bg-blue-50 text-blue-600",
-  Electrical:  "bg-amber-50 text-amber-600",
-  Cleaning:    "bg-green-50 text-green-600",
-  Security:    "bg-red-50 text-red-600",
-  Lift:        "bg-violet-50 text-violet-600",
-  Other:       "bg-slate-100 text-slate-600",
+  Water:   "bg-blue-50 text-blue-600",
+  Electricity: "bg-amber-50 text-amber-600",
+  Security:   "bg-red-50 text-red-600",
+  Maintenance:       "bg-violet-50 text-violet-600",
+  Other:      "bg-slate-100 text-slate-600",
 };
 
 const RaiseComplaint = () => {
   const dispatch = useDispatch();
-  const { complaints, loading } = useSelector((s) => s.complaint);
-  const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const isAdmin = user?.role?.toLowerCase() === "admin";
+
+  const { complaints, loading: complaintLoading } = useSelector((s) => s.complaint);
+
+  // FIX: Use profileLoading (not loading) from residentSlice.
+  // profileLoading is only ever set by fetchResidentById, so it won't
+  // be stuck true because of complaint or list actions.
+  const { singleResident, profileLoading: residentLoading } = useSelector((s) => s.resident);
+
+  const user       = JSON.parse(localStorage.getItem("userData") || "{}");
+  const residentId = user?.profileId;
 
   const [showForm, setShowForm] = useState(false);
-  const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState("All");
-  const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
+  const [filter,   setFilter]   = useState("All");
+  const [search,   setSearch]   = useState("");
 
-  useEffect(() => { dispatch(fetchComplaints()); }, [dispatch]);
+  const [form, setForm] = useState({
+    title:       "",
+    description: "",
+    category:    "Other",
+    wing:        "",
+    flatNumber:  "",
+    attachment:  null,
+  });
 
-  const filtered = (complaints || []).filter(c => {
+  useEffect(() => {
+    dispatch(fetchComplaints());
+    if (residentId) {
+      dispatch(fetchResidentById(residentId));
+    }
+  }, [dispatch, residentId]);
+
+  // Autofill wing + flatNumber from residentSlice once singleResident loads
+  useEffect(() => {
+    if (!singleResident) return;
+    setForm((prev) => ({
+      ...prev,
+      wing:       singleResident.wing       ?? "",
+      flatNumber: singleResident.flatNumber ?? "",
+    }));
+  }, [singleResident]);
+
+  const filtered = (complaints || []).filter((c) => {
     const matchStatus = filter === "All" || c.status === filter;
     const matchSearch = c.title?.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
@@ -40,16 +69,34 @@ const RaiseComplaint = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    await dispatch(createComplaint(form));
-    setShowForm(false);
-    setForm({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
+
+    const formData = new FormData();
+    formData.append("title",       form.title);
+    formData.append("description", form.description);
+    formData.append("category",    form.category);
+    formData.append("resident",    singleResident?._id);
+    if (form.attachment) formData.append("attachment", form.attachment);
+
+    const result = await dispatch(createComplaint(formData));
+
+    if (!result.error) {
+      setShowForm(false);
+      setForm({
+        title:       "",
+        description: "",
+        category:    "Other",
+        wing:        singleResident?.wing       ?? "",
+        flatNumber:  singleResident?.flatNumber ?? "",
+        attachment:  null,
+      });
+    }
   };
 
   const stats = [
-    { label: "Total", value: complaints?.length || 0, color: "text-slate-700", bg: "bg-slate-50" },
-    { label: "Pending", value: complaints?.filter(c => c.status === "Pending").length || 0, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "In Progress", value: complaints?.filter(c => c.status === "In Progress").length || 0, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Resolved", value: complaints?.filter(c => c.status === "Resolved").length || 0, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Total",       value: complaints?.length || 0,                                            color: "text-slate-700",   bg: "bg-slate-50"   },
+    { label: "Pending",     value: complaints?.filter((c) => c.status === "Pending").length     || 0,  color: "text-amber-600",   bg: "bg-amber-50"   },
+    { label: "In Progress", value: complaints?.filter((c) => c.status === "In Progress").length || 0,  color: "text-blue-600",    bg: "bg-blue-50"    },
+    { label: "Resolved",    value: complaints?.filter((c) => c.status === "Resolved").length    || 0,  color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
   return (
@@ -67,14 +114,17 @@ const RaiseComplaint = () => {
             </div>
             <p className="text-sm text-slate-400">Track and manage your complaints</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-700 transition">
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-700 transition"
+          >
             <Plus size={16} /> Raise Complaint
           </button>
         </div>
 
         {/* STATS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {stats.map(s => (
+          {stats.map((s) => (
             <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
               <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
@@ -86,136 +136,161 @@ const RaiseComplaint = () => {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6 flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search complaints..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search complaints..."
+              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+            />
           </div>
           <div className="flex gap-2">
-            {["All", "Pending", "In Progress", "Resolved"].map(s => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${filter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+            {["All", "Pending", "In Progress", "Resolved"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  filter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+              >
                 {s}
               </button>
             ))}
           </div>
         </div>
 
-        {/* COMPLAINTS LIST */}
-        {loading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}</div>
+        {/* LIST */}
+        {complaintLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-white rounded-2xl border border-slate-100 animate-pulse" />
+            ))}
+          </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map(c => (
-              <div key={c._id} onClick={() => setSelected(c)}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-slate-200 transition">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[c.category] || categoryColors.Other}`}>{c.category}</span>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[c.status]?.color || statusConfig.Pending.color}`}>
-                        {statusConfig[c.status]?.icon} {c.status}
-                      </span>
-                      {c.wing && <span className="text-xs text-slate-400">Wing {c.wing} • Flat {c.flatNumber}</span>}
+            {filtered.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center text-slate-400 text-sm">
+                No complaints found
+              </div>
+            ) : (
+              filtered.map((c) => (
+                <div key={c._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold text-slate-800">{c.title}</h3>
+                      <p className="text-sm text-slate-400 mt-0.5">{c.description}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Wing {c.resident?.wing ?? "—"} • Flat {c.resident?.flatNumber ?? "—"}
+                      </p>
                     </div>
-                    <h3 className="font-semibold text-slate-800 mb-1">{c.title}</h3>
-                    <p className="text-sm text-slate-400 line-clamp-1">{c.description}</p>
+                    <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${statusConfig[c.status]?.color}`}>
+                      {statusConfig[c.status]?.icon} {c.status}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-300 shrink-0">{new Date(c.createdAt).toLocaleDateString("en-IN")}</p>
                 </div>
-              </div>
-            ))}
-            {!filtered.length && (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 text-slate-400">
-                <Wrench size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-medium">No complaints found</p>
-              </div>
+              ))
             )}
           </div>
         )}
-      </div>
 
-      {/* DETAIL MODAL */}
-      {selected && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[selected.category] || categoryColors.Other}`}>{selected.category}</span>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[selected.status]?.color}`}>
-                  {statusConfig[selected.status]?.icon} {selected.status}
-                </span>
+        {/* CREATE MODAL */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-slate-800">Raise Complaint</h2>
+                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={18} />
+                </button>
               </div>
-              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">{selected.title}</h2>
-            <p className="text-slate-500 text-sm leading-relaxed mb-4">{selected.description}</p>
-            {(selected.wing || selected.flatNumber) && (
-              <p className="text-xs text-slate-400 mb-4">Wing {selected.wing} • Flat {selected.flatNumber}</p>
-            )}
-            <p className="text-xs text-slate-300 mb-5">{new Date(selected.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
-            {isAdmin && (
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">Update Status</label>
-                <div className="flex gap-2 flex-wrap">
-                  {["Pending", "In Progress", "Resolved"].map(s => (
-                    <button key={s} onClick={() => { dispatch(updateComplaintStatus({ id: selected._id, status: s })); setSelected(null); }}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold border transition ${selected.status === s ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
-                      {s}
-                    </button>
+
+              <form onSubmit={handleCreate} className="space-y-4">
+
+                <input
+                  required
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="Brief issue title"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+
+                <textarea
+                  required
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Describe the issue..."
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Object.keys(categoryColors).map((c) => (
+                    <option key={c}>{c}</option>
                   ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* CREATE MODAL */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-slate-800">Raise Complaint</h2>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Title</label>
-                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="Brief issue title" className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Category</label>
-                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                  className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  {Object.keys(categoryColors).map(c => <option key={c}>{c}</option>)}
                 </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Wing</label>
-                  <input value={form.wing} onChange={e => setForm({ ...form, wing: e.target.value })}
-                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+                {/* Wing + Flat autofill */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Wing</label>
+                    <input
+                      value={residentLoading ? "Loading..." : (form.wing || "—")}
+                      readOnly
+                      className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-100 text-slate-600 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Flat No.</label>
+                    <input
+                      value={residentLoading ? "Loading..." : (form.flatNumber || "—")}
+                      readOnly
+                      className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-100 text-slate-600 cursor-not-allowed"
+                    />
+                  </div>
                 </div>
+
+                {/* ATTACHMENT */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Flat No.</label>
-                  <input value={form.flatNumber} onChange={e => setForm({ ...form, flatNumber: e.target.value })}
-                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Attachment (Optional)
+                  </label>
+                  <div className="mt-1">
+                    <label className="w-full cursor-pointer">
+                      <div className="flex flex-col items-center justify-center px-4 py-5 border border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 transition">
+                        <svg className="w-6 h-6 mb-2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l-4-4m4 4l4-4" />
+                        </svg>
+                        <p className="text-xs text-slate-500">
+                          {form.attachment ? form.attachment.name : "Click to upload image (max 5MB)"}
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        className="hidden"
+                        onChange={(e) => setForm({ ...form, attachment: e.target.files[0] || null })}
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</label>
-                <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Describe the issue in detail..." className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-              </div>
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 transition">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition">Submit</button>
-              </div>
-            </form>
+
+                <button
+                  type="submit"
+                  disabled={complaintLoading || !singleResident}
+                  className="w-full bg-slate-900 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {complaintLoading ? "Submitting..." : "Submit Complaint"}
+                </button>
+
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 };
