@@ -89,7 +89,7 @@ exports.getAllResidents = async (req, res) => {
  * GET RESIDENT BY ID
  */
 exports.getResidentById = async (req, res) => {
-  console.log("controller resident get by id");
+  console.log("controller resident get by id",req.params.id);
   try {
 
     const resident = await Resident.findById(req.params.id).populate('flat');
