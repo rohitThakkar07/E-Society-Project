@@ -2,33 +2,26 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import API from "../../service/api";
 
-// ── Helper: Parse any backend error into a human-readable message ─────────────
+// ── Helper ────────────────────────────────────────────────────────────────────
 const parseError = (err) => {
   const errData = err.response?.data;
 
-  // 1. express-validator array: [{ msg: "..." }, ...]
   if (Array.isArray(errData?.errors) && errData.errors.length > 0) {
     return errData.errors.map((e) => e.msg).join(", ");
   }
 
-  // 2. Plain backend message string
   if (errData?.message) {
     const msg = errData.message;
-
-    // 3. MongoDB duplicate key error → user-friendly translation
     if (msg.includes("E11000") || msg.includes("duplicate key")) {
-      if (msg.includes("email"))        return "This email is already registered. Please use a different email.";
+      if (msg.includes("email"))        return "This email is already registered.";
       if (msg.includes("mobileNumber")) return "This mobile number is already registered.";
       if (msg.includes("flat"))         return "This flat is already assigned to another resident.";
       return "A resident with these details already exists.";
     }
-
     return msg;
   }
 
-  // 4. Network / unknown error
   if (!err.response) return "Network error. Please check your connection.";
-
   return "Something went wrong. Please try again.";
 };
 
@@ -123,10 +116,14 @@ export const deleteResident = createAsyncThunk(
 // ── Slice ─────────────────────────────────────────────────────────────────────
 
 const initialState = {
-  residents: [],
+  residents:      [],
   singleResident: null,
-  loading: false,
-  error: null,
+  // FIX: Two separate loading flags so ProfilePage and RaiseComplaint
+  // never block each other. profileLoading is ONLY for fetchResidentById.
+  // loading is for list/create/update/delete operations.
+  loading:        false,
+  profileLoading: false,
+  error:          null,
 };
 
 const residentSlice = createSlice({
@@ -137,45 +134,65 @@ const residentSlice = createSlice({
     clearError:          (state) => { state.error = null; },
   },
   extraReducers: (builder) => {
-    const pending  = (state)         => { state.loading = true;  state.error = null; };
-    const rejected = (state, action) => { state.loading = false; state.error = action.payload; };
-
     builder
-      // fetchResidents
-      .addCase(fetchResidents.pending,   pending)
-      .addCase(fetchResidents.fulfilled, (state, action) => { state.loading = false; state.residents = action.payload; })
-      .addCase(fetchResidents.rejected,  rejected)
+      // ── fetchResidents ──────────────────────────────────────────────────────
+      .addCase(fetchResidents.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(fetchResidents.fulfilled, (state, action) => {
+        state.loading   = false;
+        state.residents = action.payload;
+      })
+      .addCase(fetchResidents.rejected,  (state, action) => {
+        state.loading = false;
+        state.error   = action.payload;
+      })
 
-      // fetchResidentById
-      .addCase(fetchResidentById.pending,   pending)
-      .addCase(fetchResidentById.fulfilled, (state, action) => { state.loading = false; state.singleResident = action.payload; })
-      .addCase(fetchResidentById.rejected,  rejected)
+      // ── fetchResidentById ───────────────────────────────────────────────────
+      // FIX: Uses profileLoading instead of loading so it never interferes
+      // with complaint list loading or any other consumer of state.resident.loading
+      .addCase(fetchResidentById.pending,   (state) => { state.profileLoading = true;  state.error = null; })
+      .addCase(fetchResidentById.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.singleResident = action.payload;
+      })
+      .addCase(fetchResidentById.rejected,  (state, action) => {
+        state.profileLoading = false;
+        state.error          = action.payload;
+      })
 
-      // createResident
-      .addCase(createResident.pending,   pending)
+      // ── createResident ──────────────────────────────────────────────────────
+      .addCase(createResident.pending,   (state) => { state.loading = true;  state.error = null; })
       .addCase(createResident.fulfilled, (state, action) => {
         state.loading = false;
         if (action.payload) state.residents.unshift(action.payload);
       })
-      .addCase(createResident.rejected,  rejected)
+      .addCase(createResident.rejected,  (state, action) => {
+        state.loading = false;
+        state.error   = action.payload;
+      })
 
-      // updateResident
-      .addCase(updateResident.pending,   pending)
+      // ── updateResident ──────────────────────────────────────────────────────
+      .addCase(updateResident.pending,   (state) => { state.loading = true;  state.error = null; })
       .addCase(updateResident.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.residents.findIndex((r) => r._id === action.payload._id);
         if (index !== -1) state.residents[index] = action.payload;
         state.singleResident = action.payload;
       })
-      .addCase(updateResident.rejected,  rejected)
-
-      // deleteResident
-      .addCase(deleteResident.pending,   pending)
-      .addCase(deleteResident.fulfilled, (state, action) => {
+      .addCase(updateResident.rejected,  (state, action) => {
         state.loading = false;
-        state.residents = state.residents.filter((r) => r._id !== action.payload);
+        state.error   = action.payload;
       })
-      .addCase(deleteResident.rejected,  rejected);
+
+      // ── deleteResident ──────────────────────────────────────────────────────
+      .addCase(deleteResident.pending,   (state) => { state.loading = true;  state.error = null; })
+      .addCase(deleteResident.fulfilled, (state, action) => {
+        state.loading     = false;
+        state.residents   = state.residents.filter((r) => r._id !== action.payload);
+      })
+      .addCase(deleteResident.rejected,  (state, action) => {
+        state.loading = false;
+        state.error   = action.payload;
+      });
   },
 });
 
