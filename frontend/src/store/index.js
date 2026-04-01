@@ -15,6 +15,7 @@ import staffReducer          from './slices/staffSlice';
 import pollReducer           from './slices/pollSlice';
 import alertReducer          from './slices/alertSlice';
 import maintenanceBillingReducer from "./slices/Maintenancebillingslice";
+import paymentReducer        from "./slices/paymentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
     poll:        pollReducer,  
     alert:       alertReducer, 
     maintenanceBilling: maintenanceBillingReducer,
+    payment: paymentReducer,
   },
 });
 

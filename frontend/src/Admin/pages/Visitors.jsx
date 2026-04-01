@@ -1,21 +1,30 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { 
+  Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, TablePagination,
+  IconButton, Tooltip, Chip, InputBase, Avatar 
+} from "@mui/material";
 import {
   FiEdit, FiSearch, FiPlus, FiUser, FiPhone,
-  FiLogIn, FiLogOut, FiMapPin, FiActivity, FiClock
+  FiLogIn, FiLogOut, FiMapPin, FiClock
 } from "react-icons/fi";
 import { fetchVisitors, updateVisitorStatus } from "../../../store/slices/visitorSlice";
 
 const STATUS_STYLE = {
-  Inside: "bg-green-100 text-green-700",
-  Exited: "bg-gray-100 text-gray-500",
+  Inside: { bg: "#ecfdf5", color: "#059669" },
+  Exited: { bg: "#f1f5f9", color: "#64748b" },
 };
 
 const Visitors = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // ✅ Pagination & Search State
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const { list: visitors = [], loading } = useSelector((state) => state.visitor || {});
 
@@ -23,6 +32,17 @@ const Visitors = () => {
     dispatch(fetchVisitors());
   }, [dispatch]);
 
+  // ✅ Pagination Handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page when changing limit
+  };
+
+  // Filtering Logic
   const filteredVisitors = useMemo(() =>
     visitors.filter((v) =>
       v.visitorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,6 +50,7 @@ const Visitors = () => {
       v.mobileNumber?.includes(searchTerm)
     ), [visitors, searchTerm]);
 
+  // Status Handlers
   const handleMarkExit = (id) => {
     if (window.confirm("Are you sure this visitor has exited?")) {
       dispatch(updateVisitorStatus({ id, status: "Exited", exitTime: new Date() }));
@@ -42,151 +63,162 @@ const Visitors = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* HEADER SECTION - Same as FlatList */}
-      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+      
+      {/* HEADER SECTION */}
+      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Visitor Management</h1>
-          <p className="text-sm text-gray-500">Real-time log of all society entries and exits.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Visitor Management</h1>
+          <p className="text-sm text-slate-500 font-medium">Real-time log of all society entries and exits.</p>
         </div>
         <button
           onClick={() => navigate("/admin/visitors/add")}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 font-semibold flex items-center gap-2 shadow-sm transition-all active:scale-95"
+          className="bg-blue-600 text-white px-6 py-3 rounded-2xl hover:bg-blue-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
         >
-          <FiPlus /> Log Visitor
+          <FiPlus size={18} /> Log Visitor
         </button>
       </div>
 
-      {/* TABLE CONTAINER - Same as FlatList */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-        {/* SEARCH BAR - Same as FlatList */}
-        <div className="p-4 border-b border-gray-50 flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[300px]">
-            <FiSearch className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by Visitor Name, Flat, or Phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all"
-            />
-          </div>
-        </div>
-
-        {/* TABLE BODY - Identical structure to FlatList */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-[10px] tracking-widest border-b">
-              <tr>
-                <th className="px-6 py-4">Visitor Name</th>
-                <th className="px-6 py-4">Contact</th>
-                <th className="px-6 py-4">Visiting Unit</th>
-                <th className="px-6 py-4">Entry Time</th>
-                <th className="px-6 py-4">Exit Time</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan="7" className="p-6 bg-gray-50/50"></td>
-                  </tr>
-                ))
-              ) : filteredVisitors.length > 0 ? (
-                filteredVisitors.map((v) => (
-                  <tr key={v._id} className="hover:bg-blue-50/30 transition-colors">
-
-                    {/* Visitor Name (Bold like Flat No) */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                          <FiUser size={14} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">{v.visitorName}</div>
-                          <div className="text-[11px] text-gray-400">{v.purpose || "General"}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Contact (Medium grey) */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-gray-600 font-medium">
-                        <FiPhone className="text-gray-400" size={12} />
-                        {v.mobileNumber}
-                      </div>
-                    </td>
-
-                    {/* Unit (Bold Blue like Wing-Flat) */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <FiMapPin className="text-indigo-400" size={14} />
-                        <span className="font-bold text-indigo-600">
-                          {v.flatNumber}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Entry Time (Green Accent) */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-green-600 font-semibold">
-                        <FiLogIn size={13} />
-                        {formatTime(v.entryTime)}
-                      </div>
-                    </td>
-
-                    {/* Exit Time (Grey/Amber) */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <FiLogOut size={13} />
-                        {formatTime(v.exitTime)}
-                      </div>
-                    </td>
-
-                    {/* Status Badge (Uppercase Bold text-[10px]) */}
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[v.status] || STATUS_STYLE.Exited}`}>
-                        {v.status}
-                      </span>
-                    </td>
-
-                    {/* Action Buttons (Square with Backgrounds) */}
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2 justify-center">
-                        {v.status === "Inside" && (
-                          <button
-                            onClick={() => handleMarkExit(v._id)}
-                            className="p-2 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors"
-                            title="Mark Exit"
-                          >
-                            <FiClock size={14} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => navigate(`/admin/visitors/edit/${v._id}`)}
-                          className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <FiEdit size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                    No visitor records found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* SEARCH BAR */}
+      <div className="mb-6 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 px-4 max-w-md">
+        <FiSearch className="text-slate-400" />
+        <InputBase
+          placeholder="Search by Visitor, Flat, or Phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full font-medium text-sm"
+        />
       </div>
+
+      {/* MUI TABLE CONTAINER */}
+      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+        <Table sx={{ minWidth: 900 }}>
+          <TableHead className="bg-slate-50">
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Visitor Details</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Visiting Unit</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Entry</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Exit</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {!loading ? filteredVisitors
+              // ✅ Apply Slicing for Pagination
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((v) => (
+              <TableRow key={v._id} hover>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 36, height: 36 }}>
+                      <FiUser size={16} />
+                    </Avatar>
+                    <div>
+                      <div className="font-bold text-slate-900">{v.visitorName}</div>
+                      <div className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{v.purpose || "General"}</div>
+                    </div>
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
+                    <FiPhone className="text-slate-300" size={14} />
+                    {v.mobileNumber}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                      <FiMapPin size={14} />
+                    </div>
+                    <span className="font-black text-indigo-600 text-sm">{v.flatNumber}</span>
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                   <div className="flex items-center gap-1.5 text-emerald-600 font-black text-xs">
+                      <FiLogIn size={14} /> {formatTime(v.entryTime)}
+                   </div>
+                </TableCell>
+
+                <TableCell>
+                   <div className="flex items-center gap-1.5 text-slate-400 font-bold text-xs">
+                      <FiLogOut size={14} /> {formatTime(v.exitTime)}
+                   </div>
+                </TableCell>
+
+                <TableCell>
+                  <Chip 
+                    label={v.status}
+                    size="small"
+                    sx={{ 
+                      fontWeight: 900, 
+                      fontSize: '9px',
+                      textTransform: 'uppercase',
+                      bgcolor: STATUS_STYLE[v.status]?.bg || STATUS_STYLE.Exited.bg,
+                      color: STATUS_STYLE[v.status]?.color || STATUS_STYLE.Exited.color,
+                      borderRadius: '8px'
+                    }}
+                  />
+                </TableCell>
+
+                <TableCell align="center">
+                  <div className="flex justify-center gap-1">
+                    {v.status === "Inside" && (
+                      <Tooltip title="Mark Exit">
+                        <IconButton 
+                          onClick={() => handleMarkExit(v._id)}
+                          size="small"
+                          sx={{ color: '#d97706', bgcolor: '#fffbeb', borderRadius: '10px', '&:hover': { bgcolor: '#fef3c7' } }}
+                        >
+                          <FiClock size={14} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Edit Log">
+                      <IconButton 
+                        onClick={() => navigate(`/admin/visitors/edit/${v._id}`)} 
+                        size="small"
+                        sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}
+                      >
+                        <FiEdit size={14} />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )) : (
+              [...Array(rowsPerPage)].map((_, i) => (
+                <TableRow key={i}><TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: '#cbd5e1' }}>Loading...</TableCell></TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+
+        {/* ✅ PAGINATION COMPONENT */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredVisitors.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid #f1f5f9',
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontWeight: 800,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: '#94a3b8'
+            }
+          }}
+        />
+      </TableContainer>
     </div>
   );
 };
