@@ -1,21 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const paymentController = require("./lib/controller");
-// const { protect, adminOnly } = require("../middleware/authMiddleware");
 
-// Resident pays a bill
-router.post("/add",
-    //  protect, 
-    paymentController.createPayment);
+// Step 1 — get payment intent before showing checkout
+router.post("/initiate", paymentController.initiatePayment);
+
+// Step 2 — resident confirms and pays a bill
+router.post("/add", paymentController.createPayment);
 
 // Admin sees all receipts
-router.get("/list",
-    // protect, adminOnly,
-    paymentController.getAllPayments);
+router.get("/list", paymentController.getAllPayments);
 
 // Resident sees their own history
-router.get("/my-history",
-    // protect,
-    paymentController.getMyPayments);
+router.get("/my-history", paymentController.getMyPayments);
 
 module.exports = router;

@@ -2,6 +2,15 @@ const User = require("../../../db/models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 /* Register Resident */
 const registerResident = async (req, res) => {
@@ -115,8 +124,60 @@ const logout = async (req, res) => {
     });
   }
 };
+/* Forgot Password - Send OTP */
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  user.resetOtp = otp;
+  user.resetOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+  await user.save();
+
+  // send email here
+
+  res.json({ message: "OTP sent" });
+};
+
+/* Reset Password - Verify OTP & Set New Password */
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ message: "Email, OTP, and new password are required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.resetToken || user.resetToken !== otp)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    if (!user.resetTokenExpiry || user.resetTokenExpiry < new Date())
+      return res.status(400).json({ message: "OTP has expired. Please request a new one." });
+
+    if (newPassword.length < 6)
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successfully! You can now log in." });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ message: "Password reset failed. Please try again." });
+  }
+};
+
 module.exports = {
   // registerResident,
   login,
-  logout
+  logout,
+  forgotPassword,
+  resetPassword,
 };

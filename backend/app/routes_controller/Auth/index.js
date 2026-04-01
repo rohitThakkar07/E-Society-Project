@@ -20,6 +20,12 @@ router.post(
 );
 
 // Logout
-router.post("/logout",controller.logout);
+router.post("/logout", controller.logout);
+
+// Forgot Password - Send OTP
+router.post("/forgot-password", controller.forgotPassword);
+
+// Reset Password - Verify OTP & Set New Password
+router.post("/reset-password", controller.resetPassword);
 
 module.exports = router;
