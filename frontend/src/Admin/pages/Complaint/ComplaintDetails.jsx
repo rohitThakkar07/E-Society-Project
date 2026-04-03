@@ -108,7 +108,7 @@ const ComplaintDetails = () => {
             </div>
 
             {/* ✅ ATTACHMENT SECTION */}
-            {complaint.attachment && (
+            {complaint.attachment ? (
               <div className="mt-10 pt-10 border-t border-gray-50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-blue-600">
@@ -130,10 +130,23 @@ const ComplaintDetails = () => {
                     alt="Evidence" 
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 cursor-zoom-in"
                     onClick={() => window.open(`${BASE_URL}${complaint.attachment}`, "_blank")}
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='10' y='100' font-size='14' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                     <p className="text-white text-xs font-medium">Click to expand</p>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-10 pt-10 border-t border-gray-50">
+                <div className="flex items-center gap-2 text-gray-500 mb-4">
+                  <FiMaximize size={18} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Evidence Attachment</span>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center text-gray-400">
+                  <p>No attachment provided</p>
                 </div>
               </div>
             )}

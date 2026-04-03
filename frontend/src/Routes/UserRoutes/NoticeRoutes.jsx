@@ -1,10 +1,16 @@
-import NoticeBoard from "../../User/pages/NoticeBoard";
+import { lazy, Suspense } from "react";
+
+const NoticeBoard = lazy(() => import("../../User/pages/NoticeBoard"));
 
 // Header nav: Community → "Notice Board" → "/notices"
 const NoticeRoutes = [
   {
     path: "notices",
-    element: <NoticeBoard />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <NoticeBoard />
+      </Suspense>
+    ),
   },
 ];
 

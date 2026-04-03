@@ -1,20 +1,33 @@
-import React from 'react';
-import ComplaintDashboard from "../../Admin/pages/Complaint/ComplaintDashboard";
-import ComplaintDetails from "../../Admin/pages/Complaint/ComplaintDetails";
-import CreateComplaint from "../../Admin/pages/Complaint/CreateComplaint";
+import React, { lazy, Suspense } from 'react';
+
+const ComplaintDashboard = lazy(() => import("../../Admin/pages/Complaint/ComplaintDashboard"));
+const ComplaintDetails = lazy(() => import("../../Admin/pages/Complaint/ComplaintDetails"));
+const CreateComplaint = lazy(() => import("../../Admin/pages/Complaint/CreateComplaint"));
 
 const complaintRoutes = [
   {
     path: "complaints",
-    element: <ComplaintDashboard />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ComplaintDashboard />
+      </Suspense>
+    ),
   },
   {
     path: "complaints/create",
-    element: <CreateComplaint />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <CreateComplaint />
+      </Suspense>
+    ),
   },
   {
     path: "complaints/:id",
-    element: <ComplaintDetails />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ComplaintDetails />
+      </Suspense>
+    ),
   },
 ];
 

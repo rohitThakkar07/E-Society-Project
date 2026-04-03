@@ -1,10 +1,16 @@
-import PollsPage from "../../User/pages/PollPage";
+import { lazy, Suspense } from "react";
+
+const PollsPage = lazy(() => import("../../User/pages/PollPage"));
 
 // Header nav: Operations → "Book Facilities" → "/facilities"
 const PollRoutes = [
   {
     path: "/polls",
-    element: <PollsPage />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <PollsPage />
+      </Suspense>
+    ),
   },
 ];
 

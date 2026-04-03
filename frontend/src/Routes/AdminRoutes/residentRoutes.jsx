@@ -1,19 +1,32 @@
-import React from 'react';
-import Residents from "../../Admin/pages/Residents/Residents";
-import ResidentForm from "../../Admin/pages/Residents/ResidentForm";
+import React, { lazy, Suspense } from 'react';
+
+const Residents = lazy(() => import("../../Admin/pages/Residents/Residents"));
+const ResidentForm = lazy(() => import("../../Admin/pages/Residents/ResidentForm"));
 
 const residentRoutes = [
   {
     path: "residents",
-    element: <Residents />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Residents />
+      </Suspense>
+    ),
   },
   {
     path: "residents/add",
-    element: <ResidentForm />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ResidentForm />
+      </Suspense>
+    ),
   },
   {
     path: "residents/edit/:id",
-    element: <ResidentForm />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ResidentForm />
+      </Suspense>
+    ),
   },
 ];
 

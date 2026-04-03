@@ -26,7 +26,7 @@ const Visitors = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const { list: visitors = [], loading } = useSelector((state) => state.visitor || {});
+  const { visitors = [], loading } = useSelector((state) => state.visitor || {});
 
   useEffect(() => {
     dispatch(fetchVisitors());
@@ -39,7 +39,7 @@ const Visitors = () => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to first page when changing limit
+    setPage(0); 
   };
 
   // Filtering Logic
@@ -72,7 +72,7 @@ const Visitors = () => {
           <p className="text-sm text-slate-500 font-medium">Real-time log of all society entries and exits.</p>
         </div>
         <button
-          onClick={() => navigate("/admin/visitors/add")}
+          onClick={() => navigate("/admin/visitor/add")}
           className="bg-blue-600 text-white px-6 py-3 rounded-2xl hover:bg-blue-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
         >
           <FiPlus size={18} /> Log Visitor
@@ -107,7 +107,7 @@ const Visitors = () => {
 
           <TableBody>
             {!loading ? filteredVisitors
-              // ✅ Apply Slicing for Pagination
+              // Apply Slicing for Pagination
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((v) => (
               <TableRow key={v._id} hover>
@@ -181,7 +181,7 @@ const Visitors = () => {
                     )}
                     <Tooltip title="Edit Log">
                       <IconButton 
-                        onClick={() => navigate(`/admin/visitors/edit/${v._id}`)} 
+                        onClick={() => navigate(`/admin/visitor/edit/${v._id}`)} 
                         size="small"
                         sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}
                       >

@@ -19,7 +19,7 @@ const statusConfig = {
 
 const VisitorManagement = () => {
   const dispatch = useDispatch();
-  const { list: visitors = [], loading } = useSelector((s) => s.visitor || {});
+  const { visitors = [], loading } = useSelector((s) => s.visitor || {});
   const { residents = [] } = useSelector((s) => s.resident || {});
   
   console.log(visitors)

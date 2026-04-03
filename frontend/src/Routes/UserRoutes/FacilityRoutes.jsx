@@ -1,10 +1,16 @@
-import BookFacility from "../../User/pages/BookFacility";
+import { lazy, Suspense } from "react";
+
+const BookFacility = lazy(() => import("../../User/pages/BookFacility"));
 
 // Header nav: Operations → "Book Facilities" → "/facilities"
 const FacilityRoutes = [
   {
     path: "facilities",
-    element: <BookFacility />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <BookFacility />
+      </Suspense>
+    ),
   },
 ];
 

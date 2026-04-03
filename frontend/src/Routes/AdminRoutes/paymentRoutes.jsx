@@ -1,10 +1,15 @@
-import React from 'react';
-import Payments from "../../Admin/pages/Payments";
+import React, { lazy, Suspense } from 'react';
+
+const Payments = lazy(() => import("../../Admin/pages/Payments"));
 
 const paymentRoutes = [
   {
     path: "payments",
-    element: <Payments />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Payments />
+      </Suspense>
+    ),
   },
 ];
 
