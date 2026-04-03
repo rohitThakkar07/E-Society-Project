@@ -16,7 +16,7 @@ const maintenanceSchema = new mongoose.Schema({
   paymentHistory: [{
     date: { type: Date, default: Date.now },
     amount: { type: Number },
-    mode: { type: String, enum: ["Cash", "UPI", "Card", "Net Banking"] },
+    mode: { type: String, enum: ["Cash", "UPI", "Card", "Net Banking", "Netbanking", "Wallet", "E-Mandate", "Razorpay", "Other"] },
     transactionId: { type: String }
   }]
 }, { timestamps: true });
