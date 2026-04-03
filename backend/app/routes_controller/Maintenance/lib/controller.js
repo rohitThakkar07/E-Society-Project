@@ -300,6 +300,18 @@ const updateMaintenance = async (req, res) => {
 };
 
 // ── ADD PAYMENT (partial) ─────────────────────────────────────────────────────
+const normalizeMode = (mode) => {
+  const value = (mode || "").toString().toLowerCase();
+  if (value === "card") return "Card";
+  if (value === "netbanking" || value === "net banking") return "Net Banking";
+  if (value === "upi") return "UPI";
+  if (value === "wallet") return "Wallet";
+  if (value === "emandate") return "E-Mandate";
+  if (value === "razorpay") return "Razorpay";
+  if (value === "cash") return "Cash";
+  return "Other";
+};
+
 const addPayment = async (req, res) => {
   try {
     const { amount, mode, transactionId } = req.body;
@@ -313,7 +325,7 @@ const addPayment = async (req, res) => {
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
     if (record.status === "Paid") return res.status(400).json({ success: false, message: "Already fully paid." });
 
-    record.paymentHistory.push({ amount, mode, transactionId, date: new Date() });
+    record.paymentHistory.push({ amount, mode: normalizeMode(mode), transactionId, date: new Date() });
 
     const totalPaid = record.paymentHistory.reduce((sum, p) => sum + p.amount, 0);
     const totalDue  = record.amount + (record.lateFee || 0);
@@ -351,7 +363,7 @@ const markAsPaid = async (req, res) => {
     const remaining = totalDue - totalPaid;
 
     if (remaining > 0) {
-      record.paymentHistory.push({ amount: remaining, mode, transactionId, date: new Date() });
+      record.paymentHistory.push({ amount: remaining, mode: normalizeMode(mode), transactionId, date: new Date() });
     }
 
     record.status   = "Paid";

@@ -133,14 +133,46 @@ const forgotPassword = async (req, res) => {
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  user.resetOtp = otp;
-  user.resetOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
+  user.resetToken = otp;
+  user.resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
   await user.save();
 
-  // send email here
+  // Send email with OTP
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Password Reset OTP - E-Society",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            We received a request to reset your password for your E-Society account.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="background-color: #007bff; color: white; padding: 15px 30px; border-radius: 5px; font-size: 24px; font-weight: bold; display: inline-block;">
+              ${otp}
+            </div>
+          </div>
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            This OTP will expire in 15 minutes. If you didn't request this password reset, please ignore this email.
+          </p>
+          <p style="color: #999; font-size: 14px; margin-top: 20px;">
+            For security reasons, please do not share this OTP with anyone.
+          </p>
+        </div>
+      </div>
+    `,
+  };
 
-  res.json({ message: "OTP sent" });
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "OTP sent to your email" });
+  } catch (error) {
+    console.error("Email send error:", error);
+    res.status(500).json({ message: "Failed to send OTP email" });
+  }
 };
 
 /* Reset Password - Verify OTP & Set New Password */
