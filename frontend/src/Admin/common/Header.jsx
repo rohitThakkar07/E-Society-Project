@@ -2,16 +2,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await axios.post("http://localhost:4000/api/auth/logout");
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:4000/api"}/auth/logout`);
       toast.success("Logged out successfully");
     } catch (error) {
       console.error(error);
@@ -47,7 +49,14 @@ const Header = ({ toggleSidebar }) => {
             {user.name?.charAt(0) || "A"}
           </div>
         </div>
-        
+
+        <button
+          onClick={() => setShowForgotModal(true)}
+          className="bg-white text-slate-800 border border-slate-300 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all active:scale-95"
+        >
+          Reset Password
+        </button>
+
         <button 
           onClick={handleLogout}
           disabled={loading}
@@ -56,6 +65,8 @@ const Header = ({ toggleSidebar }) => {
           {loading ? "..." : "Logout"}
         </button>
       </div>
+
+      {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
     </header>
   );
 };

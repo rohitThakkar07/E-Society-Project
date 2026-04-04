@@ -5,11 +5,18 @@ const { validationResult } = require("express-validator");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // TLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
 });
 
 /* Register Resident */
@@ -126,52 +133,56 @@ const logout = async (req, res) => {
 };
 /* Forgot Password - Send OTP */
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  user.resetToken = otp;
-  user.resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
-
-  await user.save();
-
-  // Send email with OTP
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Password Reset OTP - E-Society",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
-        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-          <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
-          <p style="color: #666; font-size: 16px; line-height: 1.6;">
-            We received a request to reset your password for your E-Society account.
-          </p>
-          <div style="text-align: center; margin: 30px 0;">
-            <div style="background-color: #007bff; color: white; padding: 15px 30px; border-radius: 5px; font-size: 24px; font-weight: bold; display: inline-block;">
-              ${otp}
-            </div>
-          </div>
-          <p style="color: #666; font-size: 16px; line-height: 1.6;">
-            This OTP will expire in 15 minutes. If you didn't request this password reset, please ignore this email.
-          </p>
-          <p style="color: #999; font-size: 14px; margin-top: 20px;">
-            For security reasons, please do not share this OTP with anyone.
-          </p>
-        </div>
-      </div>
-    `,
-  };
-
   try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "Email is required." });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(400).json({ message: "No account found with this email address." });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Use updateOne to avoid full-document validation (profileId required check)
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { resetToken: otp, resetTokenExpiry: otpExpiry } }
+    );
+
+    // Send email with OTP
+    const mailOptions = {
+      from: `"E-Society" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Password Reset OTP - E-Society",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
+          <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
+            <p style="color: #666; font-size: 16px; line-height: 1.6;">
+              We received a request to reset your password for your E-Society account.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background-color: #007bff; color: white; padding: 15px 30px; border-radius: 5px; font-size: 24px; font-weight: bold; display: inline-block;">
+                ${otp}
+              </div>
+            </div>
+            <p style="color: #666; font-size: 16px; line-height: 1.6;">
+              This OTP will expire in 15 minutes. If you didn't request this password reset, please ignore this email.
+            </p>
+            <p style="color: #999; font-size: 14px; margin-top: 20px;">
+              For security reasons, please do not share this OTP with anyone.
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
     await transporter.sendMail(mailOptions);
-    res.json({ message: "OTP sent to your email" });
+    res.json({ success: true, message: "OTP sent to your email" });
   } catch (error) {
-    console.error("Email send error:", error);
-    res.status(500).json({ message: "Failed to send OTP email" });
+    console.error("Forgot password error:", error.message || error);
+    res.status(500).json({ message: error.message || "Failed to send OTP. Please try again." });
   }
 };
 
@@ -194,10 +205,13 @@ const resetPassword = async (req, res) => {
     if (newPassword.length < 6)
       return res.status(400).json({ message: "Password must be at least 6 characters" });
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    await user.save();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Use updateOne to avoid full-document validation (profileId required check)
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword }, $unset: { resetToken: "", resetTokenExpiry: "" } }
+    );
 
     res.json({ success: true, message: "Password reset successfully! You can now log in." });
   } catch (error) {
