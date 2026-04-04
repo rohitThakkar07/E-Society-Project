@@ -1,99 +1,161 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Payments = () => {
-  // 1. Mock data for Maintenance Payments
-  const [payments, setPayments] = useState([
-    { id: "INV-2026-001", unit: "A-101", resident: "Rahul Sharma", amount: 5000, type: "Maintenance - Feb", date: "05 Feb 2026", status: "Paid" },
-    { id: "INV-2026-002", unit: "B-205", resident: "Priya Patel", amount: 5000, type: "Maintenance - Feb", date: "10 Feb 2026", status: "Pending" },
-    { id: "INV-2026-003", unit: "C-302", resident: "Amit Kumar", amount: 1500, type: "Clubhouse Booking", date: "12 Feb 2026", status: "Paid" },
-    { id: "INV-2026-004", unit: "A-102", resident: "Neha Gupta", amount: 10000, type: "Maintenance - Jan & Feb", date: "01 Feb 2026", status: "Overdue" },
-  ]);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({ status: "", query: "", startDate: "", endDate: "" });
+
+  const fetchPayments = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/payment/list`, {
+        params: {
+          status: filters.status || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (res.data.success) {
+        setPayments(res.data.data || []);
+      } else {
+        setError(res.data.message || "Unable to load payments");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Unable to load payments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, [filters.status, filters.startDate, filters.endDate]);
+
+  const filteredPayments = payments.filter((payment) => {
+    const q = filters.query.trim().toLowerCase();
+    if (!q) return true;
+    const residentName = `${payment.resident?.firstName || ""} ${payment.resident?.lastName || ""}`.trim().toLowerCase();
+    return (
+      (payment.receiptNumber || "").toLowerCase().includes(q) ||
+      residentName.includes(q) ||
+      (payment.resident?.flatNumber || "").toLowerCase().includes(q) ||
+      (payment.razorpayOrderId || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      
       {/* 2. Header Section */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Maintenance & Payments</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          + Generate Invoice
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Maintenance & Payments</h2>
+          <p className="text-sm text-gray-500 mt-1">View all payments, search and filter across residents.</p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          Refresh
         </button>
       </div>
 
-      {/* 3. The Data Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-gray-600 border-b">
-              <th className="p-3 font-semibold">Invoice No.</th>
-              <th className="p-3 font-semibold">Unit & Resident</th>
-              <th className="p-3 font-semibold">Description</th>
-              <th className="p-3 font-semibold">Amount</th>
-              <th className="p-3 font-semibold">Due/Paid Date</th>
-              <th className="p-3 font-semibold">Status</th>
-              <th className="p-3 font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {payments.map((payment) => (
-              <tr key={payment.id} className="border-b hover:bg-gray-50 transition-colors">
-                
-                <td className="p-3 text-gray-800 font-medium text-sm">{payment.id}</td>
-                
-                {/* Stack Unit and Resident Name for easy reading */}
-                <td className="p-3">
-                  <div className="font-medium text-blue-600">{payment.unit}</div>
-                  <div className="text-xs text-gray-500">{payment.resident}</div>
-                </td>
-                
-                <td className="p-3 text-gray-600">{payment.type}</td>
-                
-                {/* Formatted Amount */}
-                <td className="p-3 font-semibold text-gray-800">
-                  ₹{payment.amount.toLocaleString('en-IN')}
-                </td>
-                
-                <td className="p-3 text-gray-600 text-sm">{payment.date}</td>
+      {/* 3. Filters */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <input
+          value={filters.query}
+          onChange={(e) => setFilters((prev) => ({ ...prev, query: e.target.value }))}
+          placeholder="Search by invoice, resident, flat or order" 
+          className="w-full border p-2 rounded-lg outline-none focus:border-blue-500"
+        />
 
-                {/* Dynamic styling for Payment Status */}
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    payment.status === 'Paid' ? 'bg-green-100 text-green-700' : 
-                    payment.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    {payment.status}
-                  </span>
-                </td>
+        <select
+          value={filters.status}
+          onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+          className="w-full border p-2 rounded-lg outline-none focus:border-blue-500"
+        >
+          <option value="">All Status</option>
+          <option value="successful">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+          <option value="refunded">Refunded</option>
+        </select>
 
-                {/* Action Buttons */}
-                <td className="p-3 flex gap-3 items-center mt-1">
-                  {/* If Paid, show Receipt. If Pending/Overdue, show Reminder */}
-                  {payment.status === 'Paid' ? (
-                     <button className="text-blue-500 hover:text-blue-700 font-medium text-sm border border-blue-200 px-2 py-1 rounded">
-                       Receipt
-                     </button>
-                  ) : (
-                    <button className="text-orange-500 hover:text-orange-700 font-medium text-sm border border-orange-200 px-2 py-1 rounded flex items-center gap-1">
-                      Remind
-                    </button>
-                  )}
-                  <button className="text-gray-500 hover:text-gray-700 font-medium ml-2">Edit</button>
-                </td>
-                
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <input
+          type="date"
+          value={filters.startDate}
+          onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+          className="w-full border p-2 rounded-lg outline-none focus:border-blue-500"
+        />
+
+        <input
+          type="date"
+          value={filters.endDate}
+          onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+          className="w-full border p-2 rounded-lg outline-none focus:border-blue-500"
+        />
       </div>
-      
-      {/* 4. Empty State */}
-      {payments.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No payment records found.
+
+      {error && <div className="text-red-600 mb-4">{error}</div>}
+
+      {loading ? (
+        <div className="text-center py-8 text-gray-600">Loading payments...</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-100 text-gray-600 border-b">
+                <th className="p-3 font-semibold">Receipt</th>
+                <th className="p-3 font-semibold">Resident</th>
+                <th className="p-3 font-semibold">Unit</th>
+                <th className="p-3 font-semibold">Amount</th>
+                <th className="p-3 font-semibold">Method</th>
+                <th className="p-3 font-semibold">Status</th>
+                <th className="p-3 font-semibold">Paid Date</th>
+                <th className="p-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPayments.length > 0 ? (
+                filteredPayments.map((payment) => (
+                  <tr key={payment._id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-gray-800 font-medium text-sm">{payment.receiptNumber || payment._id}</td>
+                    <td className="p-3">
+                      <div className="font-medium text-blue-600">{payment.resident?.firstName} {payment.resident?.lastName}</div>
+                      <div className="text-xs text-gray-500">{payment.resident?.email || payment.resident?.mobile}</div>
+                    </td>
+                    <td className="p-3 text-gray-600">{payment.resident?.flatNumber || "N/A"}</td>
+                    <td className="p-3 font-semibold text-gray-800">₹{(payment.totalAmount || 0).toLocaleString("en-IN")}</td>
+                    <td className="p-3 text-gray-600">{payment.paymentMethod || "Razorpay"}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        payment.status === 'successful' ? 'bg-green-100 text-green-700' :
+                        payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        payment.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-gray-600 text-sm">{payment.paidAt ? new Date(payment.paidAt).toLocaleString("en-IN") : "N/A"}</td>
+                    <td className="p-3 flex gap-2">
+                      <button className="text-blue-500 hover:text-blue-700 text-xs font-medium border border-blue-200 px-2 py-1 rounded">Receipt</button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="p-4 text-center text-gray-500">No payments match the current filters.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
-
     </div>
   );
 };

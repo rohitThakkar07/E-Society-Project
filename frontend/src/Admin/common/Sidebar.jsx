@@ -1,6 +1,39 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
+const DropBtn = ({ isOpen, onClick, icon, label, open, active }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+      active
+        ? "text-white bg-slate-800"
+        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+    } ${!isOpen ? "justify-center" : ""}`}
+  >
+    {icon}
+    {isOpen && (
+      <>
+        <span className="flex-1 text-left">{label}</span>
+        <svg
+          className={`w-4 h-4 transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M19 9l-7 7-7-7" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </>
+    )}
+  </button>
+);
+
+const SectionLabel = ({ isOpen, label }) =>
+  isOpen ? (
+    <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest px-3 pt-4 pb-1">{label}</p>
+  ) : (
+    <div className="border-t border-slate-800 my-2 mx-3" />
+  );
+
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
 
@@ -23,40 +56,6 @@ const Sidebar = ({ isOpen }) => {
         : "text-slate-500 border-slate-800 hover:text-white hover:border-slate-600"
     }`;
 
-  // Dropdown toggle button
-  const DropBtn = ({ onClick, icon, label, open, active }) => (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-        active
-          ? "text-white bg-slate-800"
-          : "text-slate-400 hover:bg-slate-800 hover:text-white"
-      } ${!isOpen && "justify-center"}`}
-    >
-      {icon}
-      {isOpen && (
-        <>
-          <span className="flex-1 text-left">{label}</span>
-          <svg
-            className={`w-4 h-4 transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
-            fill="none" stroke="currentColor" viewBox="0 0 24 24"
-          >
-            <path d="M19 9l-7 7-7-7" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </>
-      )}
-    </button>
-  );
-
-  // Section label
-  const SectionLabel = ({ label }) =>
-    isOpen ? (
-      <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest px-3 pt-4 pb-1">
-        {label}
-      </p>
-    ) : (
-      <div className="border-t border-slate-800 my-2 mx-3" />
-    );
 
   return (
     <aside
@@ -75,7 +74,7 @@ const Sidebar = ({ isOpen }) => {
       <nav className="flex-1 overflow-y-auto px-3 space-y-0.5 pb-10 custom-scrollbar">
 
         {/* ── MAIN ─────────────────────────────────────────────────── */}
-        <SectionLabel label="Main" />
+        <SectionLabel isOpen={isOpen} label="Main" />
 
         <NavLink to="/admin" end className={navItem} title="Dashboard">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,13 +112,20 @@ const Sidebar = ({ isOpen }) => {
         </NavLink>
 
         {/* ── OPERATIONS ───────────────────────────────────────────── */}
-        <SectionLabel label="Operations" />
+        <SectionLabel isOpen={isOpen} label="Operations" />
 
         <NavLink to="/admin/visitors" className={navItem} title="Visitors">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
           {isOpen && <span>Visitors</span>}
+        </NavLink>
+
+        <NavLink to="/admin/event/list" className={navItem} title="Events">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {isOpen && <span>Events</span>}
         </NavLink>
 
         <NavLink to="/admin/complaints" className={navItem} title="Complaints">
@@ -132,6 +138,7 @@ const Sidebar = ({ isOpen }) => {
         {/* Facility dropdown */}
         <div>
           <DropBtn
+            isOpen={isOpen}
             onClick={() => setOpenFacility(!openFacility)}
             open={openFacility}
             active={location.pathname.includes("/facility")}
@@ -153,11 +160,12 @@ const Sidebar = ({ isOpen }) => {
         </div>
 
         {/* ── FINANCE ──────────────────────────────────────────────── */}
-        <SectionLabel label="Finance" />
+        <SectionLabel isOpen={isOpen} label="Finance" />
 
         {/* Finance dropdown */}
         <div>
           <DropBtn
+            isOpen={isOpen}
             onClick={() => setOpenFinance(!openFinance)}
             open={openFinance}
             active={location.pathname.includes("/maintenance") || location.pathname.includes("/expense")}
@@ -173,6 +181,7 @@ const Sidebar = ({ isOpen }) => {
               <NavLink to="/admin/maintenance/dashboard" className={dropItem}>Maintenance</NavLink>
               <NavLink to="/admin/maintenance/list"      className={dropItem}>Maintenance List</NavLink>
               <NavLink to="/admin/maintenance/generate"      className={dropItem}>Generate Maintenance</NavLink>
+              <NavLink to="/admin/payments" className={dropItem}>Payments</NavLink>
               <NavLink to="/admin/expense/dashboard"     className={dropItem}>Expense</NavLink>
               <NavLink to="/admin/expense/list"          className={dropItem}>Expense List</NavLink>
               <NavLink to="/admin/expense/report"        className={dropItem}>Expense Report</NavLink>
@@ -181,11 +190,12 @@ const Sidebar = ({ isOpen }) => {
         </div>
 
         {/* ── COMMUNITY ────────────────────────────────────────────── */}
-        <SectionLabel label="Community" />
+        <SectionLabel isOpen={isOpen} label="Community" />
 
         {/* Community dropdown */}
         <div>
           <DropBtn
+            isOpen={isOpen}
             onClick={() => setOpenCommunity(!openCommunity)}
             open={openCommunity}
             active={location.pathname.includes("/notice") || location.pathname.includes("/poll") || location.pathname.includes("/alert")}
