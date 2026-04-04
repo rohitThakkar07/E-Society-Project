@@ -64,95 +64,81 @@ const AddFacility = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
-      <div className="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-8">
-        
-        {/* HEADER */}
-        <div className="mb-6 border-b pb-4">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {isEditMode ? "Edit Facility" : "Add New Facility"}
-          </h2>
-          <p className="text-gray-500">Configure resources available for society residents</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <div className="container-fluid bg-light min-vh-100 py-5">
+      <div className="row justify-content-center">
+        <div className="col-lg-6 col-xl-5">
+          <div className="card shadow">
+            <div className="card-header bg-primary text-white">
+              <h2 className="card-title mb-0">
+                {isEditMode ? "Edit Facility" : "Add New Facility"}
+              </h2>
+              <p className="card-subtitle mb-0 text-white-50">Configure resources available for society residents</p>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit(onSubmit)}>
           
-          {/* NAME - Required by Model */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Facility Name *
-            </label>
-            <input
-              {...register("name", { required: "Facility name is required" })}
-              className={`w-full border px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition ${
-                errors.name ? "border-red-400" : "border-gray-300"
-              }`}
-              placeholder="e.g. Gym, Community Hall"
-            />
-            {errors.name && (
-              <span className="text-red-500 text-xs mt-1 block">
-                {errors.name.message}
-              </span>
-            )}
-          </div>
+                <div className="mb-3">
+                  <label className="form-label">Facility Name *</label>
+                  <input
+                    {...register("name", { required: "Facility name is required" })}
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                    placeholder="e.g. Gym, Community Hall"
+                  />
+                  {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
+                </div>
 
-          {/* DESCRIPTION - Optional in Model */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              {...register("description")}
-              rows={4}
-              className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition resize-none"
-              placeholder="Capacity, equipment details, or usage rules..."
-            />
-          </div>
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    {...register("description")}
+                    rows={4}
+                    className="form-control"
+                    placeholder="Capacity, equipment details, or usage rules..."
+                  />
+                </div>
 
-          {/* STATUS - Enum in Model */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Current Status
-            </label>
-            <select
-              {...register("status")}
-              className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition bg-white"
-            >
-              <option value="Available">Available</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
+                <div className="mb-3">
+                  <label className="form-label">Current Status</label>
+                  <select
+                    {...register("status")}
+                    className="form-select"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
 
-          {/* ACTIONS */}
-          <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition font-medium"
-            >
-              Cancel
-            </button>
-            
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm disabled:opacity-50 min-w-[120px]"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </span>
-              ) : isEditMode ? (
-                "Update Facility"
-              ) : (
-                "Create Facility"
-              )}
-            </button>
-          </div>
+                <div className="d-flex justify-content-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
 
-        </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn btn-primary"
+                  >
+                    {loading ? (
+                      <span className="d-flex align-items-center justify-content-center gap-2">
+                        <div className="spinner-border spinner-border-sm" role="status"></div>
+                        Saving...
+                      </span>
+                    ) : isEditMode ? (
+                      "Update Facility"
+                    ) : (
+                      "Create Facility"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

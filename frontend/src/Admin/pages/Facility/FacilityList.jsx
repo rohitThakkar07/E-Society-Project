@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
+import { Switch } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchFacilities, deleteFacility } from "../../../store/slices/facilitySlice";
+import { fetchFacilities, deleteFacility, updateFacilityStatus } from "../../../store/slices/facilitySlice";
 
 const FacilityList = () => {
   const navigate = useNavigate();
@@ -57,13 +58,25 @@ const FacilityList = () => {
                     {f.description || "No description provided"}
                   </td>
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         f.status === "Available" ? "bg-green-100 text-green-600" : 
                         f.status === "Maintenance" ? "bg-yellow-100 text-yellow-600" : 
                         "bg-red-100 text-red-600"
-                    }`}>
-                      {f.status}
-                    </span>
+                      }`}>
+                        {f.status}
+                      </span>
+                      <Switch
+                        checked={f.status === "Available"}
+                        onChange={() => {
+                          const newStatus = f.status === "Available" ? "Maintenance" : "Available";
+                          dispatch(updateFacilityStatus({ id: f._id, status: newStatus }));
+                        }}
+                        color="success"
+                        size="small"
+                        inputProps={{ "aria-label": "Toggle facility status" }}
+                      />
+                    </div>
                   </td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center gap-4">
