@@ -11,14 +11,13 @@ import {
 const BookFacility = () => {
   const dispatch = useDispatch();
   
-  // ✅ FIX 1: Robust selectors with fallback to prevent 'undefined' errors
   // Check your store.js - if the slice is named 'booking', use s.booking
   const { facilities = [], loading: facilityLoading } = useSelector((s) => s.facility || {});
   const { bookings = [], loading: bookingLoading } = useSelector((s) => s.booking || s.facilityBooking || {});
   
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
   // Use the ID field that matches your backend (usually _id)
-  const profileId = user?._id || user?.profileId;
+  const profileId = user?._id || user?.profileId || user?.id;
 
   const [selected, setSelected] = useState(null);
   const [bookingForm, setBookingForm] = useState({ date: "", timeSlot: "", purpose: "" });
@@ -29,16 +28,25 @@ const BookFacility = () => {
     dispatch(fetchBookings());
   }, [dispatch]);
 
-  // ✅ FIX 2: Filter logic to ensure we only see our own bookings
+  //FIX 2: Improved filter logic - handles multiple ID formats and variations
   const myBookings = Array.isArray(bookings) 
     ? bookings.filter(b => {
-        const residentId = b.resident?._id || b.resident;
-        return residentId === profileId;
+        // Get resident ID from multiple possible sources
+        const residentId = (b.resident?._id || b.resident?.id || b.resident || "").toString().trim();
+        const currentUserId = (profileId || "").toString().trim();
+        
+        // Return true if IDs match (handles both string IDs and ObjectIds)
+        return residentId && currentUserId && residentId === currentUserId;
       })
     : [];
 
   const handleBook = async (e) => {
     e.preventDefault();
+    
+    if (!profileId) {
+      alert("Error: Unable to identify user. Please login again.");
+      return;
+    }
     
     // Construct payload to match Mongoose Schema
     const payload = {
@@ -55,7 +63,8 @@ const BookFacility = () => {
     
     // ✅ FIX 3: Re-fetch bookings immediately after a successful creation
     if (res.type.endsWith("fulfilled")) {
-      await dispatch(fetchBookings()); // <--- This calls the API to refresh the list
+      // Add a small delay to ensure backend has time to return the data
+      setTimeout(() => dispatch(fetchBookings()), 500);
       setSelected(null);
       setBookingForm({ date: "", timeSlot: "", purpose: "" });
       setActiveTab("bookings");
@@ -157,7 +166,7 @@ const BookFacility = () => {
                       {b.status === "Pending" && (
                         <button onClick={async () => {
                            await dispatch(cancelBooking(b._id));
-                           dispatch(fetchBookings()); // Refresh after cancel
+                           setTimeout(() => dispatch(fetchBookings()), 500); // Refresh after cancel
                         }}
                           className="text-xs text-red-500 hover:text-red-700 font-medium border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition">
                           Cancel
