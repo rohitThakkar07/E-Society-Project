@@ -150,10 +150,10 @@ const PollsPage = () => {
    const filteredPolls = useMemo(() => {
     return polls.filter(p => {
         const isExpiredByDate = p.expiresAt && new Date(p.expiresAt) < new Date();
-        const isActuallyActive = p.isActive && !isExpiredByDate;
+        const isActuallyActive = p.isActive;
 
         if (tab === "active") return isActuallyActive;
-        if (tab === "closed") return !isActuallyActive;
+        if (tab === "closed") return !isActuallyActive || isExpiredByDate;
         return true;
     });
 }, [polls, tab]);
