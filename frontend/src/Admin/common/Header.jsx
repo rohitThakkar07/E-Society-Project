@@ -9,6 +9,7 @@ const Header = ({ toggleSidebar }) => {
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
+  const role = localStorage.getItem("role") || "Admin";
 
   const handleLogout = async () => {
     setLoading(true);
@@ -25,43 +26,55 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 py-3 flex justify-between items-center h-20">
-      <div className="flex items-center gap-6">
-        <button
-          onClick={toggleSidebar}
-          className="p-2.5 hover:bg-slate-100 rounded-xl transition-all text-slate-600 active:scale-95"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h12M4 18h16" />
-          </svg>
-        </button>
-      </div>
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 flex justify-between items-center h-[70px] flex-shrink-0">
+      {/* Left: Hamburger */}
+      <button
+        onClick={toggleSidebar}
+        className="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-500 hover:text-slate-700 active:scale-95"
+        title="Toggle Sidebar"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h12M4 18h16" />
+        </svg>
+      </button>
 
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-4 border-r border-gray-100 pr-8">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.name || "Admin"}</p>
-            <p className="text-xs font-semibold text-blue-500 uppercase tracking-tighter">
-              {localStorage.getItem("role") || "Staff"}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center font-bold text-slate-500">
-            {user.name?.charAt(0) || "A"}
-          </div>
-        </div>
+      {/* Right side */}
+      <div className="flex items-center gap-3">
 
+        {/* Reset Password */}
         <button
           onClick={() => setShowForgotModal(true)}
-          className="bg-white text-slate-800 border border-slate-300 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all active:scale-95"
+          className="hidden sm:flex items-center gap-2 text-sm text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all font-medium"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
           Reset Password
         </button>
 
-        <button 
+        {/* Divider */}
+        <div className="w-px h-8 bg-slate-200" />
+
+        {/* User Info */}
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-bold text-slate-800 leading-none">{user.name || "Admin"}</p>
+            <p className="text-xs text-blue-600 font-semibold capitalize mt-0.5">{role}</p>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center font-bold text-blue-700 text-sm">
+            {(user.name?.charAt(0) || "A").toUpperCase()}
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button
           onClick={handleLogout}
           disabled={loading}
-          className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-red-600 transition-all active:scale-95 disabled:opacity-50"
+          className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-all active:scale-95 disabled:opacity-50"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
           {loading ? "..." : "Logout"}
         </button>
       </div>
