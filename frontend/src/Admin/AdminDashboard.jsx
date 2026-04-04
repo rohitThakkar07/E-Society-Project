@@ -8,6 +8,13 @@ import {
 
 import { fetchStaffSummary } from "../store/slices/staffSlice";
 import { fetchDashboardSummary as fetchMaintenanceSummary } from "../store/slices/maintainenceSlice";
+import { fetchResidents } from "../store/slices/residentSlice";
+import { fetchFlats } from "../store/slices/flatSlice";
+import { fetchGuards } from "../store/slices/guardSlice";
+import { fetchVisitors, fetchTodayStats } from "../store/slices/visitorSlice";
+import { fetchComplaints } from "../store/slices/complaintSlice";
+import { fetchBookings } from "../store/slices/facilityBookingSlice";
+import { fetchNotices } from "../store/slices/noticeSlice";
 
 // ── helper 
 const Card = ({ label, value, color = "text-gray-800", onClick, sub }) => (
@@ -22,6 +29,11 @@ const Card = ({ label, value, color = "text-gray-800", onClick, sub }) => (
 );
 
 const fmt = (n) => (n != null ? `₹${Number(n).toLocaleString("en-IN")}` : "—");
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+};
 
 // ── component ────────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
@@ -29,20 +41,41 @@ const AdminDashboard = () => {
   const navigate  = useNavigate();
 
   // ── selectors ──────────────────────────────────────────────────────────────
-  const staffSummary      = useSelector((s) => s.staff?.summary);
-  const staffLoading      = useSelector((s) => s.staff?.summaryLoading);
-
   const maintenanceSummary = useSelector((s) => s.maintenance?.summary);
   const maintenanceLoading = useSelector((s) => s.maintenance?.summaryLoading);
 
+  const residents          = useSelector((s) => s.resident?.residents ?? []);
+  const flats              = useSelector((s) => s.flat?.list ?? []);
+  const guards             = useSelector((s) => s.guard?.guards ?? []);
+  const visitors           = useSelector((s) => s.visitor?.visitors ?? []);
+  const todayStats         = useSelector((s) => s.visitor?.todayStats ?? {});
+  const complaints         = useSelector((s) => s.complaint?.complaints ?? []);
+  const bookings           = useSelector((s) => s.booking?.bookings ?? []);
+  const notices            = useSelector((s) => s.notice?.list ?? []);
+
   // ── fetch on mount ─────────────────────────────────────────────────────────
   useEffect(() => {
-    dispatch(fetchStaffSummary());
     dispatch(fetchMaintenanceSummary());
+    dispatch(fetchResidents());
+    dispatch(fetchFlats());
+    dispatch(fetchGuards());
+    dispatch(fetchVisitors());
+    dispatch(fetchTodayStats());
+    dispatch(fetchComplaints());
+    dispatch(fetchBookings());
+    dispatch(fetchNotices());
   }, [dispatch]);
 
   // ── derived values ─────────────────────────────────────────────────────────
   const val = (v, loading) => (loading ? "…" : (v ?? 0));
+
+  const residentCount   = residents.length;
+  const flatCount       = flats.length;
+  const guardCount      = guards.length;
+  const todayVisitorCount = todayStats.total ?? visitors.length;
+  const latestComplaints = complaints.slice(0, 3);
+  const latestBookings   = bookings.slice(0, 3);
+  const latestNotices    = notices.slice(0, 3);
 
   // Chart: maintenance monthly collection vs expenses
   // maintenanceSummary.monthlyData should be [{month, collected, expenses}]
@@ -50,9 +83,7 @@ const AdminDashboard = () => {
   const chartData = maintenanceSummary?.monthlyData ?? [];
 
   // Role breakdown for staff mini-chart
-  const roleData = staffSummary?.byRole
-    ? Object.entries(staffSummary.byRole).map(([role, count]) => ({ role, count }))
-    : [];
+  const roleData = [];
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -65,34 +96,81 @@ const AdminDashboard = () => {
             <p className="text-gray-500 text-sm">Society Overview & Analytics</p>
           </div>
 
-          {/* ── STAFF CARDS ─────────────────────────────────────────────────── */}
+          {/* ── SOCIETY METRICS CARDS ─────────────────────────────────────────── */}
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Staff
+            Society Stats
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card
-              label="Total Staff"
-              value={val(staffSummary?.total, staffLoading)}
-              onClick={() => navigate("/admin/staff/list")}
+              label="Total Residents"
+              value={residentCount}
+              onClick={() => navigate("/admin/resident/list")}
             />
             <Card
-              label="Active"
-              value={val(staffSummary?.active, staffLoading)}
-              color="text-green-600"
-              onClick={() => navigate("/admin/staff/list")}
+              label="Total Flats"
+              value={flatCount}
+              onClick={() => navigate("/admin/flat/list")}
             />
             <Card
-              label="On Leave"
-              value={val(staffSummary?.onLeave, staffLoading)}
-              color="text-yellow-600"
-              onClick={() => navigate("/admin/staff/list")}
+              label="Total Guards"
+              value={guardCount}
+              onClick={() => navigate("/admin/guard/list")}
             />
             <Card
-              label="Inactive"
-              value={val(staffSummary?.inactive, staffLoading)}
-              color="text-red-600"
-              onClick={() => navigate("/admin/staff/list")}
+              label="Today's Visitors"
+              value={todayVisitorCount}
+              onClick={() => navigate("/admin/visitor/list")}
             />
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white p-4 rounded-xl shadow">
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Latest Complaints</p>
+              {latestComplaints.length === 0 ? (
+                <p className="text-sm text-gray-400">No complaints yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {latestComplaints.map((complaint) => (
+                    <li key={complaint._id} className="text-sm text-gray-700 border-b border-gray-100 pb-2">
+                      <strong>{complaint.title || complaint.subject || complaint.type || "Complaint"}</strong>
+                      <div className="text-xs text-gray-500">{formatDate(complaint.createdAt || complaint.date)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="bg-white p-4 rounded-xl shadow">
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Latest Bookings</p>
+              {latestBookings.length === 0 ? (
+                <p className="text-sm text-gray-400">No bookings yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {latestBookings.map((booking) => (
+                    <li key={booking._id} className="text-sm text-gray-700 border-b border-gray-100 pb-2">
+                      <strong>{booking.facility?.name || booking.facility || "Booking"}</strong>
+                      <div className="text-xs text-gray-500">{formatDate(booking.bookingDate || booking.createdAt)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="bg-white p-4 rounded-xl shadow">
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Latest Notices</p>
+              {latestNotices.length === 0 ? (
+                <p className="text-sm text-gray-400">No notices yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {latestNotices.map((notice) => (
+                    <li key={notice._id} className="text-sm text-gray-700 border-b border-gray-100 pb-2">
+                      <strong>{notice.title || notice.heading || "Notice"}</strong>
+                      <div className="text-xs text-gray-500">{formatDate(notice.createdAt || notice.date)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* ── MAINTENANCE / FINANCE CARDS ──────────────────────────────────── */}
@@ -164,32 +242,6 @@ const AdminDashboard = () => {
               ) : (
                 <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
                   No monthly data available
-                </div>
-              )}
-            </div>
-
-            {/* Staff by role chart */}
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h2 className="text-base font-semibold text-gray-800 mb-4">
-                Staff by Role
-              </h2>
-              {staffLoading ? (
-                <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
-                  Loading…
-                </div>
-              ) : roleData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={roleData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e6e6e6" horizontal={false} />
-                    <XAxis type="number" tick={{ fill: "#374151", fontSize: 12 }} allowDecimals={false} />
-                    <YAxis type="category" dataKey="role" width={90} tick={{ fill: "#374151", fontSize: 11 }} />
-                    <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} />
-                    <Bar dataKey="count" name="Staff" fill="#60A5FA" barSize={18} radius={[0,6,6,0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
-                  No staff data available
                 </div>
               )}
             </div>
