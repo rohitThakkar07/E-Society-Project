@@ -40,25 +40,19 @@ const ResidentForm = () => {
   }, [singleResident, isEditMode, reset]);
 
   const onSubmit = async (data) => {
-    // ✅ FIX: API response uses 'block' not 'wing', and 'floor' not 'floorNumber'
     const selectedFlat = flats.find((f) => f._id === data.flat);
-
     if (!selectedFlat) {
       alert("Please select a valid flat");
       return;
     }
-
     const formattedData = {
       ...data,
-      // ✅ Use 'block' from API — fallback to wing if some entries use it
       wing: selectedFlat.wing || selectedFlat.block,
       flatNumber: selectedFlat.flatNumber,
-      // ✅ API uses 'floor' not 'floorNumber'
       floorNumber: Number(selectedFlat.floor ?? selectedFlat.floorNumber ?? 0),
       flatType: selectedFlat.type,
       mobileNumber: data.mobileNumber.toString(),
     };
-
     if (isEditMode) {
       const result = await dispatch(updateResident({ id, formData: formattedData }));
       if (result.type.endsWith("fulfilled")) navigate("/admin/residents");
@@ -68,150 +62,216 @@ const ResidentForm = () => {
     }
   };
 
- const getFlatLabel = (f) => {
-  return `${f.flatNumber} (${f.type})`;
-};
+  const getFlatLabel = (f) => `${f.flatNumber} (${f.type})`;
 
   return (
-    <div className="container-fluid bg-light min-vh-100 py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-8 col-xl-6">
-          <div className="card shadow">
-            <div className="card-header bg-primary text-white">
-              <h2 className="card-title mb-0">{isEditMode ? "Edit" : "Add"} Resident</h2>
-            </div>
-            <div className="card-body">
-              <form onSubmit={handleSubmit(onSubmit)}>
+    <div className="max-w-2xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          {isEditMode ? "Edit Resident" : "Add New Resident"}
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          {isEditMode ? "Update resident information below." : "Fill in the details to register a new resident."}
+        </p>
+      </div>
 
-                <div className="row g-3">
-                  {/* Names */}
-                  <div className="col-md-6">
-                    <Input label="First Name *" name="firstName" reg={register} req="First name is required" err={errors.firstName} />
-                  </div>
-                  <div className="col-md-6">
-                    <Input label="Last Name" name="lastName" reg={register} />
-                  </div>
-
-                  {/* Identity */}
-                  <div className="col-md-6">
-                    <Select label="Gender *" name="gender" reg={register} req="Gender is required" err={errors.gender} options={["Male", "Female"]} />
-                  </div>
-                  <div className="col-md-6">
-                    <Input label="DOB" name="dateOfBirth" type="date" reg={register} />
-                  </div>
-
-                  {/* Contact */}
-                  <div className="col-md-6">
-                    <Input
-                      label="Mobile *"
-                      name="mobileNumber"
-                      reg={register}
-                      req="Mobile number is required"
-                      pattern={{ value: /^[0-9]{10}$/, message: "Enter a valid 10-digit mobile number" }}
-                      err={errors.mobileNumber}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <Input label="Email" name="email" type="email" reg={register} />
-                  </div>
-
-                  {/* Flat */}
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label">Assign Flat *</label>
-                      <select
-                        {...register("flat", { required: "Assigning a flat is required" })}
-                        className={`form-select ${errors.flat ? "is-invalid" : ""}`}
-                      >
-                        <option value="">Select a Flat</option>
-                        {flats
-                          .filter((f) => {
-                            if (f.status === "Vacant") return true;
-                            if (isEditMode && f._id === singleResident?.flat?._id) return true;
-                            return false;
-                          })
-                          .map((f) => (
-                            <option key={f._id} value={f._id}>
-                              {getFlatLabel(f)}
-                            </option>
-                          ))}
-                      </select>
-                      {errors.flat && <div className="invalid-feedback">{errors.flat.message}</div>}
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <Select label="Resident Type *" name="residentType" reg={register} options={["Owner", "Tenant"]} />
-                  </div>
-                  <div className="col-md-6">
-                    <Input label="Move In Date" name="moveInDate" type="date" reg={register} />
-                  </div>
-                  <div className="col-md-6">
-                    <Select label="Status" name="status" reg={register} options={["Active", "Inactive"]} />
-                  </div>
-
-                  {!isEditMode && (
-                    <div className="col-12">
-                      <Input
-                        label="Password *"
-                        name="password"
-                        type="password"
-                        reg={register}
-                        req="Password is required"
-                        minL={{ value: 6, message: "Password must be at least 6 characters" }}
-                        err={errors.password}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="d-flex justify-content-end gap-2 mt-4">
-                  <button type="button" onClick={() => navigate(-1)} className="btn btn-secondary">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={loading} className="btn btn-primary">
-                    {loading ? "Saving..." : "Save Resident"}
-                  </button>
-                </div>
-              </form>
-            </div>
+      {/* Form Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-800">{isEditMode ? "Edit Profile" : "Resident Information"}</p>
+            <p className="text-[11px] text-slate-400">All fields marked * are required</p>
           </div>
         </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            {/* First Name */}
+            <FormField label="First Name *" error={errors.firstName}>
+              <input
+                type="text"
+                {...register("firstName", { required: "First name is required" })}
+                className={`admin-input ${errors.firstName ? "admin-input-error" : ""}`}
+                placeholder="Enter first name"
+              />
+            </FormField>
+
+            {/* Last Name */}
+            <FormField label="Last Name">
+              <input
+                type="text"
+                {...register("lastName")}
+                className="admin-input"
+                placeholder="Enter last name"
+              />
+            </FormField>
+
+            {/* Gender */}
+            <FormField label="Gender *" error={errors.gender}>
+              <select
+                {...register("gender", { required: "Gender is required" })}
+                className={`admin-input ${errors.gender ? "admin-input-error" : ""}`}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </FormField>
+
+            {/* Date of Birth */}
+            <FormField label="Date of Birth">
+              <input
+                type="date"
+                {...register("dateOfBirth")}
+                className="admin-input"
+              />
+            </FormField>
+
+            {/* Mobile */}
+            <FormField label="Mobile Number *" error={errors.mobileNumber}>
+              <input
+                type="text"
+                {...register("mobileNumber", {
+                  required: "Mobile number is required",
+                  pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit mobile number" },
+                })}
+                className={`admin-input ${errors.mobileNumber ? "admin-input-error" : ""}`}
+                placeholder="10-digit mobile number"
+              />
+            </FormField>
+
+            {/* Email */}
+            <FormField label="Email Address">
+              <input
+                type="email"
+                {...register("email")}
+                className="admin-input"
+                placeholder="email@example.com"
+              />
+            </FormField>
+
+            {/* Assign Flat */}
+            <FormField label="Assign Flat *" error={errors.flat}>
+              <select
+                {...register("flat", { required: "Assigning a flat is required" })}
+                className={`admin-input ${errors.flat ? "admin-input-error" : ""}`}
+              >
+                <option value="">Select a Flat</option>
+                {flats
+                  .filter((f) => {
+                    if (f.status === "Vacant") return true;
+                    if (isEditMode && f._id === singleResident?.flat?._id) return true;
+                    return false;
+                  })
+                  .map((f) => (
+                    <option key={f._id} value={f._id}>
+                      {getFlatLabel(f)}
+                    </option>
+                  ))}
+              </select>
+            </FormField>
+
+            {/* Resident Type */}
+            <FormField label="Resident Type *">
+              <select {...register("residentType")} className="admin-input">
+                <option value="Owner">Owner</option>
+                <option value="Tenant">Tenant</option>
+              </select>
+            </FormField>
+
+            {/* Move In Date */}
+            <FormField label="Move In Date">
+              <input
+                type="date"
+                {...register("moveInDate")}
+                className="admin-input"
+              />
+            </FormField>
+
+            {/* Status */}
+            <FormField label="Status">
+              <select {...register("status")} className="admin-input">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </FormField>
+
+            {/* Password (add mode only) */}
+            {!isEditMode && (
+              <div className="col-span-full">
+                <FormField label="Password *" error={errors.password}>
+                  <input
+                    type="password"
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: { value: 6, message: "Password must be at least 6 characters" },
+                    })}
+                    className={`admin-input ${errors.password ? "admin-input-error" : ""}`}
+                    placeholder="Minimum 6 characters"
+                  />
+                </FormField>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {isEditMode ? "Update Resident" : "Save Resident"}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-// ── Helper Components ─────────────────────────────────────────────────────────
-
-const Input = ({ label, name, type = "text", reg, req = false, err, pattern, minL }) => (
-  <div className="mb-3">
-    <label className="form-label">{label}</label>
-    <input
-      type={type}
-      {...reg(name, {
-        required: req,
-        ...(pattern ? { pattern } : {}),
-        ...(minL ? { minLength: minL } : {}),
-      })}
-      className={`form-control ${err ? "is-invalid" : ""}`}
-    />
-    {err && <div className="invalid-feedback">{err.message}</div>}
-  </div>
-);
-
-const Select = ({ label, name, reg, options, req = false, err }) => (
-  <div className="mb-3">
-    <label className="form-label">{label}</label>
-    <select
-      {...reg(name, { required: req })}
-      className={`form-select ${err ? "is-invalid" : ""}`}
-    >
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
-    {err && <div className="invalid-feedback">{err.message}</div>}
+// ── Helper Component ──────────────────────────────────────────────────────────
+const FormField = ({ label, error, children }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{label}</label>
+    {children}
+    {error && (
+      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+        </svg>
+        {error.message}
+      </p>
+    )}
   </div>
 );
 

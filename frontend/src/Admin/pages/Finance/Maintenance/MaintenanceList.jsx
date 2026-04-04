@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   Table, TableBody, TableCell, TableContainer, 
@@ -27,8 +27,16 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+const TABS = [
+  { label: "Overview", path: "/admin/maintenance/dashboard" },
+  { label: "Records",  path: "/admin/maintenance/list" },
+  { label: "Add Bill", path: "/admin/maintenance/add" },
+  { label: "Generate", path: "/admin/maintenance/generate" },
+];
+
 const MaintenanceList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
   const maintenanceState = useSelector((s) => s.maintenance || {});
@@ -78,20 +86,26 @@ const MaintenanceList = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
-      
-      {/* HEADER */}
-      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <div>
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance Records</h1>
-          <p className="text-sm text-slate-500 font-medium">Manage invoices and track society collections.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">Manage invoices and track society collections.</p>
         </div>
-        <button 
-          onClick={() => navigate("/admin/maintenance/add")} 
-          className="bg-indigo-600 text-white px-6 py-3 rounded-2xl hover:bg-indigo-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
-        >
-          <FiPlus size={18} /> Create Bill
+        <button onClick={() => navigate("/admin/maintenance/add")} className="admin-btn-primary">
+          <FiPlus size={16} /> Add Bill
         </button>
+      </div>
+
+      {/* Sub Navigation */}
+      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+        {TABS.map((tab) => (
+          <button key={tab.path} onClick={() => navigate(tab.path)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* FILTERS ROW */}

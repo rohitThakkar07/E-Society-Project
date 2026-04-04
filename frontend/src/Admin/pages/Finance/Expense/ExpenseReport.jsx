@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchReport } from "../../../../store/slices/expenseSlice";
 import {
@@ -16,7 +17,16 @@ const MONTHS = ["January", "February", "March", "April", "May", "June",
 const thisYear = new Date().getFullYear();
 const YEARS = [thisYear - 1, thisYear, thisYear + 1];
 
+const TABS = [
+  { label: "Overview",     path: "/admin/expense/dashboard" },
+  { label: "All Expenses", path: "/admin/expense/list" },
+  { label: "Add Expense",  path: "/admin/expense/add" },
+  { label: "Reports",      path: "/admin/expense/report" },
+];
+
 const ExpenseReport = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const expenseState = useSelector((s) => s.expense) ?? {};
   const { report = null, reportLoading = false } = expenseState;
@@ -49,22 +59,27 @@ const ExpenseReport = () => {
   const categorySummary = report?.categorySummary ?? [];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* HEADER SECTION */}
+    <div>
+      {/* Page Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <FiActivity className="text-red-500" /> Expense Analytics
-          </h1>
-          <p className="text-sm text-gray-500">Visual breakdown and history of society spending.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Expense Reports</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">Visual breakdown and history of society spending.</p>
         </div>
-        <button
-          onClick={exportCSV}
-          disabled={expenses.length === 0}
-          className="bg-gray-900 text-white px-5 py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-all font-semibold flex items-center gap-2 shadow-sm active:scale-95"
-        >
+        <button onClick={exportCSV} disabled={expenses.length === 0}
+          className="admin-btn-primary disabled:opacity-50">
           <FiDownload /> Export CSV
         </button>
+      </div>
+
+      {/* Sub Navigation */}
+      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+        {TABS.map((tab) => (
+          <button key={tab.path} onClick={() => navigate(tab.path)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* FILTERS & SUMMARY ROW */}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   Table, TableBody, TableCell, TableContainer, 
@@ -20,8 +20,16 @@ const CATEGORY_STYLE = {
   Other:       { bg: "#f8fafc", color: "#64748b" },
 };
 
+const TABS = [
+  { label: "Overview",     path: "/admin/expense/dashboard" },
+  { label: "All Expenses", path: "/admin/expense/list" },
+  { label: "Add Expense",  path: "/admin/expense/add" },
+  { label: "Reports",      path: "/admin/expense/report" },
+];
+
 const ExpenseList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
   const expenseState = useSelector((s) => s.expense) ?? {};
@@ -79,20 +87,26 @@ const ExpenseList = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
-      
-      {/* HEADER SECTION */}
-      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <div>
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Expense Management</h1>
-          <p className="text-sm text-slate-500 font-medium">Track and monitor all society expenditures.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Expense</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">Track and monitor all society expenditures.</p>
         </div>
-        <button
-          onClick={() => navigate("/admin/expense/add")}
-          className="bg-red-600 text-white px-6 py-3 rounded-2xl hover:bg-red-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
-        >
-          <FiPlus size={18} /> Add Expense
+        <button onClick={() => navigate("/admin/expense/add")} className="admin-btn-primary">
+          <FiPlus size={16} /> Add Expense
         </button>
+      </div>
+
+      {/* Sub Navigation */}
+      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+        {TABS.map((tab) => (
+          <button key={tab.path} onClick={() => navigate(tab.path)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* FILTERS BAR */}
@@ -249,32 +263,32 @@ const ExpenseList = () => {
         />
       </TableContainer>
 
-      {/* EDIT MODAL (Functionally identical, visually polished) */}
+      {/* EDIT MODAL — Kaynex Style */}
       {editingId && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
-            <div className="bg-slate-50 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Edit Transaction</h3>
-              <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-black">₹</div>
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <div className="admin-modal-header">
+              <p className="admin-modal-title">Edit Expense</p>
+              <button className="admin-modal-close" onClick={() => setEditingId(null)}
+                title="Close">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="p-8 space-y-5">
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
-                <input
-                  type="text"
-                  value={editData.title}
+            <div className="admin-modal-body space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Expense Title</label>
+                <input type="text" value={editData.title}
                   onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500 font-bold"
-                />
+                  className="admin-input" />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Category</label>
-                  <select
-                    value={editData.category}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Category</label>
+                  <select value={editData.category}
                     onChange={(e) => setEditData({ ...editData, category: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500 bg-white"
-                  >
+                    className="admin-input">
                     <option value="Electricity">Electricity</option>
                     <option value="Water">Water</option>
                     <option value="Salary">Salary</option>
@@ -282,31 +296,23 @@ const ExpenseList = () => {
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Amount (₹)</label>
-                  <input
-                    type="number"
-                    value={editData.amount}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Amount (₹)</label>
+                  <input type="number" value={editData.amount}
                     onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500 font-black text-red-600"
-                  />
+                    className="admin-input" />
                 </div>
               </div>
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setEditingId(null)}
-                  className="flex-1 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-400 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveEdit}
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 text-xs font-black uppercase tracking-widest text-white bg-slate-900 hover:bg-black disabled:opacity-60 rounded-2xl transition-all shadow-lg"
-                >
-                  {loading ? "Saving…" : "Update"}
-                </button>
-              </div>
+            </div>
+            <div className="admin-modal-footer">
+              <button onClick={() => setEditingId(null)}
+                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">
+                Cancel
+              </button>
+              <button onClick={saveEdit} disabled={loading}
+                className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-60">
+                {loading ? "Saving…" : "Update Expense"}
+              </button>
             </div>
           </div>
         </div>
