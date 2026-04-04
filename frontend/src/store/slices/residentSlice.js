@@ -113,6 +113,21 @@ export const deleteResident = createAsyncThunk(
   }
 );
 
+export const updateResidentStatus = createAsyncThunk(
+  "resident/updateResidentStatus",
+  async ({ id, status }, { rejectWithValue }) => {
+    try {
+      const response = await API.put(`/resident/update/${id}`, { status });
+      toast.success(`Resident status set to ${status}`);
+      return { id, status };
+    } catch (err) {
+      const msg = parseError(err);
+      toast.error(msg);
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 // ── Slice ─────────────────────────────────────────────────────────────────────
 
 const initialState = {
@@ -192,6 +207,18 @@ const residentSlice = createSlice({
       .addCase(deleteResident.rejected,  (state, action) => {
         state.loading = false;
         state.error   = action.payload;
+      })
+
+      // ── updateResidentStatus ───────────────────────────────────────────────
+      .addCase(updateResidentStatus.pending,   (state) => { state.loading = true; state.error = null; })
+      .addCase(updateResidentStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.residents.findIndex((r) => r._id === action.payload.id);
+        if (index !== -1) state.residents[index].status = action.payload.status;
+      })
+      .addCase(updateResidentStatus.rejected,  (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

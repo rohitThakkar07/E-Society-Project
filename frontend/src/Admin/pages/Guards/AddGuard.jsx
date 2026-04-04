@@ -3,7 +3,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { createGuard, updateGuard, fetchGuardById } from "../../../store/slices/guardSlice";
+import { createGuard, updateGuard, fetchGuardById, clearSingleGuard } from "../../../store/slices/guardSlice";
 import { useEffect } from "react";
 
 const AddGuard = () => {
@@ -24,6 +24,11 @@ const AddGuard = () => {
     defaultValues: { status: "Active" },
   });
 
+  // Clear singleGuard when leaving the page to prevent stale prefill
+  useEffect(() => {
+    return () => { dispatch(clearSingleGuard()); };
+  }, [dispatch]);
+
   // Fetch guard data if editing
   useEffect(() => {
     if (isEditMode) {
@@ -32,27 +37,31 @@ const AddGuard = () => {
   }, [id, isEditMode, dispatch]);
 
   // Populate form when singleGuard is fetched
-useEffect(() => {
-  if (singleGuard) {
-    const nameParts = singleGuard.fullName?.split(" ") || [];
+  // API response fields: name, email, idProofType, idProofNumber, mobileNumber, joiningDate, shift, city, status
+  useEffect(() => {
+    if (singleGuard && isEditMode) {
+      // API stores full name in 'name' field (not 'fullName')
+      const nameParts = (singleGuard.name || "").trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName  = nameParts.slice(1).join(" ") || "";
 
-    reset({
-      firstName: nameParts[0] || "",
-      lastName: nameParts.slice(1).join(" ") || "",
-      mobileNumber: singleGuard.mobileNumber || "",
-      alternativeNumber: singleGuard.alternativeNumber || "",
-      emailAddress: singleGuard.emailAddress || "",
-      city: singleGuard.city || "",
-      shift: singleGuard.shift || "",
-      idType: singleGuard.idType || "",
-      idNumber: singleGuard.idNumber || "",
-      joiningDate: singleGuard.joiningDate
-        ? singleGuard.joiningDate.split("T")[0]
-        : "",
-      status: singleGuard.status || "Active",
-    });
-  }
-}, [singleGuard, reset]);
+      reset({
+        firstName,
+        lastName,
+        mobileNumber:      singleGuard.mobileNumber      || "",
+        alternativeNumber: singleGuard.alternativeNumber  || "",
+        emailAddress:      singleGuard.email              || "",   // API field: 'email'
+        city:              singleGuard.city               || "",
+        shift:             singleGuard.shift              || "",
+        idType:            singleGuard.idProofType        || "",   // API field: 'idProofType'
+        idNumber:          singleGuard.idProofNumber      || "",   // API field: 'idProofNumber'
+        joiningDate:       singleGuard.joiningDate
+          ? singleGuard.joiningDate.split("T")[0]
+          : "",
+        status:            singleGuard.status             || "Active",
+      });
+    }
+  }, [singleGuard, reset, isEditMode]);
 
   const onSubmit = async (data) => {
 
