@@ -10,6 +10,7 @@ import {
   Eye, Trash2, AlertCircle, Info, Megaphone, DollarSign 
 } from "lucide-react";
 import { fetchNotices, createNotice, deleteNotice } from "../../store/slices/noticeSlice";
+import { PageLoaderInline } from "../../components/PageLoader";
 
 const categoryIcons = {
   General: <Info size={14} />,
@@ -203,9 +204,11 @@ const NoticeBoard = () => {
                   </TableCell>
                 </TableRow>
               )) : (
-                [...Array(rowsPerPage)].map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={4} sx={{ py: 6, textAlign: 'center', color: '#cbd5e1' }}>Loading board...</TableCell></TableRow>
-                ))
+                <TableRow>
+                  <TableCell colSpan={4} sx={{ py: 2, border: 0 }}>
+                    <PageLoaderInline message="Loading notices…" />
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>

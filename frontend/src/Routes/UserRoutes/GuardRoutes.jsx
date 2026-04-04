@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const Dashboard = lazy(() => import("../../Guard/GuardDashboard"));
 const AddVisitorEntry = lazy(() => import("../../Guard/pages/AddVisitorEntry"));
@@ -11,7 +12,7 @@ const guardPortalRoutes = [
   {
     index: true,
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <Dashboard />
       </Suspense>
     ),
@@ -19,7 +20,7 @@ const guardPortalRoutes = [
   {
     path: "visitor/add",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <AddVisitorEntry />
       </Suspense>
     ),
@@ -27,7 +28,7 @@ const guardPortalRoutes = [
   {
     path: "visitors",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <VisitorManagement />
       </Suspense>
     ),
@@ -35,7 +36,7 @@ const guardPortalRoutes = [
   {
     path: "gate-log",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <VisitorLog />
       </Suspense>
     ),
@@ -43,7 +44,7 @@ const guardPortalRoutes = [
   {
     path: "visitor/:id",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <VisitorDetail />
       </Suspense>
     ),
@@ -51,7 +52,7 @@ const guardPortalRoutes = [
   {
     path: "search-resident",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <SearchResident />
       </Suspense>
     ),

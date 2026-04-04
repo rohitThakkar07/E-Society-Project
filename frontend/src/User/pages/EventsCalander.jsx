@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Calendar, MapPin, Clock, Plus, X, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { fetchEvents, createEvent, deleteEvent } from "../../store/slices/eventSlice";
+import { ListSkeleton } from "../../components/PageLoader";
 
 const EventsCalendar = () => {
   const dispatch = useDispatch();
@@ -79,7 +80,7 @@ const EventsCalendar = () => {
             <div>
               <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Upcoming</h2>
               {loading ? (
-                <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-2xl animate-pulse border border-slate-100" />)}</div>
+                <ListSkeleton rows={4} rowClassName="h-24" />
               ) : upcoming.length ? (
                 <div className="space-y-3">
                   {upcoming.map((e, i) => (

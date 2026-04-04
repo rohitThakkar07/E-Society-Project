@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Download, Mail, X } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { PageLoaderInline } from "../../components/PageLoader";
 
 const PaymentReceipt = ({ isOpen, onClose, receiptNumber }) => {
   const [receipt, setReceipt] = useState(null);
@@ -171,11 +172,7 @@ const PaymentReceipt = ({ isOpen, onClose, receiptNumber }) => {
         {/* Content */}
         <div className="p-8">
           
-          {loading && (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading receipt...</p>
-            </div>
-          )}
+          {loading && <PageLoaderInline message="Loading receipt…" className="py-10" />}
 
           {error && (
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">

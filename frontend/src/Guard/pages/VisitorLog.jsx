@@ -6,6 +6,7 @@ import {
   Search, LogOut, Clock, ChevronRight, RefreshCw, Users, Filter, MapPin
 } from "lucide-react";
 import { fetchVisitors, markVisitorExit } from "../../store/slices/visitorSlice";
+import { PageLoaderInline } from "../../components/PageLoader";
 
 const ACCENT = "#4F6EF7";
 
@@ -108,9 +109,8 @@ const VisitorLog = () => {
 
       {/* List */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center shadow-sm">
-          <RefreshCw size={24} className="text-slate-300 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 text-sm">Loading visitors…</p>
+        <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <PageLoaderInline message="Loading visitors…" className="p-12" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center shadow-sm">

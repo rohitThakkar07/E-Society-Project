@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const NoticeBoard = lazy(() => import("../../User/pages/NoticeBoard"));
 
@@ -7,7 +8,7 @@ const NoticeRoutes = [
   {
     path: "notices",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <NoticeBoard />
       </Suspense>
     ),

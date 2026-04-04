@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const VisitorManagement = lazy(() => import("../../Guard/pages/VisitorManagement"));
 const VisitorLog = lazy(() => import("../../Guard/pages/VisitorLog"));
@@ -8,7 +9,7 @@ const VisitorRoutes = [
   {
     path: "visitors",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <VisitorManagement />
       </Suspense>
     ),
@@ -16,7 +17,7 @@ const VisitorRoutes = [
   {
     path: "gate-logs",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <VisitorLog />
       </Suspense>
     ),

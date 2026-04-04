@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const MyInvoice = lazy(() => import("../../User/pages/MyInvoice"));
 
@@ -7,7 +8,7 @@ const InvoiceRoutes = [
   {
     path: "invoices",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <MyInvoice />
       </Suspense>
     ),

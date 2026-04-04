@@ -1,5 +1,6 @@
 import React from "react";
 import { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
 const MaintenanceDashboard = lazy(() => import("../../Admin/pages/Finance/Maintenance/MaintenanceDashboard"));
 const MaintenanceList = lazy(() => import("../../Admin/pages/Finance/Maintenance/MaintenanceList"));
 const AddMaintenance = lazy(() => import("../../Admin/pages/Finance/Maintenance/AddMaintenance"));
@@ -9,13 +10,13 @@ const ReceiptGenerator = lazy(() => import("../../Admin/pages/Finance/Maintenanc
 const GenerateMaintenance = lazy(() => import("../../Admin/pages/Finance/Maintenance/GenerateMaintenance"));
 // All paths are relative to the /admin parent route
 const maintenanceRoutes = [
-  { path: "maintenance/dashboard", element: <Suspense fallback={<div>Loading...</div>}><MaintenanceDashboard /></Suspense> },
-  { path: "maintenance/list",      element: <Suspense fallback={<div>Loading...</div>}><MaintenanceList /></Suspense> },
-  { path: "maintenance/add",       element: <Suspense fallback={<div>Loading...</div>}><AddMaintenance /></Suspense> },
-  { path: "maintenance/:id",       element: <Suspense fallback={<div>Loading...</div>}><MaintenanceDetails /></Suspense> },
-  { path: "maintenance/:id/invoice", element: <Suspense fallback={<div>Loading...</div>}><InvoiceGenerator /></Suspense> },
-  { path: "maintenance/:id/receipt", element: <Suspense fallback={<div>Loading...</div>}><ReceiptGenerator /></Suspense> },
-  { path: "maintenance/generate",  element: <Suspense fallback={<div>Loading...</div>}><GenerateMaintenance /></Suspense> },
+  { path: "maintenance/dashboard", element: <Suspense fallback={<PageLoader message="Loading…" />}><MaintenanceDashboard /></Suspense> },
+  { path: "maintenance/list",      element: <Suspense fallback={<PageLoader message="Loading…" />}><MaintenanceList /></Suspense> },
+  { path: "maintenance/add",       element: <Suspense fallback={<PageLoader message="Loading…" />}><AddMaintenance /></Suspense> },
+  { path: "maintenance/:id",       element: <Suspense fallback={<PageLoader message="Loading…" />}><MaintenanceDetails /></Suspense> },
+  { path: "maintenance/:id/invoice", element: <Suspense fallback={<PageLoader message="Loading…" />}><InvoiceGenerator /></Suspense> },
+  { path: "maintenance/:id/receipt", element: <Suspense fallback={<PageLoader message="Loading…" />}><ReceiptGenerator /></Suspense> },
+  { path: "maintenance/generate",  element: <Suspense fallback={<PageLoader message="Loading…" />}><GenerateMaintenance /></Suspense> },
 ];
 
 export default maintenanceRoutes;

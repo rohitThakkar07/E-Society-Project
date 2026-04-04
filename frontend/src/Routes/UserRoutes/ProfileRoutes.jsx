@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const ProfilePage = lazy(() => import("../../User/pages/Profile"));
 
@@ -7,7 +8,7 @@ const ProfileRoutes = [
   {
     path: "profile",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <ProfilePage />
       </Suspense>
     ),

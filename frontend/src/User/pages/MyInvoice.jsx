@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { FiCreditCard } from "react-icons/fi";
+import { SkeletonGrid } from "../../components/PageLoader";
 
 const MyInvoice = () => {
   const dispatch = useDispatch();
@@ -122,11 +123,7 @@ const MyInvoice = () => {
 
         {/* CONTENT GRID */}
         {loading ? (
-          <div className="grid md:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-slate-200 h-64 rounded-3xl"></div>
-            ))}
-          </div>
+          <SkeletonGrid count={6} gridClassName="grid gap-6 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-64" />
         ) : filteredInvoices.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredInvoices.map((invoice) => (

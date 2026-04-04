@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { fetchResidentById } from "../../store/slices/residentSlice";
+import { PageLoader } from "../../components/PageLoader";
 
 const ProfilePage = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -38,14 +39,7 @@ const ProfilePage = () => {
   ];
 
   if (profileLoading || !data) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
-        <div className="flex flex-col items-center animate-pulse">
-          <div className="mb-4 h-12 w-12 rounded-full bg-[var(--accent-soft)]" />
-          <p className="font-medium text-[var(--text-muted)]">Loading profile…</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading profile…" />;
   }
 
   return (

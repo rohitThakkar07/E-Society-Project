@@ -3,6 +3,7 @@ import UserRouter from "./UserRoutes/index";
 import AdminRouter from "./AdminRoutes/index";
 import guardPortalRoutes from "./UserRoutes/GuardRoutes";
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../components/PageLoader";
 
 const GuardLayout = lazy(() => import("../User/layout/GuardLayout"));
 const GuardAuthContext = lazy(() => import("../User/context/GuardAuthContext"));
@@ -13,7 +14,7 @@ const router = createBrowserRouter([
    {
     path: "/guard",
     element: (
-      <Suspense fallback={<div>Loading guard portal...</div>}>
+      <Suspense fallback={<PageLoader message="Loading guard portal…" />}>
         <GuardAuthContext>
           <GuardLayout />
         </GuardAuthContext>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -332,6 +332,16 @@ const LoginInner = () => {
   const [showForgot, setShowForgot] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inactiveToastShown = useRef(false);
+
+  useEffect(() => {
+    if (searchParams.get("inactive") === "1" && !inactiveToastShown.current) {
+      inactiveToastShown.current = true;
+      toast.error("Account is inactive. Contact admin.");
+      navigate("/login", { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   const [formData, setFormData] = useState({
     fullName: "",

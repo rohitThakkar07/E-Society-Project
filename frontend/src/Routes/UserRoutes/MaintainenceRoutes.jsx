@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const PayMaintenance = lazy(() => import("../../User/pages/PayMaintenance"));
 
@@ -7,7 +8,7 @@ const MaintenanceRoutes = [
   {
     path: "maintenance",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <PayMaintenance />
       </Suspense>
     ),

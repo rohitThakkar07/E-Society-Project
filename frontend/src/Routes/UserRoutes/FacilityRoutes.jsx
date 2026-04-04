@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const BookFacility = lazy(() => import("../../User/pages/BookFacility"));
 
@@ -7,7 +8,7 @@ const FacilityRoutes = [
   {
     path: "facilities",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <BookFacility />
       </Suspense>
     ),

@@ -7,6 +7,7 @@ import {
   createBooking, 
   cancelBooking,
 } from "../../store/slices/facilityBookingSlice";
+import { ListSkeleton, SkeletonGrid } from "../../components/PageLoader";
 
 const BookFacility = () => {
   const dispatch = useDispatch();
@@ -107,9 +108,7 @@ const BookFacility = () => {
 
         {activeTab === "facilities" && (
           facilityLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1,2,3,4,5,6].map(i => <div key={i} className="h-48 bg-white rounded-2xl animate-pulse border border-slate-100" />)}
-            </div>
+            <SkeletonGrid count={6} gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-48" />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {facilities.map(f => (
@@ -144,7 +143,7 @@ const BookFacility = () => {
         {activeTab === "bookings" && (
           <div>
             {bookingLoading ? (
-              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-white rounded-2xl animate-pulse border border-slate-100" />)}</div>
+              <ListSkeleton rows={4} rowClassName="h-20" />
             ) : myBookings.length ? (
               <div className="space-y-3">
                 {myBookings.map(b => (

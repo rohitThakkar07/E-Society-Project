@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
 
 const ComplaintDashboard = lazy(() => import("../../Admin/pages/Complaint/ComplaintDashboard"));
 const ComplaintDetails = lazy(() => import("../../Admin/pages/Complaint/ComplaintDetails"));
@@ -8,7 +9,7 @@ const complaintRoutes = [
   {
     path: "complaints",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <ComplaintDashboard />
       </Suspense>
     ),
@@ -16,7 +17,7 @@ const complaintRoutes = [
   {
     path: "complaints/create",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <CreateComplaint />
       </Suspense>
     ),
@@ -24,7 +25,7 @@ const complaintRoutes = [
   {
     path: "complaints/:id",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <ComplaintDetails />
       </Suspense>
     ),

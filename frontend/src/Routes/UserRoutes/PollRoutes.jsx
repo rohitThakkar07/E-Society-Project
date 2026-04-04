@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const PollsPage = lazy(() => import("../../User/pages/PollPage"));
 
@@ -7,7 +8,7 @@ const PollRoutes = [
   {
     path: "/polls",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading…" />}>
         <PollsPage />
       </Suspense>
     ),

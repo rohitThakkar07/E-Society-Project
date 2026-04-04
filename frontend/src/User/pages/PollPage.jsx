@@ -11,6 +11,7 @@ import {
     deletePoll,
     closePoll
 } from "../../store/slices/pollSlice";
+import { SkeletonGrid } from "../../components/PageLoader";
 
 // --- Style Helpers ---
 const COLORS = ["bg-blue-500", "bg-violet-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500", "bg-cyan-500"];
@@ -196,9 +197,7 @@ const PollsPage = () => {
 
                 {/* Grid Layout */}
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3].map(i => <div key={i} className="h-80 bg-[var(--card)] rounded-[32px] animate-pulse border border-[var(--border)]" />)}
-                    </div>
+                    <SkeletonGrid count={6} gridClassName="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-80" />
                 ) : filteredPolls.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredPolls.map(poll => (

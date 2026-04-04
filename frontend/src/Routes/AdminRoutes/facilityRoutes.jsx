@@ -1,5 +1,6 @@
 import React from 'react';
 import { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
 const FacilityDashboard = lazy(() => import("../../Admin/pages/Facility/FacilityDashboard"));
 const BookingForm = lazy(() => import("../../Admin/pages/Facility/BookingForm"));
 const BookingList = lazy(() => import("../../Admin/pages/Facility/BookingList"));
@@ -15,37 +16,37 @@ const FacilityList = lazy(() => import('../../Admin/pages/Facility/FacilityList'
 const facilityRoutes = [
   {
     path: "facility/dashboard",
-    element: <Suspense fallback={<div>Loading...</div>}><FacilityDashboard /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityDashboard /></Suspense>,
   },
   {
     path: "facility/add",
-    element: <Suspense fallback={<div>Loading...</div>}><FacilityForm /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityForm /></Suspense>,
   },
   {
     path: "facility/edit/:id",
-    element: <Suspense fallback={<div>Loading...</div>}><FacilityForm /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityForm /></Suspense>,
   },
   {
     path: "facility/list",
-    element: <Suspense fallback={<div>Loading...</div>}><FacilityList /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityList /></Suspense>,
   },
   {
     path: "facility/book",
-    element: <Suspense fallback={<div>Loading...</div>}><BookingForm /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingForm /></Suspense>,
   },
   {
     // FIX: Was "facility-booking/list" — now matches navigate("/admin/facility-booking/list")
     path: "facility-booking/list",
-    element: <Suspense fallback={<div>Loading...</div>}><BookingList /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingList /></Suspense>,
   },
   {
     path: "facility/calendar",
-    element: <Suspense fallback={<div>Loading...</div>}><BookingCalendar /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingCalendar /></Suspense>,
   },
   {
     // FIX: Was "facility/booking/:id" — now matches navigate("/admin/facility/booking/:id")
     path: "facility/booking/:id",
-    element: <Suspense fallback={<div>Loading...</div>}><BookingDetails /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingDetails /></Suspense>,
   },
 ];
 

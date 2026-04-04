@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { fetchVisitors, denyVisitor, approveVisitor } from "../../store/slices/visitorSlice";
 import { toast } from "react-toastify";
+import { PageLoaderInline } from "../../components/PageLoader";
 
 const ACCENT = "#4F6EF7";
 
@@ -158,10 +159,7 @@ const VisitorManagement = () => {
 
         {/* Rows */}
         {loading ? (
-          <div className="p-16 text-center">
-            <RefreshCw size={24} className="text-slate-300 animate-spin mx-auto mb-4" />
-            <p className="text-slate-400 text-sm">Loading visitors…</p>
-          </div>
+          <PageLoaderInline message="Loading visitors…" className="p-12" />
         ) : paginated.length === 0 ? (
           <div className="p-16 text-center">
             <Users size={36} className="text-slate-200 mx-auto mb-4" />

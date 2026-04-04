@@ -1,5 +1,6 @@
 import React from 'react';
 import { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
 const VisitorDashboard = lazy(() => import("../../Admin/pages/Visitors/VisitorDashboard"));
 const VisitorDetails = lazy(() => import("../../Admin/pages/Visitors/VisitorsDetails"));
 const VisitorReports = lazy(() => import("../../Admin/pages/Visitors/VisitorReports"));
@@ -7,27 +8,27 @@ const AddVisitor = lazy(() => import('../../Admin/pages/Visitors/AddVisitor'));
 const visitorRoutes = [
   {
     path: "visitors",
-    element: <Suspense fallback={<div>Loading...</div>}><VisitorDashboard /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><VisitorDashboard /></Suspense>,
   },
   {
     path: "visitors/list",
-    element: <Suspense fallback={<div>Loading...</div>}><VisitorDashboard /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><VisitorDashboard /></Suspense>,
   },
   {
     path: "visitor/add",
-    element: <Suspense fallback={<div>Loading...</div>}><AddVisitor /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><AddVisitor /></Suspense>,
   },
   {
     path: "visitor/edit/:id",
-    element: <Suspense fallback={<div>Loading...</div>}><AddVisitor /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><AddVisitor /></Suspense>,
   },
   {
     path: "visitor/:id",
-    element: <Suspense fallback={<div>Loading...</div>}><VisitorDetails /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><VisitorDetails /></Suspense>,
   },
   {
     path: "visitor/reports",
-    element: <Suspense fallback={<div>Loading...</div>}><VisitorReports /></Suspense>,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><VisitorReports /></Suspense>,
   },
 ];
 

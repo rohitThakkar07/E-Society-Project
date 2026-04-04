@@ -94,13 +94,23 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({
-        id: user._id,
-        role: user.role
-      },process.env.JWT_SECRET,{ expiresIn: "1d" }
+    if (user.status === "Inactive") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is inactive. Contact admin.",
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
-    res.json({success: true,token,user});
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({ success: true, token, user: userResponse });
 
   } catch (error) {
 

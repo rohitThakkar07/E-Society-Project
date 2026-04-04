@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import RazorpayPaymentModal from "../components/RazorpayPaymentModal";
 import PaymentReceipt from "../components/PaymentReceipt";
+import { PageLoaderInline } from "../../components/PageLoader";
 
 const MaintenancePayment = () => {
   const [activeTab, setActiveTab] = useState("pending"); // pending, paid
@@ -219,8 +220,8 @@ const MaintenancePayment = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-white rounded-xl p-8 text-center">
-            <p className="text-gray-600">Loading payment data...</p>
+          <div className="rounded-xl bg-white">
+            <PageLoaderInline message="Loading payment data…" className="py-12" />
           </div>
         )}
 

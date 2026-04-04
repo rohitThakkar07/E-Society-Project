@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 // Layout
 const UserLayout = lazy(() => import("../../User/layout/UserLayout"));
@@ -24,7 +25,7 @@ const UserRouter = [
   {
     path: "/",
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--bg)] text-[var(--text-muted)]">Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading portal…" />}>
         <UserLayout />
       </Suspense>
     ),
@@ -36,7 +37,7 @@ const UserRouter = [
   // 🔒 PROTECTED — login required
   {
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--bg)] text-[var(--text-muted)]">Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading portal…" />}>
         <AuthContext />
       </Suspense>
     ),

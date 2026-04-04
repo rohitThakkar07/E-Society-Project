@@ -8,6 +8,7 @@ import {
   AlertCircle, CheckCircle2, XCircle
 } from "lucide-react";
 import { fetchVisitors, fetchTodayStats } from "../store/slices/visitorSlice";
+import { PageLoaderInline } from "../components/PageLoader";
 
 const ACCENT = "#4F6EF7";
 
@@ -135,7 +136,7 @@ const GuardDashboard = () => {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">Loading…</div>
+          <PageLoaderInline message="Loading recent visitors…" className="p-10" />
         ) : recentVisitors.length === 0 ? (
           <div className="p-12 text-center">
             <Users size={36} className="text-slate-200 mx-auto mb-3" />

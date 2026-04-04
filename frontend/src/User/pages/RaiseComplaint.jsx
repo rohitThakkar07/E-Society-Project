@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search, FileUp, TrendingUp } from "lucide-react";
 import { fetchComplaints, createComplaint } from "../../store/slices/complaintSlice";
+import { ListSkeleton } from "../../components/PageLoader";
 
 const filePublicOrigin = () => {
   const u = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -46,8 +47,6 @@ const RaiseComplaint = () => {
 
   useEffect(() => {
     dispatch(fetchComplaints());
-    // Don't fetch resident - form works without it and avoids "not found" errors
-    // Users can still submit complaints with just their resident ID from auth
   }, [dispatch]);
 
   // Filter to show only current user's complaints
@@ -368,11 +367,7 @@ const RaiseComplaint = () => {
 
             {/* COMPLAINTS LIST */}
             {complaintLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 bg-[var(--card)] rounded-2xl border border-[var(--border)] animate-pulse" />
-                ))}
-              </div>
+              <ListSkeleton rows={4} rowClassName="h-28" />
             ) : filtered.length === 0 ? (
               <div className="text-center py-16 bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-sm">
                 <Wrench size={48} className="mx-auto mb-4 text-slate-300" />

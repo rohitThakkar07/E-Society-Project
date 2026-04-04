@@ -12,6 +12,11 @@ const GuardAuthContext = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (user?.status === "Inactive") {
+    localStorage.clear();
+    return <Navigate to="/login?inactive=1" replace />;
+  }
+
   // Admin can also access guard pages (for oversight)
   if (role !== "guard" && role !== "admin") {
     return <Navigate to="/" replace />;

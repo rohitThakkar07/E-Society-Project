@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPolls, castVote } from "../../store/slices/pollSlice";
 import { fetchEvents } from "../../store/slices/eventSlice";
+import { ListSkeleton, SkeletonGrid } from "../../components/PageLoader";
 
 const DiscussionPolls = () => {
   const dispatch = useDispatch();
@@ -81,11 +82,7 @@ const DiscussionPolls = () => {
           </div>
 
           {eventLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-24 bg-white rounded-2xl animate-pulse border border-slate-100" />
-              ))}
-            </div>
+            <ListSkeleton rows={4} rowClassName="h-24" />
           ) : ( 
             <div className="space-y-4">
               {upcomingEvents.length > 0 ? upcomingEvents.map((ev) => (
@@ -129,11 +126,7 @@ const DiscussionPolls = () => {
       {activeTab === "polls" && (
         <div>
           {pollLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-64 bg-white rounded-2xl animate-pulse border border-slate-200" />
-              ))}
-            </div>
+            <SkeletonGrid count={4} gridClassName="grid grid-cols-1 gap-6 md:grid-cols-2" itemClassName="h-64" />
           ) : polls?.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {polls.map((poll) => {

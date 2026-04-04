@@ -18,9 +18,17 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired, redirect to login
-      localStorage.removeItem("token");
+    const status = error.response?.status;
+    const msg = String(error.response?.data?.message || "");
+
+    if (status === 403 && /inactive/i.test(msg)) {
+      localStorage.clear();
+      window.location.href = "/login?inactive=1";
+      return Promise.reject(error);
+    }
+
+    if (status === 401) {
+      localStorage.clear();
       window.location.href = "/login";
     }
     return Promise.reject(error);
