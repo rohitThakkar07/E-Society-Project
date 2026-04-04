@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen }) => {
 
   const [openFacility,  setOpenFacility]  = useState(location.pathname.includes("/facility"));
   const [openCommunity, setOpenCommunity] = useState(
-    location.pathname.includes("/notice") || location.pathname.includes("/poll") || location.pathname.includes("/alert")
+    location.pathname.includes("/notice") || location.pathname.includes("/poll")
   );
 
   /* nav-link class helper */
@@ -185,7 +185,7 @@ const Sidebar = ({ isOpen }) => {
             isOpen={isOpen}
             onClick={() => setOpenCommunity(!openCommunity)}
             open={openCommunity}
-            active={location.pathname.includes("/notice") || location.pathname.includes("/poll") || location.pathname.includes("/alert")}
+            active={location.pathname.includes("/notice") || location.pathname.includes("/poll")}
             label="Community"
             icon={<Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />}
           />
@@ -193,7 +193,6 @@ const Sidebar = ({ isOpen }) => {
             <div className="mt-1 ml-8 flex flex-col space-y-0.5 border-l-2 border-slate-100 pl-3">
               <NavLink to="/admin/notice/list"     className={dropItem}>Notice Board</NavLink>
               <NavLink to="/admin/poll/list"       className={dropItem}>Polls &amp; Voting</NavLink>
-              <NavLink to="/admin/alert/dashboard" className={dropItem}>Emergency Alerts</NavLink>
             </div>
           )}
         </div>

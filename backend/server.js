@@ -22,7 +22,6 @@ const expenseRoutes = require("./app/routes_controller/Expanse");
 const maintenanceRoutes = require("./app/routes_controller/Maintenance");
 const noticeRoutes = require("./app/routes_controller/Notice");
 const eventRoutes = require('./app/routes_controller/Events');
-const alertRoutes = require("./app/routes_controller/Alert");
 const pollRoutes = require("./app/routes_controller/Poll");
 const paymentRoutes = require("./app/routes_controller/Payment");
 
@@ -59,7 +58,6 @@ app.use("/api/visitor", authMiddleware, visitorRoutes);
 app.use("/api/expense", authMiddleware, expenseRoutes);
 app.use("/api/event", authMiddleware, eventRoutes);
 app.use("/api/notice", authMiddleware, noticeRoutes);
-app.use("/api/alert", authMiddleware, alertRoutes);
 app.use("/api/poll", authMiddleware, pollRoutes);
 app.use("/api/payment", authMiddleware, paymentRoutes);
 app.use("/api/maintenance", authMiddleware, maintenanceRoutes);

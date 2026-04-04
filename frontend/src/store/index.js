@@ -12,7 +12,6 @@ import noticeReducer         from "./slices/noticeSlice";
 import eventReducer          from "./slices/eventSlice";
 import flatReducer           from './slices/flatSlice';
 import pollReducer           from './slices/pollSlice';
-import alertReducer          from './slices/alertSlice';
 import maintenanceBillingReducer from "./slices/Maintenancebillingslice";
 import paymentReducer        from "./slices/paymentSlice";
 
@@ -31,7 +30,6 @@ export const store = configureStore({
     booking:     bookingReducer, 
     facility:    facilityReducer,
     poll:        pollReducer,  
-    alert:       alertReducer, 
     maintenanceBilling: maintenanceBillingReducer,
     payment: paymentReducer,
   },
