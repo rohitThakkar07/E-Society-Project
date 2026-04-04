@@ -1,153 +1,150 @@
-import React, { useState, useEffect } from "react";
-import { X, AlertCircle, CheckCircle, Loader } from "lucide-react";
-import toast from "react-hot-toast";
-import axios from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import { X, AlertCircle, CheckCircle, Loader2, ShieldCheck } from "lucide-react";
+import { toast } from "react-toastify";
+import API from "../../service/api";
 
-const RazorpayPaymentModal = ({ 
-  isOpen, 
-  onClose, 
-  maintenanceId, 
-  billDetails, 
-  onPaymentSuccess 
-}) => {
-  const [step, setStep] = useState("confirm"); // confirm, processing, success, error
+const RAZORPAY_KEY =
+  import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SZ3mYhzzSVN0ov";
+
+function loadRazorpayScript() {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== "undefined" && window.Razorpay) {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("Failed to load Razorpay")));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Razorpay"));
+    document.body.appendChild(script);
+  });
+}
+
+/**
+ * Razorpay checkout for maintenance bills.
+ * Uses shared API client (correct base URL + auth) → POST /payment/initiate, /payment/verify.
+ */
+export default function RazorpayPaymentModal({
+  isOpen,
+  onClose,
+  maintenanceId,
+  billDetails,
+  onPaymentSuccess,
+}) {
+  const [step, setStep] = useState("confirm");
   const [loading, setLoading] = useState(false);
-  const [orderId, setOrderId] = useState(null);
-  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [successData, setSuccessData] = useState(null);
   const [error, setError] = useState(null);
 
-  // Initialize Razorpay script
-  useEffect(() => {
-    if (!window.Razorpay) {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
+  const reset = useCallback(() => {
+    setStep("confirm");
+    setLoading(false);
+    setSuccessData(null);
+    setError(null);
   }, []);
 
-  // Step 1: Initiate payment - Create Razorpay order
-  const handleInitiatePayment = async () => {
+  useEffect(() => {
+    if (isOpen) reset();
+  }, [isOpen, reset]);
+
+  const handlePaymentSuccess = async (paymentResponse, orderPayload) => {
     try {
       setLoading(true);
-      setError(null);
+      const { data } = await API.post("/payment/verify", {
+        maintenanceId,
+        orderId: orderPayload.orderId,
+        paymentId: paymentResponse.razorpay_payment_id,
+        signature: paymentResponse.razorpay_signature,
+      });
 
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-      const response = await axios.post(
-        `${apiUrl}/api/payment/initiate`,
-        { maintenanceId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Failed to create order");
+      if (!data.success) {
+        throw new Error(data.message || "Payment verification failed");
       }
 
-      const data = response.data.data;
-      setOrderId(data.orderId);
-      setPaymentDetails(data);
-      setStep("processing");
-
-      // Open Razorpay Checkout
-      openRazorpayCheckout(data);
+      setSuccessData(data.data);
+      setStep("success");
+      toast.success(data.message || "Payment successful!");
+      onPaymentSuccess?.(data.data);
     } catch (err) {
-      console.error("Payment initiation error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to initiate payment");
+      console.error("Payment verification error:", err);
+      const msg =
+        err.response?.data?.message || err.message || "Payment verification failed";
+      setError(msg);
       setStep("error");
-      toast.error(err.response?.data?.message || "Payment initiation failed");
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Open Razorpay Checkout Modal
   const openRazorpayCheckout = (data) => {
-    const options = {
-      key: "rzp_test_SZ3mYhzzSVN0ov", // Razorpay Key ID
-      amount: data.amountInPaise, // Amount in paise
-      currency: data.currency,
-      order_id: data.orderId,
-      
-      // Pre-fill customer details
-      prefill: {
-        name: data.resident.name,
-        email: data.resident.email,
-        contact: data.resident.phone,
-      },
+    if (!window.Razorpay) {
+      toast.error("Razorpay failed to load. Refresh and try again.");
+      setStep("confirm");
+      return;
+    }
 
-      // Callback on payment success
+    const options = {
+      key: RAZORPAY_KEY,
+      amount: data.amountInPaise,
+      currency: data.currency || "INR",
+      order_id: data.orderId,
+      name: "E-Society",
+      description: `Maintenance ${data.billDetails?.month || ""} ${data.billDetails?.year || ""}`.trim(),
+      prefill: {
+        name: data.resident?.name || "",
+        email: data.resident?.email || "",
+        contact: data.resident?.phone || "",
+      },
       handler: async (response) => {
         await handlePaymentSuccess(response, data);
       },
-
-      // Callback on payment failure/error
       modal: {
         ondismiss: () => {
           setStep("confirm");
-          toast.error("Payment cancelled");
+          setLoading(false);
         },
       },
-
-      // Themes
-      theme: {
-        color: "#3b82f6", // Blue theme to match your design
-      },
+      theme: { color: "#4F6EF7" },
     };
 
-    // Create Razorpay instance and open checkout
     const razorpay = new window.Razorpay(options);
     razorpay.open();
   };
 
-  // Step 3: Handle payment success - Verify signature
-  const handlePaymentSuccess = async (paymentResponse, orderData) => {
+  const handleInitiatePayment = async () => {
+    if (!maintenanceId) {
+      toast.error("Missing bill reference.");
+      return;
+    }
     try {
       setLoading(true);
+      setError(null);
 
-      // Send payment verification to backend
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-      const response = await axios.post(
-        `${apiUrl}/api/payment/verify`,
-        {
-          maintenanceId,
-          orderId: orderData.orderId,
-          paymentId: paymentResponse.razorpay_payment_id,
-          signature: paymentResponse.razorpay_signature,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await loadRazorpayScript();
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Payment verification failed");
+      const { data } = await API.post("/payment/initiate", { maintenanceId });
+      if (!data.success) {
+        throw new Error(data.message || "Failed to create order");
       }
 
-      // Payment successful
-      setStep("success");
-      toast.success("Payment successful!");
-
-      // Call callback to refresh data
-      if (onPaymentSuccess) {
-        onPaymentSuccess(response.data.data);
-      }
-
-      // Auto close modal after 3 seconds
-      setTimeout(() => {
-        onClose();
-        setStep("confirm");
-      }, 3000);
+      const payload = data.data;
+      setStep("processing");
+      openRazorpayCheckout(payload);
     } catch (err) {
-      console.error("Payment verification error:", err);
-      setError(err.response?.data?.message || err.message || "Payment verification failed");
+      console.error("Payment initiation error:", err);
+      const msg =
+        err.response?.data?.message || err.message || "Failed to initiate payment";
+      setError(msg);
       setStep("error");
-      toast.error(err.response?.data?.message || "Payment verification failed");
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -155,140 +152,176 @@ const RazorpayPaymentModal = ({
 
   if (!isOpen) return null;
 
+  const totalDisplay = billDetails?.amount ?? 0;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[130] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-        
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6"
+      style={{
+        background: "color-mix(in srgb, var(--text) 45%, transparent)",
+      }}
+    >
+      <div
+        className="bg-[var(--card)] text-[var(--text)] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden border border-[var(--border)] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pay-modal-title"
+      >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Payment Details</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition"
-          >
-            <X size={24} className="text-gray-600" />
-          </button>
+        <div className="relative shrink-0 border-b border-[var(--border)] bg-gradient-to-r from-[var(--accent)]/12 via-transparent to-[var(--accent)]/8 px-5 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1 pr-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-md shrink-0">
+                  <ShieldCheck size={18} strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0">
+                  <h2
+                    id="pay-modal-title"
+                    className="text-lg font-black text-[var(--text)] tracking-tight leading-tight"
+                  >
+                    Pay maintenance
+                  </h2>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] mt-0.5 truncate">
+                    Secured by Razorpay
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 p-2 rounded-xl hover:bg-[var(--bg-alt)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors -mr-1 -mt-0.5"
+              aria-label="Close"
+            >
+              <X size={22} strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          
-          {/* Confirm Step */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1">
           {step === "confirm" && (
             <div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl mb-6">
-                <p className="text-gray-600 text-sm mb-2">Amount to Pay</p>
-                <h1 className="text-4xl font-bold text-blue-600 mb-2">
-                  ₹{billDetails?.amount?.toLocaleString("en-IN") || "0"}
-                </h1>
-                <p className="text-gray-600 text-xs">
-                  {billDetails?.month} {billDetails?.year}
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-alt)] p-5 mb-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                  Amount due
                 </p>
+                <p className="text-3xl sm:text-4xl font-black text-[var(--accent)] tabular-nums">
+                  ₹{Number(totalDisplay).toLocaleString("en-IN")}
+                </p>
+                {billDetails?.month != null && (
+                  <p className="text-sm font-semibold text-[var(--text)] mt-2">
+                    {billDetails.month} {billDetails.year}
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Base Amount</span>
-                  <span className="font-semibold">₹{billDetails?.baseAmount?.toLocaleString("en-IN") || "0"}</span>
+              <div className="space-y-0 mb-5 rounded-xl border border-[var(--border)] overflow-hidden text-sm">
+                <div className="flex justify-between px-4 py-3 bg-[var(--bg-alt)]/50">
+                  <span className="text-[var(--text-muted)]">Base</span>
+                  <span className="font-bold tabular-nums">
+                    ₹{Number(billDetails?.baseAmount ?? 0).toLocaleString("en-IN")}
+                  </span>
                 </div>
-                {billDetails?.lateFee > 0 && (
-                  <div className="flex justify-between py-3 border-b border-gray-100">
-                    <span className="text-gray-600">Late Fee</span>
-                    <span className="font-semibold text-red-600">₹{billDetails?.lateFee?.toLocaleString("en-IN")}</span>
+                {Number(billDetails?.lateFee) > 0 && (
+                  <div className="flex justify-between px-4 py-3 border-t border-[var(--border)]">
+                    <span className="text-[var(--text-muted)]">Late fee</span>
+                    <span className="font-bold text-red-600 tabular-nums">
+                      ₹{Number(billDetails.lateFee).toLocaleString("en-IN")}
+                    </span>
                   </div>
                 )}
-                <div className="flex justify-between py-3 bg-blue-50 px-3 rounded-lg">
-                  <span className="text-gray-800 font-semibold">Total Amount</span>
-                  <span className="font-bold text-blue-600">₹{billDetails?.amount?.toLocaleString("en-IN") || "0"}</span>
+                <div className="flex justify-between px-4 py-3 border-t border-[var(--border)] bg-[var(--accent)]/10">
+                  <span className="font-bold">Total</span>
+                  <span className="font-black text-[var(--accent)] tabular-nums">
+                    ₹{Number(totalDisplay).toLocaleString("en-IN")}
+                  </span>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={handleInitiatePayment}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+                className="user-btn-primary w-full justify-center min-h-[48px] text-sm"
               >
                 {loading ? (
                   <>
-                    <Loader size={20} className="animate-spin" />
-                    Processing...
+                    <Loader2 size={18} className="animate-spin shrink-0" />
+                    Opening checkout…
                   </>
                 ) : (
                   "Pay with Razorpay"
                 )}
               </button>
-
-              <p className="text-center text-xs text-gray-500 mt-4">
-                🔒 Payments are secured by Razorpay
+              <p className="text-center text-[11px] text-[var(--text-muted)] mt-3">
+                Test mode: use Razorpay test cards / UPI from the dashboard.
               </p>
             </div>
           )}
 
-          {/* Processing Step */}
           {step === "processing" && (
-            <div className="text-center py-12">
-              <div className="flex justify-center mb-4">
-                <Loader size={48} className="text-blue-600 animate-spin" />
-              </div>
-              <p className="text-gray-800 font-semibold">Processing Payment...</p>
-              <p className="text-gray-500 text-sm mt-2">Please complete the payment in the popup</p>
-            </div>
-          )}
-
-          {/* Success Step */}
-          {step === "success" && (
-            <div className="text-center py-8">
-              <div className="flex justify-center mb-4">
-                <div className="bg-green-100 p-4 rounded-full">
-                  <CheckCircle size={48} className="text-green-600" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Payment Successful</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Your payment has been verified and accepted
+            <div className="text-center py-10">
+              <Loader2
+                size={44}
+                className="mx-auto text-[var(--accent)] animate-spin mb-4"
+              />
+              <p className="font-bold text-[var(--text)]">Complete payment in the popup</p>
+              <p className="text-sm text-[var(--text-muted)] mt-2">
+                Do not close this page until you finish or cancel in Razorpay.
               </p>
-              <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-4">
-                <p className="text-xs text-gray-600 mb-1">Receipt Number</p>
-                <p className="font-mono text-sm font-bold text-green-600">
-                  {paymentDetails?.receiptNumber}
-                </p>
-              </div>
-              <p className="text-xs text-gray-500">Closing in a moment...</p>
             </div>
           )}
 
-          {/* Error Step */}
-          {step === "error" && (
-            <div className="text-center py-8">
-              <div className="flex justify-center mb-4">
-                <div className="bg-red-100 p-4 rounded-full">
-                  <AlertCircle size={48} className="text-red-600" />
+          {step === "success" && successData?.payment && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={36} className="text-emerald-600" strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-black text-[var(--text)] mb-1">Payment successful</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-5">
+                Your maintenance bill is marked paid.
+              </p>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-alt)] p-4 text-left space-y-2 text-sm mb-5">
+                <div className="flex justify-between gap-2">
+                  <span className="text-[var(--text-muted)]">Receipt</span>
+                  <span className="font-mono font-bold text-emerald-700 text-right break-all">
+                    {successData.payment.receiptNumber}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-[var(--text-muted)]">Paid</span>
+                  <span className="font-bold tabular-nums">
+                    ₹{Number(successData.payment.amount).toLocaleString("en-IN")}
+                  </span>
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Payment Failed</h3>
-              <p className="text-gray-600 text-sm mb-4">{error}</p>
+              <button type="button" onClick={onClose} className="user-btn-primary w-full justify-center">
+                Done
+              </button>
+            </div>
+          )}
+
+          {step === "error" && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={36} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-black text-[var(--text)] mb-2">Something went wrong</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-5">{error}</p>
               <button
+                type="button"
                 onClick={() => {
-                  setStep("confirm");
-                  setError(null);
+                  reset();
                 }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition"
+                className="user-btn-primary w-full justify-center"
               >
-                Try Again
+                Try again
               </button>
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-          <p className="text-xs text-gray-500 text-center">
-            This is a test payment gateway. No real money will be debited.
-          </p>
-        </div>
       </div>
     </div>
   );
-};
-
-export default RazorpayPaymentModal;
+}

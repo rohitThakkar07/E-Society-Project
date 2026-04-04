@@ -30,8 +30,15 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
+    if (user.status === "Inactive") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is inactive. Contact admin.",
+      });
+    }
+
     // 3. Attach full user object to the request
-    req.user = user; 
+    req.user = user;
     next();
   } catch (error) {
     res.status(401).json({

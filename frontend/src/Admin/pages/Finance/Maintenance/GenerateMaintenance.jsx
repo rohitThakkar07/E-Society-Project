@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-hot-toast";
+import { toast } from "react-toastify";
 import {
   fetchSettings,
   saveSettings,
   generateBills,
   updateSettingsField,
   clearResults,
+  clearSettingsError,
   selectSettings,
   selectSettingsLoading,
   selectSettingsSaving,
+  selectSettingsError,
   selectGenerateLoading,
-  selectGenerateError,
   selectResults,
 } from "../../../../store/slices/Maintenancebillingslice";
 
 const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const TABS = [
+  { label: "Overview", path: "/admin/maintenance/dashboard" },
+  { label: "Records", path: "/admin/maintenance/list" },
+  { label: "Add Bill", path: "/admin/maintenance/add" },
+  { label: "Generate", path: "/admin/maintenance/generate" },
 ];
 
 const currentYear = new Date().getFullYear();
@@ -25,31 +34,35 @@ const years = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
 
 export default function GenerateMaintenance() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const settings        = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const settingsLoading = useSelector(selectSettingsLoading);
-  const settingsSaving  = useSelector(selectSettingsSaving);
+  const settingsSaving = useSelector(selectSettingsSaving);
+  const settingsError = useSelector(selectSettingsError);
   const generateLoading = useSelector(selectGenerateLoading);
-  const generateError   = useSelector(selectGenerateError);
-  const results         = useSelector(selectResults);
+  const results = useSelector(selectResults);
 
   const [generate, setGenerate] = useState({
     month: MONTHS[new Date().getMonth()],
     year: currentYear,
   });
 
-  // Load settings on mount
   useEffect(() => {
     dispatch(fetchSettings());
-    return () => { dispatch(clearResults()); };
+    return () => {
+      dispatch(clearResults());
+    };
   }, [dispatch]);
 
-  // Show generate error as toast
   useEffect(() => {
-    if (generateError) toast.error(generateError);
-  }, [generateError]);
+    if (settingsError) {
+      toast.error(settingsError);
+      dispatch(clearSettingsError());
+    }
+  }, [settingsError, dispatch]);
 
-  // Helper to update a single settings field
   function updateField(key, value) {
     dispatch(updateSettingsField({ key, value }));
   }
@@ -58,76 +71,118 @@ export default function GenerateMaintenance() {
     e.preventDefault();
     const result = await dispatch(saveSettings(settings));
     if (saveSettings.fulfilled.match(result)) {
-      toast.success("Settings saved!");
+      toast.success("Settings saved successfully.");
     } else {
-      toast.error(result.payload || "Failed to save settings");
+      toast.error(result.payload || "Failed to save settings.");
     }
   }
 
   async function handleGenerate() {
     const result = await dispatch(generateBills(generate));
-    if (generateBills.fulfilled.match(result)) {
-      toast.success(`${result.payload.summary.created} bills generated!`);
+    if (generateBills.rejected.match(result)) {
+      toast.error(typeof result.payload === "string" ? result.payload : "Failed to generate bills.");
+      return;
+    }
+    const { summary, message } = result.payload;
+    const created = summary?.created ?? 0;
+    const skipped = summary?.skipped ?? 0;
+    const errors = summary?.errors ?? 0;
+    if (created > 0) {
+      toast.success(message || `${created} bill${created === 1 ? "" : "s"} generated.`);
+    } else if (errors > 0) {
+      toast.error(`No new bills created. ${errors} error${errors === 1 ? "" : "s"} — see details below.`);
+    } else if (skipped > 0) {
+      toast(`All ${skipped} resident${skipped === 1 ? "" : "s"} skipped (e.g. bill already exists or no flat).`, {
+        type: "info",
+      });
+    } else {
+      toast.info("No active residents found to bill.");
     }
   }
 
   if (settingsLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-        Loading settings...
+      <div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">Track society maintenance bills and collections.</p>
+        </div>
+        <div className="flex items-center justify-center h-48 text-slate-400 text-sm rounded-2xl border border-slate-200 bg-white">
+          Loading billing settings…
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">Maintenance Billing</h1>
-      <p className="text-gray-500 mb-8 text-sm">
-        Configure auto-billing settings and generate monthly maintenance bills
-      </p>
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance</h1>
+        <p className="text-sm text-slate-500 font-medium mt-0.5">Track society maintenance bills and collections.</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+        {TABS.map((tab) => (
+          <button
+            key={tab.path}
+            type="button"
+            onClick={() => navigate(tab.path)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              location.pathname === tab.path
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        {/* ── Settings Panel ── */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm">⚙️</span>
-            Billing Settings
-          </h2>
-
-          <form onSubmit={handleSaveSettings} className="space-y-5">
-
-            {/* Due Days */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-6xl">
+        {/* Settings */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+              ⚙
+            </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date (day of month)
-              </label>
+              <p className="text-sm font-bold text-slate-800">Billing settings</p>
+              <p className="text-[11px] text-slate-400">Due dates, late fees, and email options</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveSettings} className="p-6 space-y-5">
+            <div>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Due date (day of month)</label>
               <input
                 type="number"
-                min="1"
-                max="28"
+                min={1}
+                max={28}
                 value={settings.dueDays}
-                onChange={e => updateField("dueDays", parseInt(e.target.value))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  updateField("dueDays", Number.isFinite(v) ? Math.min(28, Math.max(1, v)) : 1);
+                }}
+                className="admin-input mt-1.5"
               />
-              <p className="text-xs text-gray-400 mt-1">
-                Bills will be due on the {settings.dueDays}{ordinal(settings.dueDays)} of every month
+              <p className="text-[11px] text-slate-400 mt-1">
+                Bills are due on the {settings.dueDays}
+                {ordinal(settings.dueDays)} of each month.
               </p>
             </div>
 
-            {/* Late Fee Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee Type</label>
-              <div className="flex gap-3">
-                {["none", "flat", "percent"].map(t => (
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee type</label>
+              <div className="flex gap-2 mt-1.5">
+                {["none", "flat", "percent"].map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => updateField("lateFeeType", t)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
                       settings.lateFeeType === t
                         ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
                     }`}
                   >
                     {t === "none" ? "None" : t === "flat" ? "Flat ₹" : "Percent %"}
@@ -138,63 +193,78 @@ export default function GenerateMaintenance() {
 
             {settings.lateFeeType === "flat" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee Amount (₹)</label>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee amount (₹)</label>
                 <input
                   type="number"
-                  min="0"
+                  min={0}
+                  step={1}
                   value={settings.lateFeeAmount}
-                  onChange={e => updateField("lateFeeAmount", parseFloat(e.target.value))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    updateField("lateFeeAmount", Number.isFinite(v) ? Math.max(0, v) : 0);
+                  }}
+                  className="admin-input mt-1.5"
                 />
               </div>
             )}
 
             {settings.lateFeeType === "percent" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee (%)</label>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee (%)</label>
                 <input
                   type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
+                  min={0}
+                  max={100}
+                  step={0.5}
                   value={settings.lateFeePercent}
-                  onChange={e => updateField("lateFeePercent", parseFloat(e.target.value))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    updateField(
+                      "lateFeePercent",
+                      Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0
+                    );
+                  }}
+                  className="admin-input mt-1.5"
                 />
               </div>
             )}
 
-            {/* Toggles */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1 border-t border-slate-100">
               <ToggleRow
-                label="Auto-generate bills on 1st of each month"
+                label="Auto-generate bills on the 1st of each month"
                 value={settings.autoGenerate}
-                onChange={v => updateField("autoGenerate", v)}
+                onChange={(v) => updateField("autoGenerate", v)}
               />
               <ToggleRow
-                label="Send email when bill is generated"
+                label="Send email when a bill is generated"
                 value={settings.sendEmailOnGenerate}
-                onChange={v => updateField("sendEmailOnGenerate", v)}
+                onChange={(v) => updateField("sendEmailOnGenerate", v)}
               />
               <ToggleRow
                 label="Send overdue reminder email"
                 value={settings.sendOverdueReminder}
-                onChange={v => updateField("sendOverdueReminder", v)}
+                onChange={(v) => updateField("sendOverdueReminder", v)}
               />
             </div>
 
             {settings.sendOverdueReminder && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Send reminder after (days past due)
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  Reminder after (days past due)
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  max="30"
+                  min={1}
+                  max={30}
                   value={settings.overdueReminderDays}
-                  onChange={e => updateField("overdueReminderDays", parseInt(e.target.value))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    updateField(
+                      "overdueReminderDays",
+                      Number.isFinite(v) ? Math.min(30, Math.max(1, v)) : 3
+                    );
+                  }}
+                  className="admin-input mt-1.5"
                 />
               </div>
             )}
@@ -202,95 +272,154 @@ export default function GenerateMaintenance() {
             <button
               type="submit"
               disabled={settingsSaving}
-              className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-60"
+              className="admin-btn-primary w-full justify-center"
             >
-              {settingsSaving ? "Saving..." : "Save Settings"}
+              {settingsSaving ? "Saving…" : "Save settings"}
             </button>
           </form>
         </div>
 
-        {/* ── Generate Bills Panel ── */}
+        {/* Generate + results */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-sm">📋</span>
-              Generate Monthly Bills
-            </h2>
-            <p className="text-sm text-gray-500 mb-5">
-              Generates bills for all active residents based on their flat's monthly maintenance amount. Skips already generated bills.
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                <select
-                  value={generate.month}
-                  onChange={e => setGenerate({ ...generate, month: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  {MONTHS.map(m => <option key={m}>{m}</option>)}
-                </select>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">
+                ⚡
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                <select
-                  value={generate.year}
-                  onChange={e => setGenerate({ ...generate, year: parseInt(e.target.value) })}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  {years.map(y => <option key={y}>{y}</option>)}
-                </select>
+                <p className="text-sm font-bold text-slate-800">Generate monthly bills</p>
+                <p className="text-[11px] text-slate-400">One bill per active resident &amp; flat; skips duplicates</p>
               </div>
             </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={generateLoading}
-              className="w-full bg-green-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {generateLoading ? (
-                <><span className="animate-spin">⟳</span> Generating...</>
-              ) : (
-                <><span>⚡</span> Generate Bills for {generate.month} {generate.year}</>
-              )}
-            </button>
-          </div>
+            <div className="p-6">
+              <p className="text-sm text-slate-600 mb-5">
+                Uses each flat&apos;s <span className="font-semibold text-slate-800">monthly maintenance</span> amount.
+                Residents without a flat or with zero amount still get a bill of ₹0 unless you adjust flats first.
+              </p>
 
-          {/* Results */}
-          {results && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-sm font-semibold text-gray-800 mb-4">Generation Results</h3>
-
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <StatCard label="Created" value={results.summary.created} color="green" />
-                <StatCard label="Skipped" value={results.summary.skipped} color="yellow" />
-                <StatCard label="Errors"  value={results.summary.errors}  color="red"   />
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div>
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Month</label>
+                  <select
+                    value={generate.month}
+                    onChange={(e) => setGenerate({ ...generate, month: e.target.value })}
+                    className="admin-input mt-1.5"
+                  >
+                    {MONTHS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Year</label>
+                  <select
+                    value={generate.year}
+                    onChange={(e) =>
+                      setGenerate({ ...generate, year: parseInt(e.target.value, 10) })
+                    }
+                    className="admin-input mt-1.5"
+                  >
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {results.details.created.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Created Bills</p>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {results.details.created.map((c, i) => (
-                      <div key={i} className="flex justify-between items-center text-sm bg-green-50 rounded-lg px-3 py-2">
-                        <span className="font-medium text-gray-700">{c.flatNumber} — {c.resident}</span>
-                        <span className="text-green-700 font-semibold">₹{c.amount?.toLocaleString("en-IN")}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generateLoading}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {generateLoading ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Generating…
+                  </>
+                ) : (
+                  <>Generate for {generate.month} {generate.year}</>
+                )}
+              </button>
+            </div>
+          </div>
 
-              {results.details.errors.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-red-500 uppercase tracking-wide mb-2">Errors</p>
-                  {results.details.errors.map((e, i) => (
-                    <div key={i} className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">
-                      {e.flatNumber}: {e.error}
-                    </div>
-                  ))}
+          {results && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <p className="text-sm font-bold text-slate-800">Last run</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{results.message}</p>
+              </div>
+              <div className="p-6 space-y-5">
+                <div className="grid grid-cols-3 gap-3">
+                  <StatCard label="Created" value={results.summary.created} tone="emerald" />
+                  <StatCard label="Skipped" value={results.summary.skipped} tone="amber" />
+                  <StatCard label="Errors" value={results.summary.errors} tone="red" />
                 </div>
-              )}
+
+                {results.details.created?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                      Created bills
+                    </p>
+                    <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                      {results.details.created.map((c, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center text-sm bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2"
+                        >
+                          <span className="font-medium text-slate-700 truncate mr-2">
+                            {c.flatNumber} — {c.resident}
+                          </span>
+                          <span className="text-emerald-800 font-bold whitespace-nowrap">
+                            ₹{(c.amount ?? 0).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {results.details.skipped?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">
+                      Skipped
+                    </p>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto text-xs">
+                      {results.details.skipped.map((s, i) => (
+                        <div
+                          key={i}
+                          className="bg-amber-50 border border-amber-100 text-amber-900 rounded-lg px-3 py-2"
+                        >
+                          <span className="font-semibold">{s.flatNumber || s.resident || "—"}</span>
+                          {s.reason ? `: ${s.reason}` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {results.details.errors?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">Errors</p>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto text-xs">
+                      {results.details.errors.map((errItem, i) => (
+                        <div key={i} className="bg-red-50 border border-red-100 text-red-800 rounded-lg px-3 py-2">
+                          <span className="font-semibold">
+                            {errItem.flatNumber || errItem.resident || "Record"}
+                          </span>
+                          : {errItem.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -299,38 +428,45 @@ export default function GenerateMaintenance() {
   );
 }
 
-// ── Sub-components (unchanged) ────────────────────────────────────────────────
-
 function ToggleRow({ label, value, onChange }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-600">{label}</span>
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-sm text-slate-600 leading-snug">{label}</span>
       <button
         type="button"
+        role="switch"
+        aria-checked={value}
         onClick={() => onChange(!value)}
-        className={`w-11 h-6 rounded-full transition-colors relative ${value ? "bg-blue-600" : "bg-gray-200"}`}
+        className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${
+          value ? "bg-blue-600" : "bg-slate-200"
+        }`}
       >
-        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${value ? "left-5.5 translate-x-0.5" : "left-0.5"}`} />
+        <span
+          className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ease-out ${
+            value ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
       </button>
     </div>
   );
 }
 
-function StatCard({ label, value, color }) {
-  const colors = {
-    green:  "bg-green-50 text-green-700",
-    yellow: "bg-yellow-50 text-yellow-700",
-    red:    "bg-red-50 text-red-700",
+function StatCard({ label, value, tone }) {
+  const map = {
+    emerald: "bg-emerald-50 text-emerald-800 border-emerald-100",
+    amber: "bg-amber-50 text-amber-900 border-amber-100",
+    red: "bg-red-50 text-red-800 border-red-100",
   };
   return (
-    <div className={`${colors[color]} rounded-lg p-3 text-center`}>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs font-medium">{label}</div>
+    <div className={`rounded-xl p-3 text-center border ${map[tone]}`}>
+      <div className="text-2xl font-black tabular-nums">{value}</div>
+      <div className="text-[10px] font-bold uppercase tracking-wide opacity-90">{label}</div>
     </div>
   );
 }
 
 function ordinal(n) {
-  const s = ["th","st","nd","rd"], v = n % 100;
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 }

@@ -17,12 +17,12 @@ export const initiatePayment = createAsyncThunk(
   }
 );
 
-// Step 2: Confirm & record payment (replaces old addPayment)
+/** Razorpay verify: body must include maintenanceId, orderId, paymentId, signature */
 export const addPayment = createAsyncThunk(
   "payment/add",
   async (paymentData, { rejectWithValue }) => {
     try {
-      const res = await API.post("/payment/add", paymentData);
+      const res = await API.post("/payment/verify", paymentData);
       toast.success("Payment recorded!");
       return res.data.data;
     } catch (err) {

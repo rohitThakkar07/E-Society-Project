@@ -19,7 +19,7 @@ const maintenanceSettingsSchema = new mongoose.Schema({
   // Email notifications
   sendEmailOnGenerate: { type: Boolean, default: true },
   sendOverdueReminder: { type: Boolean, default: true },
-  overdueReminderDays: { type: Number, default: 3 }, // days after due date to send reminder
+  overdueReminderDays: { type: Number, default: 3, min: 1, max: 30 }, // days after due date
 
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });

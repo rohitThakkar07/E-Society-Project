@@ -2,6 +2,7 @@ const PaymentRecord = require("../../../db/models/paymentRecordModal");
 const Maintenance = require("../../../db/models/maintenanceModel");
 const Resident = require("../../../db/models/residentsModel");
 const { createOrder, verifyPaymentSignature, fetchPaymentDetails } = require("../../../../utils/razorpay");
+const { normalizePaymentMode, toSchemaPaymentMethod } = require("./paymentHelpers");
 
 // ── STEP 1: Create Razorpay Order ───────────────────────────────────────────
 // Frontend calls this first to get orderId and payment details
@@ -47,9 +48,9 @@ exports.initiatePayment = async (req, res) => {
         currency: orderResult.currency,
         resident: {
           id: bill.resident._id,
-          name: `${bill.resident.firstName} ${bill.resident.lastName}`,
-          email: bill.resident.email,
-          phone: bill.resident.mobile,
+          name: `${bill.resident.firstName} ${bill.resident.lastName || ""}`.trim(),
+          email: bill.resident.email || "",
+          phone: bill.resident.mobileNumber || bill.resident.mobile || "",
           flatNumber: bill.resident.flatNumber,
         },
         billDetails: {
@@ -153,22 +154,12 @@ exports.createPayment = async (req, res) => {
 
     const totalAmount = bill.amount + (bill.lateFee || 0);
 
-    const normalizePaymentMode = (method) => {
-      const lower = (method || "").toLowerCase();
-      if (lower === "card") return "Card";
-      if (lower === "netbanking") return "Net Banking";
-      if (lower === "upi") return "UPI";
-      if (lower === "wallet") return "Wallet";
-      if (lower === "emandate") return "E-Mandate";
-      if (lower === "razorpay") return "Razorpay";
-      if (lower === "cash") return "Cash";
-      return "Other";
-    };
-
     const paymentMode = normalizePaymentMode(paymentDetails.method);
+    const schemaMethod = toSchemaPaymentMethod(paymentDetails.method);
 
-    // Verify amount matches
-    if (paymentDetails.amount !== totalAmount) {
+    const paidAmt = Number(paymentDetails.amount);
+    const dueAmt = Number(totalAmount);
+    if (!Number.isFinite(paidAmt) || Math.abs(paidAmt - dueAmt) > 0.05) {
       return res.status(400).json({
         success: false,
         message: "Payment amount does not match bill amount",
@@ -191,8 +182,8 @@ exports.createPayment = async (req, res) => {
         razorpayPaymentId: paymentId,
         razorpaySignature: signature,
         signature_verified: true,
-        paymentMethod: paymentMode,
-        cardDetails: paymentMode === "Card" ? {
+        paymentMethod: schemaMethod,
+        cardDetails: schemaMethod === "card" ? {
           last4: paymentDetails.cardId?.last4,
           brand: paymentDetails.cardId?.issuer,
         } : undefined,

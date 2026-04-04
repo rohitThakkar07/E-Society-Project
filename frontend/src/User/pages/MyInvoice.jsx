@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import RazorpayPaymentModal from "../components/RazorpayPaymentModal";
 import { fetchMyMaintenance } from "../../store/slices/maintenanceSlice";
 import { Download, Filter, IndianRupee } from "lucide-react";
-import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { FiCreditCard } from "react-icons/fi";
@@ -15,10 +14,11 @@ const MyInvoice = () => {
 
   // State for filtering
   const [statusFilter, setStatusFilter] = useState("All");
-  const [paymentInvoice, setPaymentInvoice] = useState(null);
-  const [paymentModalData, setPaymentModalData] = useState({ isOpen: false, maintenanceId: null, billDetails: null });
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentModalData, setPaymentModalData] = useState({
+    isOpen: false,
+    maintenanceId: null,
+    billDetails: null,
+  });
 
   useEffect(() => {
     dispatch(fetchMyMaintenance());
@@ -67,8 +67,6 @@ const MyInvoice = () => {
   };
 
   const handlePayNow = (invoice) => {
-    setPaymentInvoice(invoice);
-    setPaymentMessage("");
     setPaymentModalData({
       isOpen: true,
       maintenanceId: invoice._id,
@@ -84,13 +82,6 @@ const MyInvoice = () => {
 
   const closePayModal = () => {
     setPaymentModalData({ isOpen: false, maintenanceId: null, billDetails: null });
-    setPaymentInvoice(null);
-    setPaymentMessage("");
-  };
-
-  const handlePaymentSubmit = async (event) => {
-    event?.preventDefault();
-    toast.info("Please initiate Razorpay payment using Pay Now.");
   };
 
   return (
@@ -199,10 +190,8 @@ const MyInvoice = () => {
           onClose={closePayModal}
           maintenanceId={paymentModalData.maintenanceId}
           billDetails={paymentModalData.billDetails}
-          onPaymentSuccess={(data) => {
+          onPaymentSuccess={() => {
             dispatch(fetchMyMaintenance());
-            closePayModal();
-            setPaymentMessage("Payment successful! Refreshing invoice data...");
           }}
         />
       </div>

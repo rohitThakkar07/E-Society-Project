@@ -56,11 +56,12 @@ const generateMonthlyBills = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid month name" });
     }
 
-    const settings = (await MaintenanceSettings.findOne()) || {};
-    const dueDays        = settings.dueDays       || 10;
-    const lateFeeType    = settings.lateFeeType   || "none";
-    const lateFeeAmount  = settings.lateFeeAmount || 0;
-    const lateFeePercent = settings.lateFeePercent|| 0;
+    const settings = await MaintenanceSettings.findOne();
+    const dueDays        = settings?.dueDays ?? 10;
+    const lateFeeType    = settings?.lateFeeType ?? "none";
+    const lateFeeAmount  = settings?.lateFeeAmount ?? 0;
+    const lateFeePercent = settings?.lateFeePercent ?? 0;
+    const sendEmailOnGenerate = settings?.sendEmailOnGenerate !== false;
 
     const results = { created: [], skipped: [], errors: [] };
 
@@ -102,8 +103,7 @@ const generateMonthlyBills = async (req, res) => {
           status:   "Pending",
         });
 
-        // Send email
-        if (resident.email) {
+        if (sendEmailOnGenerate && resident.email) {
           await sendMaintenanceBillEmail(resident, flat, maintenance);
         }
 
@@ -116,7 +116,16 @@ const generateMonthlyBills = async (req, res) => {
         });
 
       } catch (err) {
-        results.errors.push({ resident: resident.firstName, error: err.message });
+        const flatDoc = resident.flat;
+        const flatNum =
+          (flatDoc && typeof flatDoc === "object" && flatDoc.flatNumber) ||
+          resident.flatNumber ||
+          "—";
+        results.errors.push({
+          flatNumber: flatNum,
+          resident: `${resident.firstName} ${resident.lastName || ""}`.trim(),
+          error: err.message,
+        });
       }
     }
 

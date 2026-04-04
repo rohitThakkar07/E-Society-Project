@@ -1,8 +1,9 @@
 import axios from "axios";
 
+/** Default wait for most API calls. Bill generation / bulk jobs override per-request. */
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
-  timeout: 10000,
+  timeout: 60000,
 });
 
 // Interceptor: Add token to every request
