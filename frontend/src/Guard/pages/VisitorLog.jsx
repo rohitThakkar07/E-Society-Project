@@ -3,8 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  Search, Filter, LogOut, Clock, CheckCircle, XCircle,
-  AlertCircle, ChevronRight, Plus, RefreshCw, Users
+  Search, LogOut, Clock, ChevronRight, RefreshCw, Users
 } from "lucide-react";
 import { fetchVisitors, markVisitorExit } from "../../store/slices/visitorSlice";
 
@@ -61,32 +60,26 @@ const VisitorLog = () => {
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="min-h-screen bg-slate-50">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@800;900&display=swap');`}</style>
+    <div className="min-h-screen bg-slate-50">
 
       {/* HEADER */}
       <div className="bg-white border-b border-slate-100 px-6 py-5">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
-              Visitor Log
+              Gate Log
             </h1>
             <p className="text-xs text-slate-400 font-medium mt-1">
-              {filtered.length} records · real-time gate management
+              {filtered.length} record{filtered.length !== 1 ? 's' : ''} · real-time gate management
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => dispatch(fetchVisitors())}
-              className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
-            >
-              <RefreshCw size={16} className="text-slate-600" />
-            </button>
-            <Link to="/guard/visitor/add"
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-blue-100"
-            >
-              <Plus size={16} /> New Entry
-            </Link>
-          </div>
+          <button
+            onClick={() => dispatch(fetchVisitors())}
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+            title="Refresh"
+          >
+            <RefreshCw size={16} className="text-slate-600" />
+          </button>
         </div>
       </div>
 

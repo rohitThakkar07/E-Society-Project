@@ -1,12 +1,13 @@
 // src/Guard/pages/AddVisitorEntry.jsx
-import React, { useState, useCallback } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   User, Phone, MapPin, FileText, Car, Shield,
-  Search, CheckCircle, ChevronLeft, Send, Loader2
+  Search, CheckCircle, ChevronLeft, Send, Loader2, ChevronDown, X, Clock
 } from "lucide-react";
 import { createVisitor } from "../../store/slices/visitorSlice";
+import { fetchResidents } from "../../store/slices/residentSlice";
 import API from "../../service/api";
 import { toast } from "react-toastify";
 
@@ -17,14 +18,16 @@ const AddVisitorEntry = () => {
   const navigate  = useNavigate();
   const user      = JSON.parse(localStorage.getItem("userData") || "{}");
 
-  const [step,    setStep]    = useState(1);  // 1=Search Resident, 2=Fill Form, 3=OTP
+  // Redux residents
+  const { residents = [], loading: residentsLoading } = useSelector((s) => s.resident || {});
+
+  const [step,    setStep]    = useState(1);
   const [loading, setLoading] = useState(false);
-  const [searchQ, setSearchQ] = useState("");
-  const [results, setResults] = useState([]);
-  const [searching, setSearching] = useState(false);
   const [resident, setResident] = useState(null);
   const [createdVisitor, setCreatedVisitor] = useState(null);
   const [otp,  setOtp]  = useState("");
+  const [otpTimer, setOtpTimer] = useState(300); // 5 min = 300 seconds
+  const [timerActive, setTimerActive] = useState(false);
   const [form, setForm] = useState({
     visitorName:  "",
     mobileNumber: "",
@@ -33,34 +36,71 @@ const AddVisitorEntry = () => {
     notes:        "",
   });
 
-  // ── Step 1: Search Resident ────────────────────────────────────────────────
-  const searchResidents = useCallback(async (q) => {
-    if (q.length < 2) { setResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await API.get(`/visitor/search-residents?q=${q}`);
-      setResults(res.data?.data || []);
-    } catch {
-      setResults([]);
-    } finally {
-      setSearching(false);
-    }
+  // Dropdown state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const dropdownRef = useRef(null);
+
+  // Load all residents on mount
+  useEffect(() => {
+    dispatch(fetchResidents());
+  }, [dispatch]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const handleSearchChange = (e) => {
-    const v = e.target.value;
-    setSearchQ(v);
-    searchResidents(v);
-  };
+  // Active residents only, filtered by search
+  const activeResidents = useMemo(() => {
+    const all = residents.filter((r) => r.status === "Active");
+    if (!searchQ.trim()) return all;
+    const q = searchQ.toLowerCase();
+    return all.filter((r) =>
+      `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
+      r.wing?.toLowerCase().includes(q) ||
+      r.flatNumber?.toLowerCase().includes(q) ||
+      r.mobileNumber?.includes(q)
+    );
+  }, [residents, searchQ]);
 
   const selectResident = (r) => {
     setResident(r);
-    setSearchQ(`${r.firstName} ${r.lastName} — ${r.wing}-${r.flatNumber}`);
-    setResults([]);
+    setSearchQ("");
+    setDropdownOpen(false);
     setStep(2);
   };
+  // ── OTP countdown timer ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!timerActive) return;
+    if (otpTimer <= 0) { setTimerActive(false); return; }
+    const t = setInterval(() => setOtpTimer((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [timerActive, otpTimer]);
 
-  // ── Step 2: Submit Form → create visitor & send OTP ───────────────────────
+  const startTimer = () => { setOtpTimer(300); setTimerActive(true); };
+
+  const fmtTimer = (s) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${String(sec).padStart(2, "0")}`;
+  };
+
+  // Format unit display — avoid B-B-104 double wing
+  const formatUnit = (wing, flatNumber) => {
+    if (!wing || !flatNumber) return flatNumber || wing || "—";
+    // flatNumber may already include wing prefix (e.g. "B-104" when wing="B")
+    if (flatNumber.startsWith(`${wing}-`) || flatNumber.startsWith(wing)) return flatNumber;
+    return `${wing}-${flatNumber}`;
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!resident) { toast.error("Please select a resident first."); return; }
@@ -76,7 +116,8 @@ const AddVisitorEntry = () => {
       const result = await dispatch(createVisitor(payload)).unwrap();
       setCreatedVisitor(result);
       setStep(3);
-      toast.info("OTP sent to resident's mobile.");
+      startTimer(); // start 5-min countdown
+      toast.info("OTP sent to resident's email.");
     } catch {
       // toast already shown in slice
     } finally {
@@ -85,11 +126,20 @@ const AddVisitorEntry = () => {
   };
 
   // ── Step 3: Verify OTP ─────────────────────────────────────────────────────
+  const getVisitorId = () => {
+    const id = createdVisitor?.data?._id ?? createdVisitor?._id;
+    if (!id) return null;
+    return typeof id === "object" && id !== null && typeof id.toString === "function" ? id.toString() : id;
+  };
+
   const handleVerifyOTP = async () => {
     if (!otp || otp.length !== 6) { toast.error("Enter valid 6-digit OTP."); return; }
+    const visitorId = getVisitorId();
+    if (!visitorId) { toast.error("Visitor ID is invalid."); return; }
+
     setLoading(true);
     try {
-      await API.post(`/visitor/verify-otp/${createdVisitor._id}`, { otp });
+      await API.post(`/visitor/verify-otp/${visitorId}`, { otp });
       toast.success("✅ OTP verified! Visitor entry approved.");
       navigate("/guard/visitors");
     } catch (err) {
@@ -100,10 +150,15 @@ const AddVisitorEntry = () => {
   };
 
   const handleResendOTP = async () => {
+    const visitorId = getVisitorId();
+    if (!visitorId) { toast.error("Visitor ID is invalid."); return; }
+
     setLoading(true);
     try {
-      await API.post(`/visitor/resend-otp/${createdVisitor._id}`);
-      toast.success("OTP resent to resident.");
+      await API.post(`/visitor/resend-otp/${visitorId}`);
+      startTimer(); // reset 5-min countdown
+      setOtp("");   // clear any partial OTP
+      toast.success("New OTP sent to resident.");
     } catch {
       toast.error("Failed to resend OTP.");
     } finally {
@@ -113,9 +168,12 @@ const AddVisitorEntry = () => {
 
   const handleBypassEntry = async () => {
     if (!window.confirm("Allow entry without OTP? (Override)")) return;
+    const visitorId = getVisitorId();
+    if (!visitorId) { toast.error("Visitor ID is invalid."); return; }
+
     setLoading(true);
     try {
-      await API.put(`/visitor/allow-entry/${createdVisitor._id}`);
+      await API.put(`/visitor/allow-entry/${visitorId}`);
       toast.success("Visitor entry allowed (manual override).");
       navigate("/guard/visitors");
     } catch {
@@ -162,55 +220,150 @@ const AddVisitorEntry = () => {
 
       <div className="max-w-xl mx-auto px-6 py-8">
 
-        {/* ── STEP 1: Search Resident ────────────────────────────────────── */}
+        {/* ── STEP 1: Select Resident ──────────────────────────────────── */}
         {step === 1 && (
           <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Search size={28} className="text-blue-600" />
+                <User size={28} className="text-blue-600" />
               </div>
               <h2 className="text-2xl font-black text-slate-900 mb-2" style={{ fontFamily: "'Fraunces', serif" }}>
-                Find Resident
+                Select Resident
               </h2>
-              <p className="text-sm text-slate-500">Search by name, flat number, wing or mobile</p>
+              <p className="text-sm text-slate-500">Choose the resident being visited from the society list</p>
             </div>
 
-            <div className="relative">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                value={searchQ}
-                onChange={handleSearchChange}
-                placeholder="e.g. Priya, A-204, 9876543210…"
-                className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-              />
-              {searching && (
-                <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 animate-spin" />
+            {/* Dropdown Trigger */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((o) => !o)}
+                className={`w-full flex items-center justify-between px-4 py-4 border-2 rounded-2xl text-sm font-medium transition-all bg-slate-50 ${
+                  dropdownOpen ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                {resident ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+                      {resident.firstName?.[0]}
+                    </div>
+                    <div className="text-left">
+                      <span className="font-bold text-slate-800">{resident.firstName} {resident.lastName}</span>
+                      <span className="ml-2 text-xs text-blue-500 font-semibold">{resident.wing}-{resident.flatNumber}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-slate-400">
+                    {residentsLoading ? "Loading residents…" : "Select a resident…"}
+                  </span>
+                )}
+                <div className="flex items-center gap-2">
+                  {resident && (
+                    <span
+                      onClick={(e) => { e.stopPropagation(); setResident(null); }}
+                      className="p-1 hover:bg-slate-200 rounded-lg transition"
+                    >
+                      <X size={14} className="text-slate-400" />
+                    </span>
+                  )}
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                </div>
+              </button>
+
+              {/* Dropdown Panel */}
+              {dropdownOpen && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+                  {/* Search inside dropdown */}
+                  <div className="p-3 border-b border-slate-100">
+                    <div className="relative">
+                      <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        autoFocus
+                        value={searchQ}
+                        onChange={(e) => setSearchQ(e.target.value)}
+                        placeholder="Search by name, wing, flat or mobile…"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      />
+                      {searchQ && (
+                        <button
+                          onClick={() => setSearchQ("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Resident List */}
+                  <div className="max-h-72 overflow-y-auto">
+                    {residentsLoading ? (
+                      <div className="flex items-center justify-center gap-2 py-8 text-slate-400 text-sm">
+                        <Loader2 size={16} className="animate-spin" />
+                        Loading residents…
+                      </div>
+                    ) : activeResidents.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-slate-400">
+                        {searchQ ? "No residents match your search." : "No active residents found."}
+                      </div>
+                    ) : (
+                      activeResidents.map((r) => (
+                        <button
+                          key={r._id}
+                          onClick={() => selectResident(r)}
+                          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-blue-50 transition text-left border-b border-slate-50 last:border-0"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                            {r.firstName?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-slate-800 text-sm truncate">
+                              {r.firstName} {r.lastName}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">
+                                {r.wing}-{r.flatNumber}
+                              </span>
+                              {r.mobileNumber && (
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                  {r.mobileNumber}
+                                </span>
+                              )}
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                r.residentType === "Owner" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"
+                              }`}>
+                                {r.residentType}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer count */}
+                  {!residentsLoading && (
+                    <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+                      {activeResidents.length} active resident{activeResidents.length !== 1 ? "s" : ""} {searchQ ? "found" : "available"}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            {results.length > 0 && (
-              <div className="mt-3 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
-                {results.map((r) => (
-                  <button key={r._id} onClick={() => selectResident(r)}
-                    className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-50 transition border-b border-slate-50 last:border-0 text-left"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                      {r.firstName?.[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800 text-sm">{r.firstName} {r.lastName}</p>
-                      <p className="text-xs text-slate-400">{r.wing}-{r.flatNumber} · {r.mobileNumber}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {searchQ.length >= 2 && results.length === 0 && !searching && (
-              <p className="text-center text-sm text-slate-400 mt-4">No residents found. Try a different search.</p>
+            {/* Confirm button (appears after selection) */}
+            {resident && (
+              <button
+                onClick={() => setStep(2)}
+                className="mt-6 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition shadow-lg shadow-blue-100"
+              >
+                <CheckCircle size={18} />
+                Continue with {resident.firstName} {resident.lastName}
+              </button>
             )}
           </div>
         )}
+
 
         {/* ── STEP 2: Visitor Details Form ──────────────────────────────────── */}
         {step === 2 && (
@@ -340,12 +493,29 @@ const AddVisitorEntry = () => {
               OTP Verification
             </h2>
             <p className="text-sm text-slate-500 mb-2">
-              An OTP has been sent to the resident's registered mobile number.
+              An OTP has been sent to the resident's registered email address.
             </p>
-            <div className="bg-slate-50 rounded-2xl p-4 mb-8 text-left">
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 text-left">
               <p className="text-xs font-bold text-slate-500 mb-1">VISITOR</p>
               <p className="font-black text-slate-800">{createdVisitor.visitorName}</p>
-              <p className="text-sm text-slate-500">{createdVisitor.wing}-{createdVisitor.flatNumber} · {createdVisitor.purpose}</p>
+              <p className="text-sm text-slate-500">
+                {formatUnit(createdVisitor.wing, createdVisitor.flatNumber)} · {createdVisitor.purpose}
+              </p>
+            </div>
+
+            {/* Countdown Timer */}
+            <div className={`flex items-center justify-center gap-2 mb-6 px-4 py-3 rounded-2xl text-sm font-black ${
+              otpTimer <= 0
+                ? "bg-red-50 text-red-500"
+                : otpTimer <= 30
+                ? "bg-red-50 text-red-500 animate-pulse"
+                : "bg-amber-50 text-amber-600"
+            }`}>
+              <Clock size={16} />
+              {otpTimer > 0
+                ? <span>OTP expires in <span className="tabular-nums">{fmtTimer(otpTimer)}</span></span>
+                : <span>OTP expired — please resend</span>
+              }
             </div>
 
             {/* OTP Input */}
