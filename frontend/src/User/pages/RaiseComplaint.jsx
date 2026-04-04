@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";
 import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search, FileUp, TrendingUp } from "lucide-react";
 import { fetchComplaints, createComplaint } from "../../store/slices/complaintSlice";
+
+const filePublicOrigin = () => {
+  const u = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return u.replace(/\/api\/?$/, "");
+};
 
 const statusConfig = {
   Pending:      { color: "bg-amber-100 text-amber-700",    icon: <Clock size={14} />, label: "Pending" },
@@ -105,67 +111,87 @@ const RaiseComplaint = () => {
     { label: "Resolved",    value: userComplaints?.filter((c) => c.status === "Resolved").length    || 0,  color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
+  const listAnim = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.06 } },
+  };
+  const itemAnim = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
+
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="user-page-mesh min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 transition-colors duration-300">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
-      <div className="max-w-5xl mx-auto">
-
+      <div className="relative z-[1] mx-auto max-w-5xl">
         {/* HEADER */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-              <Wrench size={20} className="text-orange-600" />
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-500/15">
+              <Wrench size={22} className="text-orange-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Help Desk</h1>
-              <p className="text-sm text-slate-500">Report issues & track complaint status</p>
+              <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">Help desk</h1>
+              <p className="text-sm text-[var(--text-muted)]">Report issues and track status</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* STATS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={listAnim}
+          className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
+        >
           {stats.map((s) => (
-            <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-slate-200`}>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-slate-600 mt-1 font-semibold">{s.label}</p>
-            </div>
+            <motion.div
+              key={s.label}
+              variants={itemAnim}
+              className={`${s.bg} rounded-md border border-[var(--border)] p-4 shadow-sm transition hover:shadow-md`}
+            >
+              <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+              <p className="mt-1 text-xs font-semibold text-[var(--text-muted)]">{s.label}</p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* TAB NAVIGATION */}
-        <div className="bg-white border border-slate-200 rounded-2xl flex p-1.5 mb-8 shadow-sm">
+        <div className="mb-8 flex rounded-md border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
           <button
+            type="button"
             onClick={() => setActiveTab("form")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition ${
-              activeTab === "form" 
-                ? "bg-slate-900 text-white" 
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition ${
+              activeTab === "form"
+                ? "bg-[var(--accent)] text-white shadow-sm"
+                : "text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
             }`}
           >
-            <Plus size={16} /> New Complaint
+            <Plus size={16} /> New
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("complaints")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition ${
-              activeTab === "complaints" 
-                ? "bg-slate-900 text-white" 
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition ${
+              activeTab === "complaints"
+                ? "bg-[var(--accent)] text-white shadow-sm"
+                : "text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
             }`}
           >
-            <TrendingUp size={16} /> My Complaints ({userComplaints.length})
+            <TrendingUp size={16} /> My list ({userComplaints.length})
           </button>
         </div>
 
         {/* TAB 1: COMPLAINT FORM */}
         {activeTab === "form" && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">Report a Problem</h2>
-              <p className="text-sm text-slate-500 mb-6">Tell us what's wrong and we'll help resolve it</p>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:p-8"
+            >
+              <h2 className="mb-1 text-2xl font-black text-[var(--text)]">Report a problem</h2>
+              <p className="mb-6 text-sm text-[var(--text-muted)]">Describe the issue — we&apos;ll route it to the right team.</p>
 
-              <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="mb-6 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-4">
                 <p className="text-sm text-slate-600 font-semibold">
                   ℹ️ Please provide issue details. Your resident information will be retrieved from your account.
                 </p>
@@ -181,7 +207,7 @@ const RaiseComplaint = () => {
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                     placeholder="e.g., Water leakage in bathroom"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-orange-500/40"
                   />
                 </div>
 
@@ -194,7 +220,7 @@ const RaiseComplaint = () => {
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="Describe the issue in detail..."
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    className="w-full resize-none rounded-md border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-orange-500/40"
                   />
                 </div>
 
@@ -204,7 +230,7 @@ const RaiseComplaint = () => {
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-orange-500/40"
                   >
                     {Object.keys(categoryColors).map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -218,7 +244,7 @@ const RaiseComplaint = () => {
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Wing</label>
                     <input
                       readOnly
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-400"
+                      className="w-full px-4 py-3 border border-[var(--border)] rounded-xl text-sm bg-slate-50 text-slate-400"
                       value="Not available"
                     />
                   </div>
@@ -226,7 +252,7 @@ const RaiseComplaint = () => {
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Flat No.</label>
                     <input
                       readOnly
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-400"
+                      className="w-full px-4 py-3 border border-[var(--border)] rounded-xl text-sm bg-slate-50 text-slate-400"
                       value="Not available"
                     />
                   </div>
@@ -289,21 +315,21 @@ const RaiseComplaint = () => {
                         attachmentPreview: null,
                       });
                     }}
-                    className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    className="flex-1 rounded-md border border-[var(--border)] py-3 text-sm font-semibold text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)]"
                   >
-                    Clear Form
+                    Clear
                   </button>
                   <button
                     type="submit"
                     disabled={complaintLoading || !form.title || !residentId}
-                    className="flex-1 py-3 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-md bg-orange-600 py-3 text-sm font-bold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {complaintLoading ? "Submitting..." : "Submit Complaint"}
                   </button>
                 </div>
 
               </form>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -311,7 +337,7 @@ const RaiseComplaint = () => {
         {activeTab === "complaints" && (
           <div>
             {/* SEARCH + FILTER */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+            <div className="mb-6 rounded-md border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -319,7 +345,7 @@ const RaiseComplaint = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search your complaints..."
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-[var(--border)] rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50"
                   />
                 </div>
                 <div className="flex gap-2 flex-wrap">
@@ -327,10 +353,10 @@ const RaiseComplaint = () => {
                     <button
                       key={s}
                       onClick={() => setFilter(s)}
-                      className={`px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+                      className={`rounded-md px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
                         filter === s 
-                          ? "bg-slate-900 text-white" 
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-[var(--accent)] text-white" 
+                          : "bg-[var(--accent-bg)] text-[var(--text)] hover:bg-[var(--accent-soft)]"
                       }`}
                     >
                       {s}
@@ -344,24 +370,28 @@ const RaiseComplaint = () => {
             {complaintLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 bg-white rounded-2xl border border-slate-100 animate-pulse" />
+                  <div key={i} className="h-28 bg-[var(--card)] rounded-2xl border border-[var(--border)] animate-pulse" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="text-center py-16 bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-sm">
                 <Wrench size={48} className="mx-auto mb-4 text-slate-300" />
                 <p className="font-semibold text-slate-700 mb-1">No complaints found</p>
                 <p className="text-sm text-slate-500">Your reported issues will appear here</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <motion.div initial="hidden" animate="show" variants={listAnim} className="space-y-4">
                 {filtered.map((c) => (
-                  <div key={c._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition">
+                  <motion.div
+                    key={c._id}
+                    variants={itemAnim}
+                    className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--card)] shadow-sm transition hover:shadow-md"
+                  >
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-bold text-slate-900 text-lg">{c.title}</h3>
+                            <h3 className="font-bold text-[var(--text)] text-lg">{c.title}</h3>
                             <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${statusConfig[c.status]?.color}`}>
                               {statusConfig[c.status]?.icon} 
                               {statusConfig[c.status]?.label}
@@ -386,7 +416,7 @@ const RaiseComplaint = () => {
                       {c.attachment && (
                         <div className="mt-4 pt-4 border-t border-slate-100">
                           <img 
-                            src={`http://localhost:4000${c.attachment}`} 
+                            src={c.attachment?.startsWith("http") ? c.attachment : `${filePublicOrigin()}${c.attachment}`}
                             alt="Complaint" 
                             onError={(e) => {
                               e.target.style.display = "none";
@@ -398,16 +428,16 @@ const RaiseComplaint = () => {
                     </div>
 
                     {/* STATUS TIMELINE */}
-                    <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2 border-t border-[var(--border)] bg-[var(--accent-bg)] px-5 py-3">
                       <Clock size={14} className="text-slate-400" />
                       <p className="text-xs text-slate-600">
-                        <strong>Timeline:</strong> Created {new Date(c.createdAt).toLocaleDateString()} 
+                        <strong>Timeline:</strong> Created {new Date(c.createdAt).toLocaleDateString()}
                         {c.status === "Resolved" && c.resolvedAt && ` • Resolved ${new Date(c.resolvedAt).toLocaleDateString()}`}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         )}

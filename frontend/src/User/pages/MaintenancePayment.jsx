@@ -117,7 +117,7 @@ const MaintenancePayment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 md:p-8 transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         
         {/* Page Header */}

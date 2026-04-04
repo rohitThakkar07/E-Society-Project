@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";
 import {
-  User, Phone, FileText, MapPin,
-  MoreVertical, Edit2, ShieldCheck, Calendar, Mail
+  User,
+  Phone,
+  FileText,
+  MapPin,
+  Edit2,
+  ShieldCheck,
+  Calendar,
+  Mail,
+  Sparkles,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { fetchResidentById } from "../../store/slices/residentSlice";
 
 const ProfilePage = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const id   = user?.profileId;
+  const id = user?.profileId;
 
   const [activeTab, setActiveTab] = useState("Personal");
   const dispatch = useDispatch();
 
-  // FIX: Read profileLoading (not loading) from residentSlice.
-  // profileLoading is ONLY set by fetchResidentById, so it will never be
-  // stuck true because of an unrelated action in another slice or component.
   const { singleResident: data, profileLoading } = useSelector((state) => state.resident);
 
   useEffect(() => {
@@ -26,183 +31,207 @@ const ProfilePage = () => {
   }, [id, dispatch]);
 
   const tabs = [
-    { id: "Personal", icon: <User size={18} />,    label: "Personal"    },
-    { id: "Contact",  icon: <Phone size={18} />,   label: "Contact"     },
-    { id: "Document", icon: <FileText size={18} />, label: "Document"   },
-    { id: "Address",  icon: <MapPin size={18} />,  label: "Flat Detail" },
+    { id: "Personal", icon: <User size={18} />, label: "Personal" },
+    { id: "Contact", icon: <Phone size={18} />, label: "Contact" },
+    { id: "Document", icon: <FileText size={18} />, label: "Document" },
+    { id: "Address", icon: <MapPin size={18} />, label: "Flat" },
   ];
 
-  // FIX: Only block on profileLoading — NOT a generic loading flag that
-  // any other async action could flip back to true.
   if (profileLoading || !data) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 bg-blue-100 rounded-full mb-4"></div>
-          <p className="text-slate-400 font-medium">Loading Profile...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+        <div className="flex flex-col items-center animate-pulse">
+          <div className="mb-4 h-12 w-12 rounded-full bg-[var(--accent-soft)]" />
+          <p className="font-medium text-[var(--text-muted)]">Loading profile…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="p-6 bg-[#f8fafc] min-h-screen">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;800;900&display=swap');
-        .profile-hero-bg { background: linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 100%); }
-        .glass-input { background: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.2s ease; }
-        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); }
-      `}</style>
+    <div className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 font-sans text-[var(--text)] transition-colors duration-300 sm:p-6">
+      <div className="relative z-[1] mx-auto max-w-6xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <span className="mb-2 inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
+              <Sparkles size={12} /> Account
+            </span>
+            <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">My profile</h1>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">Your details as registered with the society</p>
+          </div>
+        </motion.div>
 
-      <div className="max-w-6xl mx-auto">
-
-        {/* PAGE HEADER */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
-            My Profile
-          </h1>
-          <p className="text-slate-500 text-sm font-medium">Manage your personal information and preferences</p>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-
-          {/* LEFT SIDEBAR */}
-          <div className="w-full lg:w-96 flex flex-col gap-6">
-            <div className="bg-white rounded-[32px] card-shadow border border-slate-100 overflow-hidden">
-
-              <div className="h-24 profile-hero-bg w-full relative">
-                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "24px 24px" }}></div>
+        <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Sidebar card */}
+          <motion.aside
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.05 }}
+            className="w-full shrink-0 lg:w-[380px]"
+          >
+            <div className="overflow-hidden rounded-xl border bg-[var(--card)] shadow-[var(--shadow-lg)] transition-colors" style={{ borderColor: "var(--border)" }}>
+              <div
+                className="relative h-28 w-full"
+                style={{
+                  background: "linear-gradient(125deg, var(--accent), #6366f1, #8b5cf6)",
+                }}
+              >
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
               </div>
 
-              <div className="px-6 pb-8 flex flex-col items-center">
-                <div className="relative -mt-12">
-                  <div className="w-28 h-28 rounded-[24px] bg-white p-1 shadow-xl">
-                    <div className="w-full h-full rounded-[20px] bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-50">
+              <div className="-mt-14 flex flex-col items-center px-6 pb-8 pt-0">
+                <div className="relative">
+                  <div className="rounded-xl border-4 border-[var(--card)] bg-[var(--card)] p-0.5 shadow-lg">
+                    <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)]">
                       {data.profileImage ? (
-                        <img src={data.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={data.profileImage} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <User size={48} className="text-slate-300" />
+                        <User size={48} className="text-[var(--text-muted)]" />
                       )}
                     </div>
                   </div>
-                  <button className="absolute bottom-1 -right-1 bg-blue-600 text-white p-2 rounded-xl shadow-lg hover:bg-blue-700 transition active:scale-95">
+                  <button
+                    type="button"
+                    className="absolute -bottom-1 -right-1 rounded-md bg-[var(--accent)] p-2 text-white shadow-md transition hover:opacity-90"
+                    title="Edit photo"
+                  >
                     <Edit2 size={14} />
                   </button>
                 </div>
 
-                <h2 className="mt-4 text-2xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
+                <h2 className="mt-4 text-center text-xl font-black text-[var(--text)]">
                   {data.firstName} {data.lastName}
                 </h2>
 
-                <div className="mt-2 inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
                   <ShieldCheck size={12} />
                   {data.residentType}
                 </div>
 
-                <div className="w-full mt-8 space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-sm">
+                <div className="mt-8 w-full space-y-3">
+                  <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[var(--card)] text-[var(--accent)] shadow-sm">
                       <Mail size={18} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Email Address</p>
-                      <p className="text-sm font-bold text-slate-700 truncate">{data.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Email</p>
+                      <p className="truncate text-sm font-bold">{data.email}</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm">
+                  <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[var(--card)] text-emerald-600 shadow-sm">
                       <Phone size={18} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Phone Number</p>
-                      <p className="text-sm font-bold text-slate-700">{data.mobileNumber}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Phone</p>
+                      <p className="text-sm font-bold">{data.mobileNumber}</p>
                     </div>
                   </div>
-
-                  <div className="pt-4 border-t border-slate-100 flex justify-between items-center px-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status</span>
-                    <span className={`text-xs font-black uppercase px-3 py-1 rounded-lg ${data.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                      ● {data.status}
+                  <div className="flex items-center justify-between rounded-md border border-[var(--border)] px-3 py-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Status</span>
+                    <span
+                      className={`rounded-md px-3 py-1 text-xs font-black uppercase ${
+                        data.status === "Active" ? "bg-emerald-500/15 text-emerald-600" : "bg-red-500/15 text-red-600"
+                      }`}
+                    >
+                      {data.status}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.aside>
 
-          {/* RIGHT SIDE */}
-          <div className="flex-1 flex flex-col gap-6">
-
-            {/* TAB NAVIGATION */}
-            <div className="bg-white p-2 rounded-[24px] card-shadow border border-slate-100 flex gap-1 overflow-x-auto">
+          {/* Main */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="min-w-0 flex-1 space-y-6"
+          >
+            <div className="flex gap-1 overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 rounded-[18px] flex items-center gap-2 text-sm font-bold transition-all whitespace-nowrap ${
+                  className={`flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition-all sm:min-w-0 ${
                     activeTab === tab.id
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                      ? "bg-[var(--accent)] text-white shadow-md"
+                      : "text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
                   }`}
                 >
                   {tab.icon}
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
 
-            {/* CONTENT */}
-            <div className="bg-white p-8 rounded-[32px] card-shadow border border-slate-100">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-xl font-bold text-slate-800" style={{ fontFamily: "'Fraunces', serif" }}>
-                  {activeTab} Details
-                </h2>
-                <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl transition">
-                  <MoreVertical size={20} />
-                </button>
-              </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow)] sm:p-8">
+              <h2 className="mb-6 text-lg font-black text-[var(--text)]">{activeTab}</h2>
 
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-                {activeTab === "Personal" && (
-                  <>
-                    <InputGroup label="First Name"     value={data.firstName} />
-                    <InputGroup label="Last Name"      value={data.lastName} />
-                    <InputGroup label="Date of Birth"  icon={<Calendar size={14} />} value={data.dateOfBirth ? dayjs(data.dateOfBirth).format("DD MMM YYYY") : "Not Set"} />
-                    <InputGroup label="Gender"         value={data.gender} />
-                    <InputGroup label="Resident Type"  value={data.residentType} />
-                  </>
-                )}
+              {activeTab === "Personal" && (
+                <div className="grid gap-6 md:grid-cols-2">
+                  <InputGroup label="First name" value={data.firstName} />
+                  <InputGroup label="Last name" value={data.lastName} />
+                  <InputGroup
+                    label="Date of birth"
+                    icon={<Calendar size={14} />}
+                    value={data.dateOfBirth ? dayjs(data.dateOfBirth).format("DD MMM YYYY") : "—"}
+                  />
+                  <InputGroup label="Gender" value={data.gender} />
+                  <InputGroup label="Resident type" value={data.residentType} />
+                </div>
+              )}
 
-                {activeTab === "Contact" && (
-                  <>
-                    <InputGroup label="Primary Mobile"          value={data.mobileNumber} />
-                    <InputGroup label="Email Address"           value={data.email} />
-                    <InputGroup label="Emergency Contact Name"  value={data.emergencyContactName} />
-                    <InputGroup label="Emergency Contact No"    value={data.emergencyContactNumber} />
-                  </>
-                )}
+              {activeTab === "Contact" && (
+                <div className="grid gap-6 md:grid-cols-2">
+                  <InputGroup label="Primary mobile" value={data.mobileNumber} />
+                  <InputGroup label="Email" value={data.email} />
+                  <InputGroup label="Emergency contact" value={data.emergencyContactName} />
+                  <InputGroup label="Emergency number" value={data.emergencyContactNumber} />
+                </div>
+              )}
 
-                {activeTab === "Address" && (
-                  <>
-                    <InputGroup label="Wing / Block"         value={data.wing} />
-                    <InputGroup label="Floor Number"         value={data.flat?.floor} />
-                    <InputGroup label="Flat Number"          value={data.flatNumber} />
-                    <InputGroup label="Flat Type (BHK)"      value={data.flat?.type} />
-                    <InputGroup label="Block"                value={data.flat?.block} />
-                    <InputGroup label="Monthly Maintenance"  value={data.flat?.monthlyMaintenance ? `₹${data.flat.monthlyMaintenance}` : null} />
-                  </>
-                )}
-              </div>
+              {activeTab === "Document" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="rounded-md border border-dashed border-[var(--border)] bg-[var(--accent-bg)]/40 p-8 text-center"
+                >
+                  <FileText className="mx-auto mb-3 text-[var(--accent)]" size={36} />
+                  <p className="font-bold text-[var(--text)]">Documents</p>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">
+                    ID and society documents will appear here when uploaded by the office.
+                  </p>
+                </motion.div>
+              )}
 
-              <div className="mt-12 pt-6 border-t border-slate-50 flex justify-end">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-2xl transition-all shadow-lg shadow-blue-100 active:scale-95 flex items-center gap-2">
-                  <Edit2 size={16} /> Edit Profile Info
+              {activeTab === "Address" && (
+                <div className="grid gap-6 md:grid-cols-2">
+                  <InputGroup label="Wing / block" value={data.wing} />
+                  <InputGroup label="Floor" value={data.flat?.floor} />
+                  <InputGroup label="Flat number" value={data.flatNumber} />
+                  <InputGroup label="Flat type (BHK)" value={data.flat?.type} />
+                  <InputGroup label="Block" value={data.flat?.block} />
+                  <InputGroup
+                    label="Monthly maintenance"
+                    value={data.flat?.monthlyMaintenance ? `₹${data.flat.monthlyMaintenance}` : "—"}
+                  />
+                </div>
+              )}
+
+              <div className="mt-10 flex justify-end border-t border-[var(--border)] pt-6">
+                <button type="button" className="user-btn-primary flex items-center gap-2 rounded-md px-6 py-2.5">
+                  <Edit2 size={16} /> Request update
                 </button>
               </div>
             </div>
-
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
@@ -210,17 +239,15 @@ const ProfilePage = () => {
 };
 
 const InputGroup = ({ label, value, icon }) => (
-  <div className="flex flex-col group">
-    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">
-      {label}
-    </label>
+  <div className="group flex flex-col">
+    <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
     <div className="relative">
       <input
-        value={value || "—"}
         readOnly
-        className="w-full glass-input rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-700 outline-none group-hover:border-blue-200"
+        value={value || "—"}
+        className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition group-hover:border-[var(--accent)]"
       />
-      {icon && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">{icon}</div>}
+      {icon && <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">{icon}</div>}
     </div>
   </div>
 );

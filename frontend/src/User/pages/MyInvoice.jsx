@@ -93,7 +93,7 @@ const MyInvoice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         
         {/* HEADER & FILTERS */}
@@ -110,7 +110,7 @@ const MyInvoice = () => {
                 onClick={() => setStatusFilter(status)}
                 className={`px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
                   statusFilter === status
-                    ? "bg-slate-900 text-white shadow-md"
+                    ? "bg-[var(--accent)] text-white shadow-md"
                     : "text-slate-500 hover:bg-slate-50"
                 }`}
               >

@@ -79,21 +79,21 @@ const NoticeBoard = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+    <div className="p-4 sm:p-6 min-h-screen font-sans bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
       
       {/* HEADER */}
       <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Bell size={24} className="text-rose-500" />
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Society Notice Board</h1>
+            <h1 className="text-2xl font-black text-[var(--text)] tracking-tight">Society Notice Board</h1>
           </div>
-          <p className="text-sm text-slate-500 font-medium">{filtered.length} active announcements</p>
+          <p className="text-sm text-[var(--text-muted)] font-medium">{filtered.length} active announcements</p>
         </div>
         {isAdmin && (
           <button 
             onClick={() => setShowForm(true)} 
-            className="bg-slate-900 text-white px-6 py-3 rounded-2xl hover:bg-slate-800 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
+            className="user-btn-primary px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg active:scale-95"
           >
             <Plus size={18} /> New Notice
           </button>
@@ -102,8 +102,8 @@ const NoticeBoard = () => {
 
       {/* SEARCH + FILTER BAR */}
       <div className="max-w-6xl mx-auto mb-6 flex flex-wrap items-center gap-4">
-        <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 px-4 flex-1 min-w-[300px]">
-          <Search size={18} className="text-slate-400" />
+        <div className="p-2 rounded-2xl border shadow-sm flex items-center gap-3 px-4 flex-1 min-w-[min(100%,300px)] bg-[var(--card)] border-[var(--border)]">
+          <Search size={18} className="text-[var(--text-muted)]" />
           <InputBase
             placeholder="Search announcements..."
             value={search}
@@ -118,8 +118,8 @@ const NoticeBoard = () => {
               onClick={() => { setFilter(c); setPage(0); }}
               className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                 filter === c 
-                ? "bg-slate-900 text-white border-slate-900 shadow-md" 
-                : "bg-white text-slate-400 border-slate-100 hover:bg-slate-50"
+                ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md" 
+                : "bg-[var(--card)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--accent-soft)]"
               }`}
             >
               {c}
@@ -130,9 +130,9 @@ const NoticeBoard = () => {
 
       {/* MUI TABLE CONTAINER */}
       <div className="max-w-6xl mx-auto">
-        <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+        <TableContainer component={Paper} elevation={0} sx={{ bgcolor: 'var(--card)', border: '1px solid', borderColor: 'var(--border)' }} className="rounded-2xl overflow-hidden shadow-sm">
           <Table sx={{ minWidth: 800 }}>
-            <TableHead className="bg-slate-50">
+            <TableHead sx={{ bgcolor: 'color-mix(in srgb, var(--accent-bg) 40%, var(--card))' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Notice Details</TableCell>
                 <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Category</TableCell>
@@ -148,8 +148,8 @@ const NoticeBoard = () => {
                 <TableRow key={n._id} hover>
                   <TableCell>
                     <div className="flex flex-col max-w-md">
-                      <span className="font-bold text-slate-900 text-sm line-clamp-1">{n.title}</span>
-                      <span className="text-xs text-slate-400 line-clamp-1 italic">{n.description}</span>
+                      <span className="font-bold text-[var(--text)] text-sm line-clamp-1">{n.title}</span>
+                      <span className="text-xs text-[var(--text-muted)] line-clamp-1 italic">{n.description}</span>
                     </div>
                   </TableCell>
 
@@ -171,8 +171,8 @@ const NoticeBoard = () => {
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center gap-2 text-slate-500 font-bold text-[11px]">
-                      <Calendar size={13} className="text-slate-300" />
+                    <div className="flex items-center gap-2 text-[var(--text-muted)] font-bold text-[11px]">
+                      <Calendar size={13} className="opacity-50" />
                       {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </div>
                   </TableCell>
@@ -233,8 +233,8 @@ const NoticeBoard = () => {
 
       {/* DETAIL MODAL (Preserved logic) */}
       {selected && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-slate-100" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 backdrop-blur-sm z-[130] flex items-center justify-center p-4" style={{ background: 'color-mix(in srgb, var(--text) 45%, transparent)' }} onClick={() => setSelected(null)}>
+          <div className="rounded-3xl shadow-2xl max-w-lg w-full p-8 border bg-[var(--card)] border-[var(--border)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-6">
               <Chip 
                 label={selected.category} 
@@ -243,12 +243,12 @@ const NoticeBoard = () => {
                   bgcolor: categoryColors[selected.category]?.bg, color: categoryColors[selected.category]?.color 
                 }} 
               />
-              <button onClick={() => setSelected(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} className="text-slate-400" /></button>
+              <button onClick={() => setSelected(null)} className="p-2 hover:bg-[var(--accent-soft)] rounded-full transition-colors"><X size={20} className="text-[var(--text-muted)]" /></button>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">{selected.title}</h2>
-            <p className="text-slate-600 text-sm leading-relaxed mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100 italic">{selected.description}</p>
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <p className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-2 tracking-widest">
+            <h2 className="text-2xl font-black text-[var(--text)] mb-4">{selected.title}</h2>
+            <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-8 p-6 rounded-2xl border italic bg-[var(--accent-bg)] border-[var(--border)]">{selected.description}</p>
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
+              <p className="text-[11px] font-black uppercase text-[var(--text-muted)] flex items-center gap-2 tracking-widest">
                 <Calendar size={14} /> Posted on {new Date(selected.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>
@@ -258,34 +258,34 @@ const NoticeBoard = () => {
 
       {/* CREATE MODAL (Preserved logic) */}
       {showForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
+        <div className="fixed inset-0 backdrop-blur-sm z-[130] flex items-center justify-center p-4" style={{ background: 'color-mix(in srgb, var(--text) 45%, transparent)' }}>
+          <div className="rounded-3xl shadow-2xl max-w-md w-full p-8 border bg-[var(--card)] border-[var(--border)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Post New Notice</h2>
-              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} className="text-slate-400" /></button>
+              <h2 className="text-xl font-black text-[var(--text)] uppercase tracking-tight">Post New Notice</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-[var(--accent-soft)] rounded-full transition-colors"><X size={20} className="text-[var(--text-muted)]" /></button>
             </div>
             <form onSubmit={handleCreate} className="space-y-5">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Title</label>
+                <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1.5 block ml-1">Title</label>
                 <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="Notice title..." className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
+                  placeholder="Notice title..." className="w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-bold bg-[var(--bg)] text-[var(--text)] border-[var(--border)]" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Category</label>
+                <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1.5 block ml-1">Category</label>
                 <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-white">
+                  className="w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-bold bg-[var(--bg)] text-[var(--text)] border-[var(--border)]">
                   {categories.filter(c => c !== "All").map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Message</label>
+                <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1.5 block ml-1">Message</label>
                 <textarea required rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Type notice details here..." className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium" />
+                  placeholder="Type notice details here..." className="w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-medium bg-[var(--bg)] text-[var(--text)] border-[var(--border)]" />
               </div>
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-slate-400 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all">Cancel</button>
-                <button type="submit" className="flex-1 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg">Post</button>
+                  className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-[var(--text-muted)] bg-[var(--accent-bg)] hover:opacity-90 rounded-2xl transition-all border border-[var(--border)]">Cancel</button>
+                <button type="submit" className="flex-1 py-3 user-btn-primary rounded-2xl text-xs shadow-lg">Post</button>
               </div>
             </form>
           </div>

@@ -24,7 +24,7 @@ const UserRouter = [
   {
     path: "/",
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--bg)] text-[var(--text-muted)]">Loading...</div>}>
         <UserLayout />
       </Suspense>
     ),
@@ -36,7 +36,7 @@ const UserRouter = [
   // 🔒 PROTECTED — login required
   {
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[var(--bg)] text-[var(--text-muted)]">Loading...</div>}>
         <AuthContext />
       </Suspense>
     ),

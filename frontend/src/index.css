@@ -1,5 +1,264 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ═══════════════════════════════════ THEME TOKENS ═══════════════════════════ */
+:root, [data-theme="light"] {
+  --bg:        #F0F4FF;
+  --bg-alt:    #FFFFFF;
+  --bg-mesh-1: rgba(79, 110, 247, 0.12);
+  --bg-mesh-2: rgba(139, 92, 246, 0.08);
+  --card:      #FFFFFF;
+  --card-hover:#F8FAFC;
+  --border:    #E2E8F0;
+  --text:      #1E293B;
+  --text-muted:#64748B;
+  --accent:    #4F6EF7;
+  --accent-hover: #3d5bd9;
+  --accent-bg: #EEF1FE;
+  --accent-soft: rgba(79, 110, 247, 0.12);
+  --header-bg: rgba(255,255,255,0.88);
+  --header-border: rgba(226,232,240,0.85);
+  --nav-link:  #475569;
+  --nav-active: #4F6EF7;
+  --nav-active-bg: rgba(79, 110, 247, 0.12);
+  --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.09);
+  --footer-bg: #0c1222;
+  --footer-text: #94A3B8;
+  --footer-border: rgba(51, 65, 85, 0.35);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg:        #0b1220;
+  --bg-alt:    #111827;
+  --bg-mesh-1: rgba(79, 110, 247, 0.15);
+  --bg-mesh-2: rgba(99, 102, 241, 0.1);
+  --card:      #1E293B;
+  --card-hover:#243045;
+  --border:    #334155;
+  --text:      #F1F5F9;
+  --text-muted:#94A3B8;
+  --accent:    #7C9BFF;
+  --accent-hover: #9BB4FF;
+  --accent-bg: #1E2A4A;
+  --accent-soft: rgba(124, 155, 255, 0.15);
+  --header-bg: rgba(15,23,42,0.82);
+  --header-border: rgba(51,65,85,0.65);
+  --nav-link:  #94A3B8;
+  --nav-active: #93C5FD;
+  --nav-active-bg: rgba(59, 130, 246, 0.18);
+  --shadow:    0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.35);
+  --footer-bg: #020617;
+  --footer-text: #94A3B8;
+  --footer-border: rgba(51, 65, 85, 0.5);
+  color-scheme: dark;
+}
+
+/* Apply theme vars to body */
+body {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme-aware utility classes */
+.t-bg      { background-color: var(--bg); }
+.t-bg-alt  { background-color: var(--bg-alt); }
+.t-card    { background-color: var(--card); }
+.t-border  { border-color: var(--border); }
+.t-text    { color: var(--text); }
+.t-muted   { color: var(--text-muted); }
+.t-accent  { color: var(--accent); }
+.t-shadow  { box-shadow: var(--shadow); }
+
+/* Smooth theme transition for all elements */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Page fade-in animation */
+@keyframes esPageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-in { animation: esPageIn 0.4s ease both; }
+
+/* Card hover lift */
+@keyframes cardLift {
+  to { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+}
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-alt) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), #8B5CF6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+.float-anim { animation: float 3s ease-in-out infinite; }
+
+/* Pulse ring animation */
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(79,110,247,0.4); }
+  70%  { box-shadow: 0 0 0 12px rgba(79,110,247,0); }
+  100% { box-shadow: 0 0 0 0 rgba(79,110,247,0); }
+}
+.pulse-ring { animation: pulseRing 2s infinite; }
+
+/* ═══════════════════════════════════ USER PORTAL ═══════════════════════════ */
+.user-portal {
+  --user-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color var(--user-transition, 0.35s ease), color var(--user-transition, 0.35s ease);
+}
+
+.user-page-mesh::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, var(--bg-mesh-1), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, var(--bg-mesh-2), transparent 50%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, var(--accent-soft), transparent 45%);
+  transition: opacity 0.5s ease;
+}
+
+.user-page-mesh > * {
+  position: relative;
+  z-index: 1;
+}
+
+.user-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.35s ease;
+}
+
+.user-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.user-glass {
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+
+/* Small consistent radius for portal buttons (matches forms & tables) */
+.user-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.375rem;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #fff !important;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.user-btn-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.user-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.user-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.375rem;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  background: var(--card);
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Modals/overlays must sit above sticky header (z-100) */
+.user-modal-overlay {
+  z-index: 130;
+}
+
+.user-btn-ghost:hover {
+  background: var(--card-hover);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+@keyframes theme-toggle-spin {
+  from { transform: rotate(0deg) scale(0.85); opacity: 0.6; }
+  to   { transform: rotate(360deg) scale(1); opacity: 1; }
+}
+
+.theme-toggle-icon {
+  animation: theme-toggle-spin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(100%); opacity: 0.85; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.user-mobile-drawer {
+  animation: drawer-in 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes header-shrink {
+  from { padding-top: 1rem; padding-bottom: 1rem; }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    GLOBAL RESETS & UI FIXES

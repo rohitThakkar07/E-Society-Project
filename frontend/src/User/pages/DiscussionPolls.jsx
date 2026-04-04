@@ -34,35 +34,37 @@ const DiscussionPolls = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto my-12 px-4">
+    <div className="max-w-6xl mx-auto my-8 sm:my-12 px-4 min-h-[60vh] text-[var(--text)]">
       {/* HEADER */}
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold">Community Voice</h2>
-        <p className="text-gray-500">
+        <h2 className="text-3xl font-bold text-[var(--text)]">Community Voice</h2>
+        <p className="text-[var(--text-muted)]">
           Discuss issues, share ideas, and vote on important society decisions.
         </p>
       </div>
 
       {/* TABS */}
       <div className="flex justify-center mb-6">
-        <div className="flex bg-gray-100 border rounded-full p-1">
+        <div className="flex bg-[var(--accent-bg)] border border-[var(--border)] rounded-full p-1">
           <button
+            type="button"
             onClick={() => setActiveTab("discussions")}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
               activeTab === "discussions"
-                ? "bg-white shadow font-bold"
-                : "text-gray-500"
+                ? "bg-[var(--card)] shadow font-bold text-[var(--text)]"
+                : "text-[var(--text-muted)]"
             }`}
           >
             <i className="far fa-comments mr-2"></i>Discussions
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("polls")}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
               activeTab === "polls"
-                ? "bg-white shadow font-bold"
-                : "text-gray-500"
+                ? "bg-[var(--card)] shadow font-bold text-[var(--text)]"
+                : "text-[var(--text-muted)]"
             }`}
           >
             <i className="fas fa-poll mr-2"></i>Active Polls
@@ -159,7 +161,7 @@ const DiscussionPolls = () => {
                               key={index}
                               onClick={() => !hasVoted && handleVote(poll._id, index)}
                               disabled={hasVoted}
-                              className={`w-full text-left border px-4 py-2 rounded relative ${hasVoted ? "bg-gray-100" : "hover:bg-gray-50"}`}
+                              className={`w-full text-left border border-[var(--border)] px-4 py-2 rounded relative ${hasVoted ? "bg-[var(--accent-bg)]" : "hover:bg-[var(--accent-soft)]"}`}
                             >
                               <div className="flex justify-between">
                                 <span>{option.text || option.label}</span>

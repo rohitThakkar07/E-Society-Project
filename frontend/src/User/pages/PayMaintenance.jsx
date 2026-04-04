@@ -110,7 +110,7 @@ const PayMaintenance = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 md:p-8 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
 
         {/* HEADER */}
@@ -126,7 +126,7 @@ const PayMaintenance = () => {
 
         {/* SUMMARY CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div className="rounded-3xl p-6 text-white shadow-xl relative overflow-hidden bg-gradient-to-br from-[var(--accent)] to-indigo-700">
             <div className="relative z-10">
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Total Outstanding</p>
               <p className="text-4xl font-black">₹{totalDue.toLocaleString()}</p>
@@ -238,7 +238,7 @@ const PayMaintenance = () => {
 
       {/* PAY MODAL */}
       {Boolean(payModal) && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-[130] p-4" style={{ background: 'color-mix(in srgb, var(--text) 55%, transparent)' }}>
           <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
 
             {/* SELECT METHOD */}
@@ -271,7 +271,7 @@ const PayMaintenance = () => {
                       onClick={() => setPayMethod(m)}
                       className={`px-4 py-3 rounded-xl flex items-center justify-between text-sm font-bold transition-all ${
                         payMethod === m
-                          ? "bg-slate-900 text-white"
+                          ? "bg-[var(--accent)] text-white"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
                       }`}
                     >
@@ -332,7 +332,7 @@ const PayMaintenance = () => {
 
                 <button
                   onClick={handleCloseModal}
-                  className="w-full bg-slate-900 text-white py-3 rounded-2xl font-bold"
+                  className="w-full bg-[var(--accent)] text-white py-3 rounded-2xl font-bold hover:opacity-95"
                 >
                   Done
                 </button>

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Users, Plus, Search, CheckCircle, XCircle,
   Clock, MapPin, Key, ShieldCheck, RefreshCw, ChevronRight,
@@ -80,32 +81,38 @@ const VisitorManagement = () => {
   };
 
   return (
-    <div className="p-6 space-y-5 min-h-full" style={{ background: "#F4F5FA" }}>
+    <div className="min-h-full space-y-5 p-4 sm:p-6" style={{ background: "linear-gradient(180deg, #f4f6fb 0%, #eef1f8 100%)" }}>
 
       {/* Page Title */}
-      <div className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">Visitor Log</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {filtered.length} record{filtered.length !== 1 ? "s" : ""} · OTP-verified gate entries
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">Visitor log</h1>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {filtered.length} record{filtered.length !== 1 ? "s" : ""} · Gate entries & OTP
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => dispatch(fetchVisitors())}
-                  className="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm"
-                  title="Refresh">
+          <button
+            type="button"
+            onClick={() => dispatch(fetchVisitors())}
+            className="rounded-md border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50"
+            title="Refresh"
+          >
             <RefreshCw size={15} className={`text-slate-500 ${loading ? "animate-spin" : ""}`} />
           </button>
-          <button onClick={() => navigate("/guard/visitor/add")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                  style={{ background: ACCENT }}>
-            <Plus size={15} /> New Entry
+          <button
+            type="button"
+            onClick={() => navigate("/guard/visitor/add")}
+            className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-bold text-white shadow-md transition hover:opacity-90"
+            style={{ background: ACCENT }}
+          >
+            <Plus size={15} /> New entry
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filters Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap items-center gap-3 rounded-md border border-slate-100 bg-white p-4 shadow-sm">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -113,7 +120,7 @@ const VisitorManagement = () => {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             placeholder="Search visitor, flat, wing, mobile…"
-            className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 bg-slate-50"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2"
             style={{ "--tw-ring-color": ACCENT + "40" }}
           />
         </div>
@@ -135,10 +142,12 @@ const VisitorManagement = () => {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-slate-100 bg-white shadow-md">
         {/* Table Header */}
-        <div className="grid gap-3 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100"
-             style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr", background: "#F8FAFC" }}>
+        <div
+          className="grid gap-3 border-b border-slate-100 px-4 py-3 text-[10px] font-black uppercase tracking-wider text-slate-500 sm:px-5"
+          style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr", background: "#f8fafc" }}
+        >
           <div>Visitor</div>
           <div className="hidden sm:block">Contact</div>
           <div className="hidden sm:block">Unit</div>
@@ -166,14 +175,21 @@ const VisitorManagement = () => {
               : `${v.wing || "?"}-${v.flatNumber || "?"}`;
 
             return (
-              <div key={v._id}
-                   onClick={() => navigate(`/guard/visitor/${v._id}`)}
-                   className="grid gap-3 px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer group items-center"
-                   style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr" }}>
+              <motion.div
+                key={v._id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={() => navigate(`/guard/visitor/${v._id}`)}
+                className="group grid cursor-pointer items-center gap-3 border-b border-slate-100 px-4 py-4 transition-colors last:border-0 hover:bg-slate-50/90 sm:px-5"
+                style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr" }}
+              >
                 {/* Visitor */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm"
-                       style={{ background: ACCENT }}>
+                  <div
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-sm font-bold text-white shadow-sm"
+                    style={{ background: ACCENT }}
+                  >
                     {v.visitorName?.[0]?.toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -227,7 +243,7 @@ const VisitorManagement = () => {
                     <StatusBadge status={v.status} />
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })
         )}
@@ -265,39 +281,56 @@ const VisitorManagement = () => {
 
       {/* OTP Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-             style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(6px)" }}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
-                 style={{ background: "#E8F5E9" }}>
-              <Key size={28} style={{ color: "#16A34A" }} />
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: "rgba(15,23,42,0.55)", backdropFilter: "blur(8px)" }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm rounded-md bg-white p-8 text-center shadow-2xl"
+          >
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-md" style={{ background: "#E8F5E9" }}>
+              <Key size={26} style={{ color: "#16A34A" }} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Verify OTP</h2>
-            <p className="text-sm text-slate-500 mb-6">Enter the 6-digit code from the resident.</p>
+            <h2 className="mb-1 text-xl font-black text-slate-900">Verify OTP</h2>
+            <p className="mb-6 text-sm text-slate-500">Enter the 6-digit code from the resident.</p>
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <input
-                required autoFocus
-                type="text" maxLength="6" inputMode="numeric"
+                required
+                autoFocus
+                type="text"
+                maxLength="6"
+                inputMode="numeric"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 placeholder="• • • • • •"
-                className="w-full text-center text-3xl font-black tracking-[0.5em] py-4 border-2 rounded-2xl focus:outline-none bg-slate-50 transition"
+                className="w-full rounded-md border-2 bg-slate-50 py-4 text-center text-3xl font-black tracking-[0.4em] transition focus:outline-none"
                 style={{ borderColor: otp.length === 6 ? "#16A34A" : "#E2E8F0" }}
               />
               <div className="flex gap-3">
-                <button type="button"
-                        onClick={() => { setShowOtpModal(false); setOtp(""); setVerifyingId(null); }}
-                        className="flex-1 py-3 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setOtp("");
+                    setVerifyingId(null);
+                  }}
+                  className="flex-1 rounded-md bg-slate-100 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={otp.length !== 6}
-                        className="flex-1 py-3 text-sm font-bold text-white rounded-xl shadow-lg transition disabled:opacity-50"
-                        style={{ background: "#16A34A" }}>
-                  Verify & Allow
+                <button
+                  type="submit"
+                  disabled={otp.length !== 6}
+                  className="flex-1 rounded-md py-3 text-sm font-bold text-white shadow-lg transition disabled:opacity-50"
+                  style={{ background: "#16A34A" }}
+                >
+                  Verify
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

@@ -84,7 +84,7 @@ const BookFacility = () => {
     "14:00 - 16:00", "16:00 - 18:00", "18:00 - 20:00", "20:00 - 22:00"];
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-slate-50 p-6">
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 transition-colors duration-300">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
       <div className="max-w-5xl mx-auto">
@@ -99,7 +99,7 @@ const BookFacility = () => {
         <div className="bg-white border border-slate-200 rounded-2xl flex p-1 mb-8 w-fit">
           {[["facilities", "Browse Facilities"], ["bookings", "My Bookings"]].map(([v, l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === v ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"}`}>
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === v ? "bg-[var(--accent)] text-white" : "text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"}`}>
               {l}
             </button>
           ))}
@@ -128,7 +128,7 @@ const BookFacility = () => {
                         className={`text-sm font-semibold px-4 py-2 rounded-xl transition ${
                           f.status !== "Available"
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                            : "bg-slate-900 text-white hover:bg-slate-700"
+                            : "bg-[var(--accent)] text-white hover:opacity-90"
                         }`}
                         disabled={f.status !== "Available"}>
                         {f.status !== "Available" ? "Unavailable" : "Book"}
@@ -188,7 +188,7 @@ const BookFacility = () => {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[130] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
@@ -211,7 +211,7 @@ const BookFacility = () => {
                 <div className="grid grid-cols-2 gap-2">
                   {timeSlots.map(t => (
                     <button key={t} type="button" onClick={() => setBookingForm({ ...bookingForm, timeSlot: t })}
-                      className={`py-2 px-3 rounded-xl text-xs font-medium border transition ${bookingForm.timeSlot === t ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
+                      className={`py-2 px-3 rounded-xl text-xs font-medium border transition ${bookingForm.timeSlot === t ? "bg-[var(--accent)] text-white border-[var(--accent)]" : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"}`}>
                       {t}
                     </button>
                   ))}
@@ -227,7 +227,7 @@ const BookFacility = () => {
                 <button type="button" onClick={() => setSelected(null)}
                   className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 transition">Cancel</button>
                 <button type="submit" disabled={!bookingForm.date || !bookingForm.timeSlot}
-                  className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   <CheckCircle size={15} /> Confirm Booking
                 </button>
               </div>

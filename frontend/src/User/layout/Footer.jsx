@@ -1,86 +1,105 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion"; 
-import { 
-  Shield, Mail, Phone, MapPin, 
-  Heart, Sparkles 
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { Shield, Mail, Phone, MapPin, Heart, Sparkles } from "lucide-react";
 import { FaFacebook, FaWhatsapp, FaLinkedin, FaInstagram } from "react-icons/fa";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const containerVars = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { staggerChildren: 0.15, duration: 0.8, ease: "easeOut" } 
-    }
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.12, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    },
   };
 
   const itemVars = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0 },
   };
 
+  const quickLinks = [
+    { label: "Home", to: "/" },
+    { label: "Notice Board", to: "/notices" },
+    { label: "Events", to: "/events" },
+    { label: "Polls", to: "/polls" },
+  ];
+
+  const serviceLinks = [
+    { label: "Visitor Management", to: "/visitors" },
+    { label: "Pay Maintenance", to: "/maintenance" },
+    { label: "Book Facility", to: "/facilities" },
+    { label: "Help Desk", to: "/raise-complaint" },
+  ];
+
   return (
-    <footer className="relative bg-[#020617] border-t border-slate-800/50 pt-24 pb-12 overflow-hidden font-sans text-slate-300">
-      {/* Background Neon Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[140px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none" />
+    <footer
+      className="relative pt-20 sm:pt-24 pb-10 sm:pb-12 overflow-hidden font-sans border-t transition-colors duration-500"
+      style={{
+        background: "var(--footer-bg)",
+        borderColor: "var(--footer-border)",
+        color: "var(--footer-text)",
+      }}
+    >
+      <div
+        className="absolute top-0 right-0 w-[min(100%,28rem)] h-[28rem] rounded-full pointer-events-none opacity-40 blur-[100px]"
+        style={{ background: "var(--accent)" }}
+      />
+      <div
+        className="absolute bottom-0 left-0 w-[min(100%,24rem)] h-64 rounded-full pointer-events-none opacity-25 blur-[90px]"
+        style={{ background: "#8B5CF6" }}
+      />
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;800;900&display=swap');
-        
-        .footer-brand-font { font-family: 'Fraunces', serif; }
-        
-        @keyframes pulse-blue {
-          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-          70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-        .emergency-glow-dark { animation: pulse-blue 2s infinite; }
-      `}} />
-
-      <motion.div 
+      <motion.div
         variants={containerVars}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        className="max-w-7xl mx-auto px-6 relative z-10"
+        viewport={{ once: true, margin: "-40px" }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
-
-          {/* COLUMN 1: BRAND & SOCIAL */}
-          <motion.div variants={itemVars} className="space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-16 sm:mb-20">
+          <motion.div variants={itemVars} className="space-y-6 sm:space-y-8">
             <div className="flex items-center gap-4 group cursor-default">
-              <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.3)] group-hover:rotate-12 transition-transform duration-500">
+              <motion.div
+                whileHover={{ rotate: [0, -8, 8, 0], scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), #6366f1)",
+                  boxShadow: "0 12px 40px color-mix(in srgb, var(--accent) 35%, transparent)",
+                }}
+              >
                 <Shield size={28} className="text-white" />
-              </div>
+              </motion.div>
               <div>
-                <span className="footer-brand-font text-white text-2xl font-black leading-none block tracking-tight">e-Society</span>
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mt-1 block">Digital Hub</span>
+                <span className="text-white text-2xl font-black leading-none block tracking-tight">e-Society</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] mt-1.5 block opacity-80">
+                  Digital Hub
+                </span>
               </div>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-medium">
-              Elevating community living through smart automation, robust security, and seamless financial transparency.
+            <p className="text-sm leading-relaxed max-w-xs font-medium opacity-90">
+              Elevating community living through smart automation, robust security, and transparent finances.
             </p>
-            
-            <div className="flex gap-4">
+
+            <div className="flex flex-wrap gap-3">
               {[
-                { Icon: FaFacebook, href: "https://facebook.com", color: "hover:bg-blue-600" },
-                { Icon: FaWhatsapp, href: "https://wa.me/919999988888", color: "hover:bg-emerald-500" }, // WhatsApp Added
-                { Icon: FaLinkedin, href: "https://linkedin.com", color: "hover:bg-blue-700" },
-                { Icon: FaInstagram, href: "https://instagram.com", color: "hover:bg-pink-600" }
+                { Icon: FaFacebook, href: "https://facebook.com", hover: "hover:bg-blue-600" },
+                { Icon: FaWhatsapp, href: "https://wa.me/919999988888", hover: "hover:bg-emerald-500" },
+                { Icon: FaLinkedin, href: "https://linkedin.com", hover: "hover:bg-blue-700" },
+                { Icon: FaInstagram, href: "https://instagram.com", hover: "hover:bg-pink-600" },
               ].map((item, i) => (
-                <motion.a 
-                  key={i} 
+                <motion.a
+                  key={i}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ y: -8, scale: 1.1 }}
-                  className={`w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-lg ${item.color}`}
+                  whileHover={{ y: -4, scale: 1.08 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`w-11 h-11 rounded-xl border flex items-center justify-center text-slate-400 hover:text-white transition-colors duration-300 shadow-lg bg-white/5 border-white/10 ${item.hover}`}
                 >
                   <item.Icon size={20} />
                 </motion.a>
@@ -88,72 +107,78 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* COLUMN 2: RESOURCES */}
           <motion.div variants={itemVars}>
-            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-10">Quick Access</span>
-            <ul className="space-y-5">
-              {['Home', 'About Society', 'Notice Board', 'Events Calendar'].map((text, i) => (
-                <li key={i}>
-                  <Link to={`/${text.toLowerCase().replace(/\s+/g, '')}`} className="group flex items-center gap-3 text-slate-400 hover:text-blue-400 text-sm font-bold transition-all">
-                    <span className="w-0 group-hover:w-3 h-[2px] bg-blue-500 transition-all duration-300" />
-                    {text}
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block mb-8">Explore</span>
+            <ul className="space-y-4">
+              {quickLinks.map(({ label, to }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="group flex items-center gap-3 text-sm font-bold opacity-90 hover:opacity-100 hover:text-white transition-all"
+                  >
+                    <span className="w-0 group-hover:w-3 h-0.5 bg-[var(--accent)] transition-all duration-300 rounded-full" />
+                    {label}
                   </Link>
                 </li>
               ))}
             </ul>
           </motion.div>
 
-          {/* COLUMN 3: SERVICES */}
           <motion.div variants={itemVars}>
-            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-10">Resident Portal</span>
-            <ul className="space-y-5">
-              {['Visitor Tracking', 'Pay Maintenance', 'Facility Booking', 'Support Desk'].map((text, i) => (
-                <li key={i}>
-                  <Link to={`/${text.toLowerCase().replace(/\s+/g, '')}`} className="group flex items-center gap-3 text-slate-400 hover:text-indigo-400 text-sm font-bold transition-all">
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-indigo-500 transition-colors" />
-                    {text}
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block mb-8">Resident portal</span>
+            <ul className="space-y-4">
+              {serviceLinks.map(({ label, to }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="group flex items-center gap-3 text-sm font-bold opacity-90 hover:opacity-100 hover:text-white transition-all"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-[var(--accent)] transition-colors" />
+                    {label}
                   </Link>
                 </li>
               ))}
             </ul>
           </motion.div>
 
-          {/* COLUMN 4: CONTACT & EMERGENCY */}
-          <motion.div variants={itemVars} className="space-y-10">
-            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-2">Location</span>
-            <div className="space-y-5">
+          <motion.div variants={itemVars} className="space-y-8">
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block">Contact</span>
+            <div className="space-y-4">
               <div className="flex items-start gap-4 group">
-                <div className="mt-1 p-2 bg-slate-900 border border-slate-800 text-blue-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                <div className="mt-0.5 p-2 rounded-lg bg-white/5 border border-white/10 text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300">
                   <MapPin size={18} />
                 </div>
-                <p className="text-slate-400 text-sm font-bold leading-relaxed">
-                  Galaxy Heights, Block C,<br />
+                <p className="text-sm font-bold leading-relaxed opacity-90">
+                  Galaxy Heights, Block C,
+                  <br />
                   Ahmedabad, Gujarat
                 </p>
               </div>
               <a href="mailto:admin@esociety.in" className="flex items-center gap-4 group">
-                <div className="p-2 bg-slate-900 border border-slate-800 text-blue-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300">
                   <Mail size={18} />
                 </div>
-                <p className="text-slate-400 text-sm font-bold">admin@esociety.in</p>
+                <span className="text-sm font-bold opacity-90">admin@esociety.in</span>
               </a>
             </div>
 
-            {/* Premium Emergency Card */}
-            <motion.div 
-              whileHover={{ scale: 1.03 }}
-              className="emergency-glow-dark bg-gradient-to-br from-blue-600/90 to-indigo-700/90 p-6 rounded-[24px] text-white relative overflow-hidden group cursor-pointer shadow-2xl"
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="rounded-3xl p-6 text-white relative overflow-hidden cursor-pointer shadow-2xl border border-white/10"
+              style={{
+                background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, #1e1b4b), #4338ca)",
+              }}
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-700">
-                <Sparkles size={48} />
+              <div className="absolute top-0 right-0 p-4 opacity-15 group-hover:scale-125 transition-transform duration-700">
+                <Sparkles size={44} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-3 flex items-center gap-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-90 mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                Security Response
+                Security desk
               </p>
-              <a href="tel:+919999988888" className="flex items-center justify-between">
-                <span className="text-xl font-black tracking-tight">+91 99999 88888</span>
-                <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md group-hover:bg-white group-hover:text-blue-700 transition-all duration-300">
+              <a href="tel:+919999988888" className="flex items-center justify-between gap-2">
+                <span className="text-lg sm:text-xl font-black tracking-tight">+91 99999 88888</span>
+                <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md shrink-0">
                   <Phone size={20} fill="currentColor" />
                 </div>
               </a>
@@ -161,25 +186,30 @@ const Footer = () => {
           </motion.div>
         </div>
 
-        {/* BOTTOM SECTION */}
-        <div className="pt-12 border-t border-slate-800/60 flex flex-col md:flex-row items-center justify-between gap-10">
-          <motion.div variants={itemVars} className="text-slate-500 text-[11px] font-black uppercase tracking-[0.2em] flex flex-wrap items-center justify-center gap-3">
-            © {currentYear} e-Society Hub 
-            <span className="hidden md:inline text-slate-800">|</span> 
-            <span className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-full text-slate-400">
-              Made with <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse" /> for community
+        <div
+          className="pt-10 border-t flex flex-col md:flex-row items-center justify-between gap-8"
+          style={{ borderColor: "var(--footer-border)" }}
+        >
+          <motion.div
+            variants={itemVars}
+            className="text-[11px] font-black uppercase tracking-[0.18em] flex flex-wrap items-center justify-center gap-3 opacity-70"
+          >
+            © {currentYear} e-Society Hub
+            <span className="hidden md:inline opacity-30">|</span>
+            <span className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
+              Made with <Heart size={14} className="text-rose-400 fill-rose-400" /> for community
             </span>
           </motion.div>
-          
-          <motion.div variants={itemVars} className="flex gap-12">
-            {['Privacy Policy', 'Terms of Use'].map((text, i) => (
-              <Link 
-                key={i} 
-                to={`/${text.toLowerCase().replace(/\s+/g, '')}`} 
-                className="text-slate-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group"
+
+          <motion.div variants={itemVars} className="flex flex-wrap justify-center gap-8">
+            {["Privacy", "Terms"].map((text) => (
+              <Link
+                key={text}
+                to="/"
+                className="text-[11px] font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity relative group"
               >
                 {text}
-                <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-blue-500 group-hover:w-full transition-all duration-300" />
+                <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[var(--accent)] group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </motion.div>

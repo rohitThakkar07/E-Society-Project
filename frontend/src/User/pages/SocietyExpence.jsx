@@ -45,23 +45,23 @@ const SocietyExpense = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 transition-colors duration-300">
       
       {/* Title */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+      <h1 className="text-2xl font-bold text-[var(--text)] mb-6">
         Society Expenses
       </h1>
 
       {/* Summary Card */}
-      <div className="bg-white p-6 rounded-xl shadow mb-8">
-        <p className="text-gray-500 text-sm">Total Expenses</p>
+      <div className="bg-[var(--card)] border border-[var(--border)] p-6 rounded-xl shadow mb-8">
+        <p className="text-[var(--text-muted)] text-sm">Total Expenses</p>
         <h2 className="text-3xl font-bold text-red-600 mt-2">
           ₹{totalExpense}
         </h2>
       </div>
 
       {/* Add Expense Form */}
-      <div className="bg-white p-6 rounded-xl shadow mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] p-6 rounded-xl shadow mb-8">
         <h2 className="text-lg font-semibold mb-4">Add New Expense</h2>
 
         <form
@@ -120,12 +120,12 @@ const SocietyExpense = () => {
       </div>
 
       {/* Expense Table */}
-      <div className="bg-white p-6 rounded-xl shadow">
+      <div className="bg-[var(--card)] border border-[var(--border)] p-6 rounded-xl shadow">
         <h2 className="text-lg font-semibold mb-4">Expense History</h2>
 
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b text-gray-600">
+            <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
               <th className="py-2">Title</th>
               <th>Category</th>
               <th>Amount</th>

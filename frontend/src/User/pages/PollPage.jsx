@@ -39,8 +39,8 @@ const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
     const canVote = !isClosed && !hasVoted;
 
     return (
-        <div className={`bg-white rounded-3xl border shadow-sm overflow-hidden flex flex-col h-full transition-all 
-            ${isClosed ? "opacity-80 grayscale-[0.2]" : "hover:shadow-md border-slate-100"}`}>
+        <div className={`rounded-3xl border shadow-sm overflow-hidden flex flex-col h-full transition-all bg-[var(--card)] border-[var(--border)]
+            ${isClosed ? "opacity-80 grayscale-[0.2]" : "hover:shadow-md"}`}>
             
             <div className="p-6 pb-4">
                 <div className="flex items-start justify-between gap-3 mb-4">
@@ -75,8 +75,8 @@ const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
                     )}
                 </div>
 
-                <h3 className="font-bold text-slate-800 text-lg leading-tight mb-2">{poll.question}</h3>
-                <p className="text-xs text-slate-400 line-clamp-2 mb-4">{poll.description || "Community opinion poll."}</p>
+                <h3 className="font-bold text-[var(--text)] text-lg leading-tight mb-2">{poll.question}</h3>
+                <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-4">{poll.description || "Community opinion poll."}</p>
             </div>
 
             <div className="px-6 pb-6 space-y-2.5 mt-auto">
@@ -168,27 +168,27 @@ const PollsPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10">
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 lg:p-10 transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                            <BarChart2 className="text-blue-600" size={32} /> Discussions & Polls
+                        <h1 className="text-3xl font-black text-[var(--text)] tracking-tight flex items-center gap-3">
+                            <BarChart2 className="text-[var(--accent)]" size={32} /> Discussions & Polls
                         </h1>
-                        <p className="text-slate-500 font-medium mt-1">Participate in community decision making.</p>
+                        <p className="text-[var(--text-muted)] font-medium mt-1">Participate in community decision making.</p>
                     </div>
                     {isAdmin && (
-                        <button onClick={() => setShowForm(true)} className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95">
+                        <button type="button" onClick={() => setShowForm(true)} className="user-btn-primary px-6 py-3 rounded-2xl font-bold flex items-center gap-2 active:scale-95">
                             <Plus size={20} /> Create New Poll
                         </button>
                     )}
                 </div>
 
                 {/* Tab Switcher */}
-                <div className="inline-flex p-1.5 bg-white border border-slate-200 rounded-2xl mb-10 shadow-sm">
+                <div className="inline-flex p-1.5 bg-[var(--card)] border border-[var(--border)] rounded-2xl mb-10 shadow-sm">
                     {["active", "closed"].map((t) => (
-                        <button key={t} onClick={() => setTab(t)} className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${tab === t ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-slate-400 hover:text-slate-600"}`}>
+                        <button key={t} type="button" onClick={() => setTab(t)} className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${tab === t ? "bg-[var(--accent)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}>
                             {t}
                         </button>
                     ))}
@@ -197,7 +197,7 @@ const PollsPage = () => {
                 {/* Grid Layout */}
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3].map(i => <div key={i} className="h-80 bg-white rounded-[32px] animate-pulse border border-slate-100" />)}
+                        {[1, 2, 3].map(i => <div key={i} className="h-80 bg-[var(--card)] rounded-[32px] animate-pulse border border-[var(--border)]" />)}
                     </div>
                 ) : filteredPolls.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -210,39 +210,39 @@ const PollsPage = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-24 bg-white rounded-[40px] border border-slate-100">
-                        <BarChart2 size={48} className="mx-auto text-slate-200 mb-4" />
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No {tab} polls found</p>
+                    <div className="text-center py-24 bg-[var(--card)] rounded-[40px] border border-[var(--border)]">
+                        <BarChart2 size={48} className="mx-auto text-[var(--border)] mb-4" />
+                        <p className="text-[var(--text-muted)] font-bold uppercase tracking-widest text-sm">No {tab} polls found</p>
                     </div>
                 )}
             </div>
 
             {/* Create Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
-                        <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
-                            <h2 className="font-black text-slate-800 uppercase tracking-tight">Launch Society Poll</h2>
-                            <button onClick={() => setShowForm(false)} className="p-2 hover:bg-white rounded-xl transition text-slate-400"><X size={20} /></button>
+                <div className="fixed inset-0 backdrop-blur-sm z-[130] flex items-center justify-center p-4" style={{ background: 'color-mix(in srgb, var(--text) 50%, transparent)' }}>
+                    <div className="rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border bg-[var(--card)] border-[var(--border)]">
+                        <div className="p-6 border-b flex justify-between items-center bg-[var(--accent-bg)] border-[var(--border)]">
+                            <h2 className="font-black text-[var(--text)] uppercase tracking-tight">Launch Society Poll</h2>
+                            <button type="button" onClick={() => setShowForm(false)} className="p-2 hover:bg-[var(--accent-soft)] rounded-xl transition text-[var(--text-muted)]"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleCreate} className="p-8 space-y-5">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Question</label>
-                                <input required className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 ring-blue-100" placeholder="e.g. Best time for Holi event?" value={form.question} onChange={e => setForm({ ...form, question: e.target.value })} />
+                                <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-2 block">Question</label>
+                                <input required className="w-full px-4 py-3 bg-[var(--bg)] rounded-xl font-bold text-[var(--text)] border border-[var(--border)] outline-none focus:ring-2 focus:ring-[var(--accent)]" placeholder="e.g. Best time for Holi event?" value={form.question} onChange={e => setForm({ ...form, question: e.target.value })} />
                             </div>
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 block">Options</label>
+                                <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-1 block">Options</label>
                                 {form.options.map((opt, i) => (
                                     <div key={i} className="flex gap-2">
-                                        <input required className="flex-1 px-4 py-2.5 bg-slate-50 rounded-xl text-sm font-medium outline-none" placeholder={`Option ${i + 1}`} value={opt} onChange={e => {
+                                        <input required className="flex-1 px-4 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl text-sm font-medium text-[var(--text)] outline-none" placeholder={`Option ${i + 1}`} value={opt} onChange={e => {
                                             const n = [...form.options]; n[i] = e.target.value; setForm({ ...form, options: n });
                                         }} />
-                                        {form.options.length > 2 && <button type="button" onClick={() => setForm({ ...form, options: form.options.filter((_, idx) => idx !== i) })} className="text-slate-300 hover:text-red-500"><X size={16} /></button>}
+                                        {form.options.length > 2 && <button type="button" onClick={() => setForm({ ...form, options: form.options.filter((_, idx) => idx !== i) })} className="text-[var(--text-muted)] hover:text-red-500"><X size={16} /></button>}
                                     </div>
                                 ))}
-                                {form.options.length < 6 && <button type="button" onClick={() => setForm({ ...form, options: [...form.options, ""] })} className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1 mt-2 tracking-widest"><Plus size={12} /> Add Choice</button>}
+                                {form.options.length < 6 && <button type="button" onClick={() => setForm({ ...form, options: [...form.options, ""] })} className="text-[10px] font-black text-[var(--accent)] uppercase flex items-center gap-1 mt-2 tracking-widest"><Plus size={12} /> Add Choice</button>}
                             </div>
-                            <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-100 mt-4 active:scale-95 transition-all">Broadcast Poll</button>
+                            <button type="submit" className="w-full user-btn-primary py-4 rounded-2xl font-black uppercase tracking-[0.2em] mt-4 active:scale-95 transition-all">Broadcast Poll</button>
                         </form>
                     </div>
                 </div>

@@ -78,7 +78,7 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: (email || "").toLowerCase() });
 
     if (!user) {
       return res.status(400).json({
@@ -86,8 +86,6 @@ const login = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
- console.log("hash password "+hashedPassword)
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
