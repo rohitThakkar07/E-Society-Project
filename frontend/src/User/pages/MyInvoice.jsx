@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import RazorpayPaymentModal from "../components/RazorpayPaymentModal";
 import { fetchMyMaintenance } from "../../store/slices/maintenanceSlice";
-import { FileText, Download, Filter, IndianRupee, Search } from "lucide-react";
+import { Download, Filter, IndianRupee } from "lucide-react";
+import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { FiCreditCard } from "react-icons/fi";
 
 const MyInvoice = () => {
   const dispatch = useDispatch();
@@ -11,6 +14,10 @@ const MyInvoice = () => {
 
   // State for filtering
   const [statusFilter, setStatusFilter] = useState("All");
+  const [paymentInvoice, setPaymentInvoice] = useState(null);
+  const [paymentModalData, setPaymentModalData] = useState({ isOpen: false, maintenanceId: null, billDetails: null });
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
 
   useEffect(() => {
     dispatch(fetchMyMaintenance());
@@ -56,6 +63,33 @@ const MyInvoice = () => {
     });
 
     doc.save(`${item.month}_${item.year}_Invoice.pdf`);
+  };
+
+  const handlePayNow = (invoice) => {
+    setPaymentInvoice(invoice);
+    setPaymentMessage("");
+    setPaymentModalData({
+      isOpen: true,
+      maintenanceId: invoice._id,
+      billDetails: {
+        amount: invoice.amount + (invoice.lateFee || 0),
+        baseAmount: invoice.amount,
+        lateFee: invoice.lateFee || 0,
+        month: invoice.month,
+        year: invoice.year,
+      },
+    });
+  };
+
+  const closePayModal = () => {
+    setPaymentModalData({ isOpen: false, maintenanceId: null, billDetails: null });
+    setPaymentInvoice(null);
+    setPaymentMessage("");
+  };
+
+  const handlePaymentSubmit = async (event) => {
+    event?.preventDefault();
+    toast.info("Please initiate Razorpay payment using Pay Now.");
   };
 
   return (
@@ -141,6 +175,14 @@ const MyInvoice = () => {
                   >
                     <Download size={14} /> Download
                   </button>
+                  {invoice.status?.toLowerCase() !== "paid" && (
+                    <button
+                      onClick={() => handlePayNow(invoice)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                    >
+                      <FiCreditCard size={14} /> Pay Now
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -154,6 +196,18 @@ const MyInvoice = () => {
             <p className="text-slate-400 font-medium">Try changing your filter settings to see more results.</p>
           </div>
         )}
+
+        <RazorpayPaymentModal
+          isOpen={paymentModalData.isOpen}
+          onClose={closePayModal}
+          maintenanceId={paymentModalData.maintenanceId}
+          billDetails={paymentModalData.billDetails}
+          onPaymentSuccess={(data) => {
+            dispatch(fetchMyMaintenance());
+            closePayModal();
+            setPaymentMessage("Payment successful! Refreshing invoice data...");
+          }}
+        />
       </div>
     </div>
   );

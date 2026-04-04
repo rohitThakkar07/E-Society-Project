@@ -6,7 +6,6 @@ import {
   CartesianGrid, ResponsiveContainer, Legend,
 } from "recharts";
 
-import { fetchStaffSummary } from "../store/slices/staffSlice";
 import { fetchDashboardSummary as fetchMaintenanceSummary } from "../store/slices/maintainenceSlice";
 import { fetchResidents } from "../store/slices/residentSlice";
 import { fetchFlats } from "../store/slices/flatSlice";

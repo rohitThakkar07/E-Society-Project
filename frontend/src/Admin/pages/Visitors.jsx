@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, TablePagination,
-  IconButton, Tooltip, Chip, InputBase, Avatar 
+  IconButton, Tooltip, Chip, InputBase, Avatar, Switch 
 } from "@mui/material";
 import {
   FiEdit, FiSearch, FiPlus, FiUser, FiPhone,
@@ -135,7 +135,7 @@ const Visitors = () => {
                     <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
                       <FiMapPin size={14} />
                     </div>
-                    <span className="font-black text-indigo-600 text-sm">{v.flatNumber}</span>
+                    <span className="font-black text-indigo-600 text-sm">{v.flatNumber || (v.flat && v.flat.flatNumber) || "N/A"}</span>
                   </div>
                 </TableCell>
 
@@ -152,18 +152,30 @@ const Visitors = () => {
                 </TableCell>
 
                 <TableCell>
-                  <Chip 
-                    label={v.status}
-                    size="small"
-                    sx={{ 
-                      fontWeight: 900, 
-                      fontSize: '9px',
-                      textTransform: 'uppercase',
-                      bgcolor: STATUS_STYLE[v.status]?.bg || STATUS_STYLE.Exited.bg,
-                      color: STATUS_STYLE[v.status]?.color || STATUS_STYLE.Exited.color,
-                      borderRadius: '8px'
-                    }}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Chip 
+                      label={v.status}
+                      size="small"
+                      sx={{ 
+                        fontWeight: 900, 
+                        fontSize: '9px',
+                        textTransform: 'uppercase',
+                        bgcolor: STATUS_STYLE[v.status]?.bg || STATUS_STYLE.Exited.bg,
+                        color: STATUS_STYLE[v.status]?.color || STATUS_STYLE.Exited.color,
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Switch
+                      checked={v.status === 'Inside'}
+                      onChange={() => {
+                        const nextStatus = v.status === 'Inside' ? 'Exited' : 'Inside';
+                        dispatch(updateVisitorStatus({ id: v._id, status: nextStatus }));
+                      }}
+                      color="success"
+                      size="small"
+                      inputProps={{ 'aria-label': 'Toggle visitor status' }}
+                    />
+                  </div>
                 </TableCell>
 
                 <TableCell align="center">

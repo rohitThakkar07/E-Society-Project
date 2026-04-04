@@ -126,8 +126,13 @@ export const markVisitorExit = createAsyncThunk(
 
 export const denyVisitor = createAsyncThunk(
   "visitor/denyVisitor",
-  async ({ id, notes } = {}, { rejectWithValue }) => {
+  async (payload = {}, { rejectWithValue }) => {
     try {
+      const data = typeof payload === "string" ? { id: payload } : payload;
+      const { id, notes } = data;
+      if (!id) {
+        throw new Error("Visitor ID is required to deny visitor.");
+      }
       const response = await API.put(`/visitor/deny/${id}`, { notes });
       toast.success("Visitor denied.");
       return response.data.data;

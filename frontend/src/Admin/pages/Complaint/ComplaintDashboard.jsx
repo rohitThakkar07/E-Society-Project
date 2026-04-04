@@ -10,7 +10,7 @@ import {
   FiSearch, FiEye, FiAlertCircle, FiClock, 
   FiCheckCircle, FiInbox, FiFilter, FiTag 
 } from "react-icons/fi";
-import { fetchComplaints } from "../../../store/slices/complaintSlice";
+import { fetchComplaints, updateComplaintStatus } from "../../../store/slices/complaintSlice";
 
 const STATUS_STYLE = {
   Pending: { bg: "#fef2f2", color: "#dc2626" },
@@ -172,18 +172,21 @@ const ComplaintDashboard = () => {
                 </TableCell>
 
                 <TableCell>
-                  <Chip 
-                    label={c.status}
+                  <Select
+                    value={c.status}
+                    onChange={(e) => dispatch(updateComplaintStatus({ id: c._id, status: e.target.value }))}
                     size="small"
-                    sx={{ 
-                      fontWeight: 900, 
-                      fontSize: '9px',
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '10px',
                       textTransform: 'uppercase',
-                      bgcolor: STATUS_STYLE[c.status]?.bg || '#f1f5f9',
-                      color: STATUS_STYLE[c.status]?.color || '#64748b',
-                      borderRadius: '8px'
+                      '& .MuiSelect-select': { paddingY: '6px' }
                     }}
-                  />
+                  >
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="In Progress">In Progress</MenuItem>
+                    <MenuItem value="Resolved">Resolved</MenuItem>
+                  </Select>
                 </TableCell>
 
                 <TableCell align="center">
