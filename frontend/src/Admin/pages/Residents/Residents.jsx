@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { 
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, TablePagination,
-  IconButton, Tooltip, Avatar, Chip, InputBase
+  IconButton, Tooltip, Avatar, Chip, InputBase, Switch
 } from "@mui/material";
 import { 
   FiEdit, FiTrash2, FiSearch, FiPlus, 
   FiUser, FiHome, FiPhone, FiMail 
 } from "react-icons/fi";
-import { fetchResidents, deleteResident } from "../../../store/slices/residentSlice";
+import { fetchResidents, deleteResident, updateResidentStatus } from "../../../store/slices/residentSlice";
 
 const ResidentList = () => {
   const dispatch = useDispatch();
@@ -117,7 +117,7 @@ const ResidentList = () => {
                     <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
                       <FiHome size={14} />
                     </div>
-                    <span className="font-black text-indigo-600 text-sm">{r.flatNumber}</span>
+                    <span className="font-black text-indigo-600 text-sm">{r.flatNumber || (r.flat && r.flat.flatNumber) || "N/A"}</span>
                   </div>
                 </TableCell>
 
@@ -153,6 +153,13 @@ const ResidentList = () => {
                     <span className={`text-[11px] font-black uppercase tracking-tighter ${r.status === 'Active' ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {r.status}
                     </span>
+                    <Switch
+                      checked={r.status === 'Active'}
+                      onChange={() => dispatch(updateResidentStatus({ id: r._id, status: r.status === 'Active' ? 'Inactive' : 'Active' }))}
+                      color="success"
+                      size="small"
+                      inputProps={{ 'aria-label': 'Toggle resident active status' }}
+                    />
                   </div>
                 </TableCell>
 
