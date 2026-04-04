@@ -189,22 +189,73 @@ const User     = require("../../../db/models/userModel");
 // ─── OTP HELPER ──────────────────────────────────────────────────────────────
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// ─── SEND OTP via SMS / fallback console ─────────────────────────────────────
-// Install twilio: npm install twilio  OR just use console.log for dev
-const sendOTPtoResident = async (mobileNumber, otp, visitorName) => {
-  // ── PRODUCTION: Uncomment and configure Twilio ─────────────────────────────
-  // const twilio = require("twilio");
-  // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-  // await client.messages.create({
-  //   body: `eSociety: ${visitorName} is at the gate. OTP to allow entry: ${otp}. Valid 5 min.`,
-  //   from: process.env.TWILIO_PHONE,
-  //   to: `+91${mobileNumber}`
-  // });
+// ─── SEND OTP via Email ───────────────────────────────────────────────────────
+const nodemailer = require("nodemailer");
 
-  // ── DEV FALLBACK: log to console ────────────────────────────────────────────
-  console.log(`📱 OTP for ${mobileNumber}: ${otp}  (visitor: ${visitorName})`);
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: { rejectUnauthorized: false },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+});
+
+const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName) => {
+  // Console log always (dev visibility)
+  console.log(`📱 OTP [${otp}] for resident mobile ${residentMobile} | visitor: ${visitorName}`);
+
+  // Send email if resident has an email address
+  if (!residentEmail) {
+    console.warn(" Resident has no email — OTP only logged to console.");
+    return true;
+  }
+
+  const mailOptions = {
+    from: `"e-Society Security" <${process.env.EMAIL_USER}>`,
+    to: residentEmail,
+    subject: "🔐 Visitor Entry OTP — e-Society",
+    html: `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
+        <div style="background: #1e40af; padding: 28px 32px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">🛡️ e-Society</h1>
+          <p style="color: #bfdbfe; margin: 6px 0 0; font-size: 13px;">Security Gate System</p>
+        </div>
+        <div style="padding: 32px;">
+          <p style="color: #334155; font-size: 15px; margin: 0 0 8px;">Hello Resident,</p>
+          <p style="color: #475569; font-size: 14px; margin: 0 0 24px;">
+            <strong style="color: #1e293b;">${visitorName}</strong> is at the gate requesting entry. 
+            Share this OTP with the security guard to allow entry:
+          </p>
+          <div style="background: #f1f5f9; border: 2px dashed #93c5fd; border-radius: 12px; text-align: center; padding: 24px; margin-bottom: 24px;">
+            <p style="color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 8px;">Your One-Time Password</p>
+            <p style="color: #1e40af; font-size: 42px; font-weight: 900; letter-spacing: 10px; margin: 0; font-family: monospace;">${otp}</p>
+          </div>
+          <div style="background: #fef3c7; border-radius: 10px; padding: 12px 16px; margin-bottom: 24px;">
+            <p style="color: #92400e; font-size: 12px; margin: 0;">
+              ⏱️ This OTP is valid for <strong>5 minutes</strong>. Do not share it with anyone other than the security guard.
+            </p>
+          </div>
+          <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+            If you are not expecting a visitor, please contact security immediately.
+          </p>
+        </div>
+        <div style="background: #f1f5f9; padding: 16px 32px; text-align: center;">
+          <p style="color: #94a3b8; font-size: 11px; margin: 0;">e-Society Management System · Do not reply to this email</p>
+        </div>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+  console.log(`✅ OTP email sent to ${residentEmail}`);
   return true;
 };
+
 
 // ─── CREATE VISITOR & SEND OTP ───────────────────────────────────────────────
 exports.createVisitor = async (req, res) => {
@@ -239,8 +290,8 @@ exports.createVisitor = async (req, res) => {
       status: "Pending"
     });
 
-    // Send OTP to resident
-    await sendOTPtoResident(resident.mobileNumber, otp, visitorName);
+    // Send OTP to resident (email + mobile fallback)
+    await sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitorName);
 
     res.status(201).json({
       success: true,
@@ -316,7 +367,7 @@ exports.resendOTP = async (req, res) => {
     await visitor.save();
 
     const resident = visitor.visitingResident;
-    await sendOTPtoResident(resident.mobileNumber, otp, visitor.visitorName);
+    await sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitor.visitorName);
 
     res.json({ success: true, message: "OTP resent to resident." });
   } catch (error) {

@@ -6,10 +6,10 @@ const createBooking = async (req, res) => {
   try {
     const { facility, resident, participantModel, bookingDate, startTime, endTime, purpose } = req.body;
 
-    if (!facility || !resident || !bookingDate || !startTime || !endTime) {
+    if (!facility || !bookingDate || !startTime || !endTime) {
       return res.status(400).json({
         success: false,
-        message: "facility, resident, bookingDate, startTime and endTime are all required.",
+        message: "facility, bookingDate, startTime and endTime are all required.",
       });
     }
 

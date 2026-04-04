@@ -1,146 +1,190 @@
 import React from "react";
 import { Link } from "react-router-dom";
-// ✅ Import only utility icons from lucide
+import { motion } from "framer-motion"; 
 import { 
   Shield, Mail, Phone, MapPin, 
-  ArrowUpRight, Heart 
+  Heart, Sparkles 
 } from "lucide-react";
-// ✅ Import brand icons from react-icons/fa (Standard for social media)
-import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { FaFacebook, FaWhatsapp, FaLinkedin, FaInstagram } from "react-icons/fa";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const containerVars = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { staggerChildren: 0.15, duration: 0.8, ease: "easeOut" } 
+    }
+  };
+
+  const itemVars = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <footer style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="bg-white border-t border-slate-100 pt-20 pb-10">
-      <style>{`
+    <footer className="relative bg-[#020617] border-t border-slate-800/50 pt-24 pb-12 overflow-hidden font-sans text-slate-300">
+      {/* Background Neon Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none" />
+
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;800;900&display=swap');
         
-        .footer-label {
-          font-size: 10px;
-          font-weight: 900;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #94a3b8;
-          margin-bottom: 24px;
-          display: block;
+        .footer-brand-font { font-family: 'Fraunces', serif; }
+        
+        @keyframes pulse-blue {
+          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
         }
-        .footer-link {
-          font-size: 14px;
-          font-weight: 600;
-          color: #64748b;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .footer-link:hover {
-          color: #2563eb;
-          transform: translateX(4px);
-        }
-        .brand-font {
-          font-family: 'Fraunces', serif;
-        }
-        .emergency-card {
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-          box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.3);
-        }
-      `}</style>
+        .emergency-glow-dark { animation: pulse-blue 2s infinite; }
+      `}} />
 
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+      <motion.div 
+        variants={containerVars}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="max-w-7xl mx-auto px-6 relative z-10"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
 
-          {/* COLUMN 1: BRAND */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
-                <Shield size={20} className="text-white" />
+          {/* COLUMN 1: BRAND & SOCIAL */}
+          <motion.div variants={itemVars} className="space-y-8">
+            <div className="flex items-center gap-4 group cursor-default">
+              <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.3)] group-hover:rotate-12 transition-transform duration-500">
+                <Shield size={28} className="text-white" />
               </div>
               <div>
-                <span className="brand-font text-slate-900 text-xl font-black leading-none block">e-Society</span>
-                <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-1 block">Management</span>
+                <span className="footer-brand-font text-white text-2xl font-black leading-none block tracking-tight">e-Society</span>
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mt-1 block">Digital Hub</span>
               </div>
             </div>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-medium">
               Elevating community living through smart automation, robust security, and seamless financial transparency.
             </p>
             
-            {/* ✅ FIXED SOCIAL LINKS: Using Fa Icons */}
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {[
-                { Icon: FaFacebook, href: "#" },
-                { Icon: FaTwitter, href: "#" },
-                { Icon: FaLinkedin, href: "#" },
-                { Icon: FaInstagram, href: "#" }
+                { Icon: FaFacebook, href: "https://facebook.com", color: "hover:bg-blue-600" },
+                { Icon: FaWhatsapp, href: "https://wa.me/919999988888", color: "hover:bg-emerald-500" }, // WhatsApp Added
+                { Icon: FaLinkedin, href: "https://linkedin.com", color: "hover:bg-blue-700" },
+                { Icon: FaInstagram, href: "https://instagram.com", color: "hover:bg-pink-600" }
               ].map((item, i) => (
-                <a key={i} href={item.href} className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
-                  <item.Icon size={16} />
-                </a>
+                <motion.a 
+                  key={i} 
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -8, scale: 1.1 }}
+                  className={`w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-lg ${item.color}`}
+                >
+                  <item.Icon size={20} />
+                </motion.a>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          {/* COLUMN 2: QUICK LINKS */}
-          <div>
-            <span className="footer-label">Resources</span>
-            <div className="space-y-4">
-              <Link to="/" className="footer-link">Home</Link>
-              <Link to="/about" className="footer-link">About Society</Link>
-              <Link to="/notices" className="footer-link">Notice Board</Link>
-              <Link to="/events" className="footer-link">Events Calendar</Link>
-            </div>
-          </div>
+          {/* COLUMN 2: RESOURCES */}
+          <motion.div variants={itemVars}>
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-10">Quick Access</span>
+            <ul className="space-y-5">
+              {['Home', 'About Society', 'Notice Board', 'Events Calendar'].map((text, i) => (
+                <li key={i}>
+                  <Link to={`/${text.toLowerCase().replace(/\s+/g, '')}`} className="group flex items-center gap-3 text-slate-400 hover:text-blue-400 text-sm font-bold transition-all">
+                    <span className="w-0 group-hover:w-3 h-[2px] bg-blue-500 transition-all duration-300" />
+                    {text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
 
           {/* COLUMN 3: SERVICES */}
-          <div>
-            <span className="footer-label">Services</span>
-            <div className="space-y-4">
-              <Link to="/visitors" className="footer-link">Visitor Tracking</Link>
-              <Link to="/maintenance" className="footer-link">Pay Maintenance</Link>
-              <Link to="/facilities" className="footer-link">Facility Booking</Link>
-              <Link to="/complaints" className="footer-link">Support Desk</Link>
-            </div>
-          </div>
+          <motion.div variants={itemVars}>
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-10">Resident Portal</span>
+            <ul className="space-y-5">
+              {['Visitor Tracking', 'Pay Maintenance', 'Facility Booking', 'Support Desk'].map((text, i) => (
+                <li key={i}>
+                  <Link to={`/${text.toLowerCase().replace(/\s+/g, '')}`} className="group flex items-center gap-3 text-slate-400 hover:text-indigo-400 text-sm font-bold transition-all">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-indigo-500 transition-colors" />
+                    {text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
 
           {/* COLUMN 4: CONTACT & EMERGENCY */}
-          <div className="space-y-6">
-            <span className="footer-label">Get in Touch</span>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-600 text-sm font-medium">
-                <MapPin size={16} className="text-blue-500" />
-                Galaxy Heights, Block C, Ahmedabad
-              </div>
-              <div className="flex items-center gap-3 text-slate-600 text-sm font-medium">
-                <Mail size={16} className="text-blue-500" />
-                admin@esociety.in
-              </div>
-            </div>
-
-            <div className="emergency-card p-5 rounded-2xl text-white">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">Security Response</p>
-              <a href="tel:+919999988888" className="flex items-center justify-between group">
-                <span className="text-lg font-bold">+91 99999 88888</span>
-                <div className="bg-white/20 p-1.5 rounded-lg group-hover:bg-white/30 transition-colors">
-                  <Phone size={16} fill="white" />
+          <motion.div variants={itemVars} className="space-y-10">
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-2">Location</span>
+            <div className="space-y-5">
+              <div className="flex items-start gap-4 group">
+                <div className="mt-1 p-2 bg-slate-900 border border-slate-800 text-blue-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                  <MapPin size={18} />
                 </div>
+                <p className="text-slate-400 text-sm font-bold leading-relaxed">
+                  Galaxy Heights, Block C,<br />
+                  Ahmedabad, Gujarat
+                </p>
+              </div>
+              <a href="mailto:admin@esociety.in" className="flex items-center gap-4 group">
+                <div className="p-2 bg-slate-900 border border-slate-800 text-blue-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                  <Mail size={18} />
+                </div>
+                <p className="text-slate-400 text-sm font-bold">admin@esociety.in</p>
               </a>
             </div>
-          </div>
+
+            {/* Premium Emergency Card */}
+            <motion.div 
+              whileHover={{ scale: 1.03 }}
+              className="emergency-glow-dark bg-gradient-to-br from-blue-600/90 to-indigo-700/90 p-6 rounded-[24px] text-white relative overflow-hidden group cursor-pointer shadow-2xl"
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-700">
+                <Sparkles size={48} />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                Security Response
+              </p>
+              <a href="tel:+919999988888" className="flex items-center justify-between">
+                <span className="text-xl font-black tracking-tight">+91 99999 88888</span>
+                <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md group-hover:bg-white group-hover:text-blue-700 transition-all duration-300">
+                  <Phone size={20} fill="currentColor" />
+                </div>
+              </a>
+            </motion.div>
+          </motion.div>
         </div>
 
-        {/* BOTTOM DIVIDER */}
-        <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-            © {currentYear} e-Society System <span className="hidden md:inline">•</span> 
-            <span className="flex items-center gap-1">Made with <Heart size={12} className="text-red-500 fill-red-500" /> for community living</span>
-          </div>
+        {/* BOTTOM SECTION */}
+        <div className="pt-12 border-t border-slate-800/60 flex flex-col md:flex-row items-center justify-between gap-10">
+          <motion.div variants={itemVars} className="text-slate-500 text-[11px] font-black uppercase tracking-[0.2em] flex flex-wrap items-center justify-center gap-3">
+            © {currentYear} e-Society Hub 
+            <span className="hidden md:inline text-slate-800">|</span> 
+            <span className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-full text-slate-400">
+              Made with <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse" /> for community
+            </span>
+          </motion.div>
           
-          <div className="flex gap-8">
-            <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs font-bold uppercase tracking-widest">Privacy Policy</Link>
-            <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs font-bold uppercase tracking-widest">Terms of Use</Link>
-          </div>
+          <motion.div variants={itemVars} className="flex gap-12">
+            {['Privacy Policy', 'Terms of Use'].map((text, i) => (
+              <Link 
+                key={i} 
+                to={`/${text.toLowerCase().replace(/\s+/g, '')}`} 
+                className="text-slate-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group"
+              >
+                {text}
+                <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-blue-500 group-hover:w-full transition-all duration-300" />
+              </Link>
+            ))}
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </footer>
   );
 };

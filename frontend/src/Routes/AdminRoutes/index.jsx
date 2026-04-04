@@ -17,9 +17,9 @@ import flatRoutes       from "./flatRoutes";
 
 // ── NEW routes (copy files from the zip into this same routes folder) ────────
 import noticeRoutes     from "./noticeRoutes";
-import staffRoutes      from "./staffRoutes";
 import alertRoutes      from "./alertRoutes";
 import pollRoutes       from "./pollRoutes";
+import eventRoutes      from "./eventRoutes";
 
 import AuthContext from "../../Admin/context/AuthContext";
 
@@ -64,9 +64,9 @@ const AdminRouter = [
       ...flatRoutes,
 
       ...noticeRoutes,
-      ...staffRoutes,
       ...alertRoutes,
       ...pollRoutes,
+      ...eventRoutes,
     ],
   },
 ];

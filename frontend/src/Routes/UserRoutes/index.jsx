@@ -4,8 +4,8 @@ import React, { lazy, Suspense } from "react";
 const UserLayout = lazy(() => import("../../User/layout/UserLayout"));
 
 // Auth
-import Login       from "../../User/pages/Login";
-import AuthContext from "../../User/context/AuthContext";
+const Login = lazy(() => import("../../User/pages/Login"));
+const AuthContext = lazy(() => import("../../User/context/AuthContext"));
 
 // Route files
 import HomeRoutes        from "./HomeRoutes";

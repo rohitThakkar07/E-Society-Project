@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Bell, Calendar, Users, Shield, Wrench, DollarSign,
   ArrowRight, Building2, Clock, ChevronRight, Star,
-  Zap, Lock, BarChart3, Heart, MapPin, Phone
+  Zap, Lock, BarChart3, MapPin, Sparkles, LayoutDashboard
 } from "lucide-react";
 import { fetchNotices } from "../../store/slices/noticeSlice";
 import { fetchEvents } from "../../store/slices/eventSlice";
@@ -17,26 +19,25 @@ const Home = () => {
   const { list: notices = [], loading: noticeLoading } = useSelector((s) => s.notice || {});
   const { events = [], loading: eventLoading } = useSelector((s) => s.event || {});
   const { singleFlat: flat, loading: flatLoading } = useSelector((s) => s.flat || {});
- 
+  
   const auth = useSelector((s) => s.auth);
   const user = auth?.user || JSON.parse(localStorage.getItem("userData") || "{}");
   const role = user?.role?.toLowerCase();
-
   const isLoggedIn = !!localStorage.getItem("token");
+
   useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchNotices());
       dispatch(fetchEvents());
-      if (role === "resident") {
-        const userId = user?._id || null;
-        console.log(userId)
-        if (userId) {
-          console.log("call fetchresident ")
-          dispatch(fetchResidentFlat(userId));
-        }
+      if (role === "resident" && user?._id) {
+        dispatch(fetchResidentFlat(user._id));
       }
+      toast.success(`Welcome back, ${user?.firstName || 'Resident'}!`, {
+        icon: '👋',
+        style: { borderRadius: '15px', background: '#0f172a', color: '#fff', border: '1px solid #1e293b' }
+      });
     }
-  }, [dispatch, isLoggedIn, role,user?._id]);
+  }, [dispatch, isLoggedIn, role, user?._id]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 60000);
@@ -45,55 +46,33 @@ const Home = () => {
 
   const upcomingEvents = events?.filter(e => new Date(e.date) >= new Date()) || [];
 
-  const getGreeting = () => {
+  const greeting = (() => {
     const h = time.getHours();
-    if (h < 12) return { text: "Good Morning", emoji: "☀️" };
-    if (h < 17) return { text: "Good Afternoon", emoji: "🌤️" };
-    return { text: "Good Evening", emoji: "🌙" };
-  };
-
-  const greeting = getGreeting();
-  const firstName = user?.firstName || user?.name?.split(" ")[0] || "Resident";
+    if (h < 12) return { text: "Good Morning", emoji: "☀️", col: "from-orange-400 to-amber-500" };
+    if (h < 17) return { text: "Good Afternoon", emoji: "🌤️", col: "from-blue-400 to-cyan-500" };
+    return { text: "Good Evening", emoji: "🌙", col: "from-indigo-500 to-purple-600" };
+  })();
 
   const stats = [
-    { label: "Notices", value: notices?.length || 0, icon: Bell, color: "#ef4444", bg: "#fef2f2" },
-    { label: "Events", value: events?.length || 0, icon: Calendar, color: "#3b82f6", bg: "#eff6ff" },
-    { 
-      label: "Wing / Block", 
-      value: flat?.block || user?.wing || "—", 
-      icon: Building2, 
-      color: "#10b981", 
-      bg: "#f0fdf4" 
-    },
-    { 
-      label: "Flat Number", 
-      value: flat?.flatNumber || user?.flatNumber || "—", 
-      icon: MapPin, 
-      color: "#f59e0b", 
-      bg: "#fffbeb" 
-    },
+    { label: "Notices", value: notices?.length || 0, icon: Bell, color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)", loading: noticeLoading },
+    { label: "Events", value: events?.length || 0, icon: Calendar, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)", loading: eventLoading },
+    { label: "Wing / Block", value: flat?.block || flat?.wing || user?.wing || "—", icon: Building2, color: "#10b981", bg: "rgba(16, 185, 129, 0.1)", loading: flatLoading },
+    { label: "Flat Number", value: flat?.flatNumber || user?.flatNumber || "—", icon: MapPin, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)", loading: flatLoading },
   ];
 
   const quickLinks = [
-    { label: "Pay Maintenance", icon: DollarSign, to: "/maintenance", color: "#10b981", bg: "#f0fdf4", border: "#d1fae5", roles: ["resident", "admin"] },
-    { label: "Raise Complaint", icon: Wrench,     to: "/complaints",  color: "#f97316", bg: "#fff7ed", border: "#fed7aa", roles: ["resident", "admin"] },
-    { label: "Book Facility",   icon: Building2,  to: "/facilities",  color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", roles: ["resident"] },
-    { label: "Visitor Log",     icon: Users,      to: "/visitors",    color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", roles: ["resident", "admin"] },
-    { label: "Notice Board",    icon: Bell,       to: "/notices",     color: "#ef4444", bg: "#fef2f2", border: "#fecaca", roles: ["resident", "admin"] },
-    { label: "Events",          icon: Calendar,   to: "/events",      color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", roles: ["resident", "admin"] },
+    { label: "Pay Maintenance", icon: DollarSign, to: "/maintenance", color: "#10b981", bg: "rgba(16, 185, 129, 0.1)", roles: ["resident", "admin"] },
+    { label: "Raise Complaint", icon: Wrench,     to: "/complaints",  color: "#f97316", bg: "rgba(249, 115, 22, 0.1)", roles: ["resident", "admin"] },
+    { label: "Book Facility",   icon: Building2,  to: "/facilities",  color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)", roles: ["resident"] },
+    { label: "Visitor Log",icon: Users,to: "/visitors",    color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.1)", roles: ["resident", "admin"] },
+    { label: "Notice Board",icon: Bell,to: "/notices",color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)", roles: ["resident", "admin"] },
+    { label: "Events",icon: Calendar,to: "/events",color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)", roles: ["resident", "admin"] },
   ];
-
-  const visibleLinks = isLoggedIn
-    ? quickLinks.filter((l) => l.roles.includes(role))
-    : quickLinks.slice(0, 3);
 
   const features = [
     { icon: DollarSign, title: "Smart Payments",  desc: "Pay maintenance fees online in seconds. Auto-reminders ensure you never miss a due date.", color: "#10b981" },
     { icon: Shield,     title: "Gated Security",  desc: "Real-time visitor logs, guard management and digital entry passes for complete security.", color: "#3b82f6" },
     { icon: Users,      title: "Community Hub",   desc: "Connect with neighbors through notices, polls, events and community discussions.",         color: "#8b5cf6" },
-    { icon: BarChart3,  title: "Live Reports",    desc: "Transparent financial reports, complaint tracking and facility usage at your fingertips.",  color: "#f59e0b" },
-    { icon: Zap,        title: "Instant Alerts",  desc: "Emergency notifications, maintenance updates and event reminders delivered instantly.",     color: "#ef4444" },
-    { icon: Lock,       title: "Safe & Private",  desc: "Bank-grade encryption protects all your personal data and transaction history.",            color: "#06b6d4" },
   ];
 
   const testimonials = [
@@ -102,320 +81,244 @@ const Home = () => {
     { name: "Anita Patel",  flat: "C-302", text: "Events and notices are now instantly visible. Feels like a real community!",       stars: 5 },
   ];
 
+  const visibleLinks = isLoggedIn ? quickLinks.filter((l) => l.roles.includes(role)) : quickLinks.slice(0, 3);
+
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="min-h-screen bg-white">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;800;900&display=swap');
+    <div className="min-h-screen bg-[#01040f] text-slate-200 font-sans overflow-x-hidden">
+      <Toaster position="bottom-right" />
+      
+      {/* GLOW DECORATION */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[-5%] left-[-5%] w-[45%] h-[45%] bg-blue-600/10 blur-[130px] rounded-full" />
+        <div className="absolute bottom-[5%] right-[-5%] w-[40%] h-[40%] bg-indigo-600/10 blur-[130px] rounded-full" />
+      </div>
 
-        .hero-bg {
-          background-color: #f8fafc;
-          background-image: 
-            linear-gradient(to right, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.7) 100%),
-            url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80');
-          background-size: cover;
-          background-position: center right;
-          position: relative;
-        }
-
-        .hero-pill {
-          background: white;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .float-card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-          animation: floatAnim 4s ease-in-out infinite;
-        }
-
-        @keyframes floatAnim {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-
-        .reveal { animation: revealUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-        @keyframes revealUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .d1 { animation-delay: 0.1s; }
-        .d2 { animation-delay: 0.2s; }
-        .d3 { animation-delay: 0.3s; }
-
-        .card-lift { transition: all 0.3s ease; }
-        .card-lift:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
-
-        .section-label {
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #3b82f6;
-        }
-
-        .shimmer {
-          background: linear-gradient(90deg, #f0f4f8 25%, #e8edf2 50%, #f0f4f8 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-      `}</style>
-
-      {/* HERO */}
-      <section className="hero-bg px-6 py-20 md:py-32 overflow-hidden">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 items-center gap-12">
-          <div className="z-10 text-left">
-            <div className="reveal d1 inline-flex items-center gap-2 hero-pill rounded-full px-4 py-2 text-sm mb-6">
-              <span className="text-lg">{greeting.emoji}</span>
-              <span className="text-slate-600 font-bold">{greeting.text}{isLoggedIn ? `, ${firstName}` : ""}</span>
+      {/* HERO SECTION */}
+      <section className="relative px-6 pt-28 pb-20 lg:pt-40 lg:pb-32 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 items-center gap-16">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900 border border-slate-800 mb-8 backdrop-blur-md">
+              <Sparkles size={16} className="text-blue-400 animate-pulse" />
+              <span className={`text-xs font-black uppercase tracking-[0.2em] bg-clip-text text-transparent bg-gradient-to-r ${greeting.col}`}>
+                {greeting.text}{isLoggedIn ? `, ${user?.firstName || 'Resident'}` : ""} {greeting.emoji}
+              </span>
             </div>
-            <h1 className="reveal d2 mb-6 leading-[1.1] text-slate-900" style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(40px, 5vw, 64px)", fontWeight: 900 }}>
-              Elevate Your <br />
-              <span className="text-blue-600">Community Living.</span>
+            
+            <h1 className="text-5xl md:text-8xl font-black text-white leading-[0.9] mb-10 tracking-tighter">
+              Modern <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
+                Community.
+              </span>
             </h1>
-            <p className="reveal d3 text-lg text-slate-600 max-w-md leading-relaxed mb-10">
-              The smartest way to manage your society. Experience seamless payments,
-              robust security, and a more connected neighborhood.
+            
+            <p className="text-xl text-slate-400 max-w-lg leading-relaxed mb-12 font-medium opacity-80">
+              The smartest way to manage your society. Experience seamless payments and robust security in one place.
             </p>
-            <div className="reveal d3 flex flex-wrap gap-4">
-              {isLoggedIn ? (
-                <Link to="/maintenance" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-blue-200">
-                  Dashboard <ArrowRight size={18} />
-                </Link>
-              ) : (
-                <Link to="/login" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-slate-200">
-                  Get Started <ArrowRight size={18} />
-                </Link>
-              )}
-              <Link to="/notices" className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-bold px-8 py-4 rounded-2xl border border-slate-200 transition-all">
-                View Notices
-              </Link>
-            </div>
-          </div>
 
-          <div className="relative hidden md:flex justify-center items-center">
-            <div className="float-card p-6 rounded-[32px] w-full max-w-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="bg-blue-100 p-3 rounded-2xl text-blue-600"><Shield size={24} /></div>
-                <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full uppercase">Verified</span>
+            {/* BUTTONS FIXED HERE (Items-Center) */}
+            <div className="flex flex-row items-center flex-wrap gap-6">
+              {/* PRIMARY BUTTON */}
+              <motion.div whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(37, 99, 235, 0.6)" }} whileTap={{ scale: 0.95 }}>
+                <Link to={isLoggedIn ? "/maintenance" : "/login"} className="h-[60px] px-10 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all">
+                   {isLoggedIn ? "Dashboard" : "Get Started"} <ArrowRight size={20} />
+                </Link>
+              </motion.div>
+
+              {/* SECONDARY BUTTON */}
+              <motion.div whileHover={{ scale: 1.05, borderColor: "rgba(255,255,255,0.4)" }} whileTap={{ scale: 0.95 }}>
+                <Link to="/notices" className="h-[60px] px-10 bg-slate-900 border border-slate-800 text-white font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center">
+                  View Board
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* SECURITY CARD UI */}
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }} className="relative hidden lg:block">
+            <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/5 p-10 rounded-[60px] shadow-2xl relative z-10 overflow-hidden group">
+              <div className="flex items-center justify-between mb-12">
+                <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-3xl flex items-center justify-center border border-blue-500/20 shadow-inner"><Shield size={32} /></div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1 flex items-center justify-end gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> System Verified
+                  </p>
+                  <p className="text-slate-500 text-[10px] font-bold">AES-256 SECURED</p>
+                </div>
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Gate Security Active</h3>
-              <p className="text-sm text-slate-500 mb-6">Real-time visitor tracking and digital authorization in progress.</p>
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {[1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-slate-200" />
-                    <div className="flex-1">
-                      <div className="h-2 bg-slate-200 w-1/2 rounded mb-2" />
-                      <div className="h-1.5 bg-slate-100 w-1/3 rounded" />
-                    </div>
+                  <div key={i} className="h-16 bg-white/5 border border-white/5 rounded-3xl flex items-center px-5 gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-800 animate-pulse" />
+                    <div className="h-2 bg-slate-800 w-1/2 rounded-full" />
                   </div>
                 ))}
               </div>
             </div>
-            <div className="absolute -bottom-6 -right-6 float-card p-4 rounded-2xl hidden lg:block" style={{ animationDelay: '2s' }}>
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-100 p-2 rounded-lg text-orange-600"><Bell size={20} /></div>
-                <div>
-                  <p className="text-xs font-black text-slate-800">New Notice</p>
-                  <p className="text-[10px] text-slate-400">2 mins ago</p>
-                </div>
+
+            {/* NOTIFICATION CARD (FRONT & FLOATING) */}
+            <motion.div 
+              animate={{ y: [0, -15, 0] }} 
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -bottom-10 -left-10 bg-slate-900 border border-slate-700 p-6 rounded-[32px] shadow-[0_30px_60px_rgba(0,0,0,0.8)] z-[999] backdrop-blur-xl flex items-center gap-5 cursor-pointer hover:border-blue-500 transition-colors"
+            >
+              <div className="bg-orange-500/20 p-3 rounded-2xl text-orange-400 shadow-lg">
+                <Bell size={24} className="animate-bounce" />
               </div>
-            </div>
-          </div>
+              <div>
+                <p className="text-sm font-black text-white">Security Alert</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">New Notice Published</p>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* STATS BAR */}
+      {/* STATS SECTION */}
       {isLoggedIn && (
-        <section className="bg-white border-b border-slate-100 px-6 py-6 shadow-sm relative z-20">
-          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((s) => {
-              const Icon = s.icon;
-              // ✅ flatLoading drives the shimmer for Wing & Flat cards
-              const isLoading = s.label === "Wing" || s.label === "Flat"
-                ? flatLoading
-                : s.label === "Notices" ? noticeLoading : eventLoading;
-              return (
-                <div key={s.label} className="card-lift flex items-center gap-4 p-5 rounded-2xl border border-slate-100 bg-white">
-                  <div style={{ background: s.bg, borderRadius: "14px", padding: "12px" }}>
-                    <Icon size={20} style={{ color: s.color }} />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>
-                      {isLoading ? (
-                        <span className="shimmer inline-block w-8 h-6 rounded" />
-                      ) : (
-                        s.value
-                      )}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{s.label}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <section className="px-6 mb-24 max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+          {stats.map((s, idx) => (
+            <motion.div 
+              whileHover={{ y: -10, backgroundColor: "rgba(15, 23, 42, 0.6)", borderColor: "rgba(255,255,255,0.1)" }} 
+              key={idx} 
+              className="bg-slate-900/30 border border-slate-800/60 p-8 rounded-[40px] flex flex-col items-start gap-6 backdrop-blur-md transition-all"
+            >
+              <div style={{ color: s.color, backgroundColor: s.bg }} className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg">
+                <s.icon size={28} />
+              </div>
+              <div>
+                <h4 className="text-3xl font-black text-white tracking-tighter">
+                  {s.loading ? <span className="animate-pulse">...</span> : s.value}
+                </h4>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{s.label}</p>
+              </div>
+            </motion.div>
+          ))}
         </section>
       )}
 
-      {/* QUICK ACCESS */}
-      <section className="px-6 py-20 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <p className="section-label mb-3">Your Terminal</p>
-          <h2 className="text-4xl font-bold text-slate-900 mb-10" style={{ fontFamily: "'Fraunces', serif" }}>Quick Access</h2>
+      {/* QUICK ACCESS GRID */}
+      <section className="px-6 py-28 bg-slate-900/10 border-y border-white/5">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-16">
+            <h2 className="text-3xl font-black text-white tracking-tight uppercase mb-2">Service Terminal</h2>
+            <div className="w-16 h-1 bg-blue-600 rounded-full" />
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {visibleLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link key={link.to} to={isLoggedIn ? link.to : "/login"}
-                  className="card-lift flex flex-col items-center gap-4 p-6 rounded-3xl text-center border border-slate-100 bg-slate-50/50"
-                >
-                  <div style={{ background: link.bg, borderRadius: "18px", padding: "16px" }}>
-                    <Icon size={24} style={{ color: link.color }} />
+            {visibleLinks.map((link, idx) => (
+              <motion.div key={idx} whileHover={{ y: -10, scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+                <Link to={link.to} className="group flex flex-col items-center p-10 bg-slate-950 border border-slate-800 rounded-[45px] hover:border-blue-500/40 transition-all shadow-xl">
+                  <div style={{ color: link.color, backgroundColor: link.bg }} className="p-6 rounded-[24px] mb-6 group-hover:rotate-6 transition-all duration-300">
+                    <link.icon size={32} />
                   </div>
-                  <span className="text-sm font-bold text-slate-700">{link.label}</span>
+                  <span className="text-xs font-black text-slate-300 group-hover:text-white uppercase transition-colors">{link.label}</span>
                 </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* LIVE FEED */}
-      {isLoggedIn && (
-        <section className="px-6 pb-20 bg-white">
-          <div className="max-w-6xl mx-auto">
-            <p className="section-label mb-3">Activity Stream</p>
-            <h2 className="text-4xl font-bold text-slate-900 mb-10" style={{ fontFamily: "'Fraunces', serif" }}>What's Happening</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* NOTICES */}
-              <div className="bg-slate-50/50 rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-red-50 p-2 rounded-lg text-red-500"><Bell size={18} /></div>
-                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Latest Notices</h3>
-                  </div>
-                  <Link to="/notices" className="text-xs text-blue-600 font-bold flex items-center gap-1">See All <ChevronRight size={14} /></Link>
-                </div>
-                <div className="p-2">
-                  {noticeLoading ? (
-                    [...Array(3)].map((_, i) => (
-                      <div key={i} className="px-4 py-5 border-b border-slate-50">
-                        <div className="shimmer h-4 w-3/4 rounded mb-2" />
-                        <div className="shimmer h-3 w-1/3 rounded" />
-                      </div>
-                    ))
-                  ) : notices?.length > 0 ? (
-                    notices.slice(0, 4).map((n) => (
-                      <div key={n._id} className="hover:bg-white m-1 rounded-2xl px-5 py-4 transition cursor-pointer border border-transparent hover:border-slate-100 hover:shadow-sm">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-bold text-slate-700 line-clamp-1">{n.title}</p>
-                          <ChevronRight size={16} className="text-slate-300" />
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                          <Clock size={12} />
-                          {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="p-10 text-sm text-slate-400 text-center font-medium">No notices currently active.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* EVENTS */}
-              <div className="bg-slate-50/50 rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-50 p-2 rounded-lg text-blue-500"><Calendar size={18} /></div>
-                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Society Calendar</h3>
-                  </div>
-                  <Link to="/events" className="text-xs text-blue-600 font-bold flex items-center gap-1">Calendar <ChevronRight size={14} /></Link>
-                </div>
-                <div className="p-2">
-                  {eventLoading ? (
-                    [...Array(3)].map((_, i) => <div key={i} className="px-4 py-5 shimmer m-2 rounded-2xl h-16" />)
-                  ) : upcomingEvents.length > 0 ? (
-                    upcomingEvents.slice(0, 4).map((e) => (
-                      <div key={e._id} className="hover:bg-white m-1 rounded-2xl px-5 py-4 transition flex items-center gap-4 border border-transparent hover:border-slate-100 hover:shadow-sm cursor-pointer">
-                        <div className="bg-blue-600 rounded-2xl p-3 text-center min-w-[56px] shadow-lg shadow-blue-100">
-                          <p className="text-xl font-black text-white leading-none">{new Date(e.date).getDate()}</p>
-                          <p className="text-[10px] font-bold text-blue-100 uppercase mt-1">{new Date(e.date).toLocaleString("default", { month: "short" })}</p>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-700 line-clamp-1">{e.title}</p>
-                          <p className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={12} /> {e.location || "Clubhouse"}</p>
-                        </div>
-                        <ChevronRight size={16} className="text-slate-300" />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="p-10 text-sm text-slate-400 text-center font-medium">No upcoming events found.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* FEATURES */}
-      <section className="px-6 py-20 bg-slate-50/30 border-t border-slate-100">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="section-label mb-3">Modern Living</p>
-            <h2 className="text-4xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Tailored for Excellence</h2>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div key={f.title} className="card-lift bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
-                  <div style={{ background: f.color + "15", borderRadius: "20px", padding: "16px", display: "inline-flex", marginBottom: "24px" }}>
-                    <Icon size={24} style={{ color: f.color }} />
-                  </div>
-                  <h3 className="font-bold text-slate-800 text-xl mb-3">{f.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">{f.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="px-6 py-20 bg-white border-t border-slate-100">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="section-label mb-3">Community Voice</p>
-            <h2 className="text-4xl font-bold text-slate-900" style={{ fontFamily: "'Fraunces', serif" }}>Resident Testimonials</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((t) => (
-              <div key={t.name} className="card-lift bg-slate-50/50 rounded-[32px] border border-slate-100 p-8">
-                <div className="flex gap-1 mb-6 text-orange-400">
-                  {[...Array(t.stars)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-                </div>
-                <p className="text-slate-600 text-base leading-relaxed mb-8 italic font-medium">"{t.text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full w-12 h-12 flex items-center justify-center text-white font-bold shadow-lg">
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-slate-800">{t.name}</p>
-                    <p className="text-xs text-slate-400 font-bold">Resident {t.flat}</p>
-                  </div>
-                </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ACTIVITY FEED */}
+      {isLoggedIn && (
+        <section className="px-6 py-32 max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-10">
+            {/* NOTICES PANEL */}
+            <motion.div whileHover={{ y: -5 }} className="bg-slate-900/40 border border-slate-800 rounded-[50px] overflow-hidden backdrop-blur-md">
+              <div className="p-10 border-b border-slate-800 flex justify-between items-center bg-slate-900/20">
+                <div className="flex items-center gap-4">
+                  <div className="bg-rose-500/10 p-3 rounded-2xl text-rose-500"><Bell size={24} /></div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Broadcast Board</h3>
+                </div>
+                <Link to="/notices" className="text-xs font-black text-blue-500 tracking-widest uppercase hover:underline">Full Feed</Link>
+              </div>
+              <div className="p-4 space-y-2">
+                {notices.length > 0 ? notices.slice(0, 3).map((n) => (
+                  <div key={n._id} className="p-6 hover:bg-white/5 rounded-3xl transition-all group flex items-center justify-between cursor-pointer">
+                    <div>
+                      <p className="font-bold text-slate-200 group-hover:text-white mb-1 transition-colors">{n.title}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase"><Clock size={12} className="inline mr-1" /> {new Date(n.createdAt).toDateString()}</p>
+                    </div>
+                    <ChevronRight size={20} className="text-slate-700 group-hover:translate-x-1 transition-all" />
+                  </div>
+                )) : <div className="p-10 text-center text-slate-600 uppercase font-black text-xs tracking-widest">No active notices</div>}
+              </div>
+            </motion.div>
+
+            {/* EVENTS PANEL */}
+            <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-[50px] p-10 text-white relative shadow-2xl overflow-hidden group shadow-blue-900/40">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[90px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
+              <div className="flex items-center justify-between mb-12 relative z-10">
+                <div className="flex items-center gap-4">
+                   <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10"><Calendar size={24} /></div>
+                   <h3 className="text-2xl font-bold tracking-tight">Timeline</h3>
+                </div>
+                <Link to="/events" className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center hover:bg-white hover:text-blue-600 transition-all shadow-lg"><ArrowRight size={22}/></Link>
+              </div>
+              <div className="space-y-6 relative z-10">
+                {upcomingEvents.length > 0 ? upcomingEvents.slice(0, 2).map((e) => (
+                  <motion.div key={e._id} whileHover={{ scale: 1.03 }} className="bg-white/10 border border-white/20 backdrop-blur-xl p-6 rounded-[35px] flex items-center gap-6 group/event">
+                    <div className="bg-white text-blue-600 w-16 h-16 rounded-3xl flex flex-col items-center justify-center font-black shadow-xl group-hover/event:bg-blue-500 group-hover/event:text-white transition-all">
+                      <span className="text-2xl leading-none">{new Date(e.date).getDate()}</span>
+                      <span className="text-[10px] uppercase font-bold">{new Date(e.date).toLocaleString('default', { month: 'short' })}</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-xl mb-1">{e.title}</p>
+                      <p className="text-xs text-blue-100 opacity-70 font-bold uppercase flex items-center gap-2"><MapPin size={14} /> {e.location || "Clubhouse"}</p>
+                    </div>
+                  </motion.div>
+                )) : <p className="text-blue-100 italic text-center py-10 opacity-50 font-bold tracking-widest">Quiet for now...</p>}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* FEATURES SECTION */}
+      <section className="py-24 px-6 bg-slate-900/20 border-y border-white/5">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
+          {features.map((f, i) => (
+            <motion.div key={i} whileHover={{ y: -10 }} className="p-10 bg-slate-900/40 border border-slate-800 rounded-[45px] hover:border-blue-500/30 transition-all">
+              <div className="text-blue-500 mb-8"><f.icon size={40} strokeWidth={1.5} /></div>
+              <h3 className="text-2xl font-bold text-white mb-4 leading-none">{f.title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">{f.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-32 px-6 max-w-7xl mx-auto text-center">
+        <div className="mb-24">
+          <h2 className="text-4xl font-black text-white tracking-tighter mb-4 leading-none">Resident Feedback</h2>
+          <div className="w-20 h-1 bg-blue-600 mx-auto rounded-full" />
+        </div>
+        <div className="grid md:grid-cols-3 gap-10">
+          {testimonials.map((t, idx) => (
+            <motion.div key={idx} whileHover={{ y: -10 }} className="p-10 bg-slate-900/20 border border-slate-800 rounded-[50px] relative transition-all group backdrop-blur-sm">
+              <div className="flex justify-center gap-1 mb-8 text-amber-500">
+                {[...Array(t.stars)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
+              </div>
+              <p className="text-slate-300 italic mb-10 leading-relaxed font-medium">"{t.text}"</p>
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white shadow-lg">{t.name[0]}</div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-sm">{t.name}</p>
+                  <p className="text-slate-500 text-[10px] font-black tracking-widest uppercase">Resident {t.flat}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-24 border-t border-slate-900 bg-[#000208] text-center">
+         <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-blue-600 rounded-[18px] flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_30px_rgba(37,99,235,0.3)]">E</div>
+            <span className="text-2xl font-black tracking-tighter text-white">E-SOCIETY</span>
+         </div>
+         <p className="text-slate-700 text-xs font-black uppercase tracking-[0.5em] leading-none">Built for Excellence. © 2026</p>
+      </footer>
     </div>
   );
 };

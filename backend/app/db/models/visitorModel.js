@@ -61,10 +61,10 @@ const visitorSchema = new mongoose.Schema({
     required: true
   },
   photo: {
-    type: String,   // URL/path to visitor photo (optional)
+    type: String,  
     default: null
   },
-  // ✅ RELATIONSHIP: Links directly to the Resident Model
+  // : Links directly to the Resident Model
   visitingResident: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Resident",
