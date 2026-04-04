@@ -32,10 +32,6 @@ const Home = () => {
       if (role === "resident" && user?._id) {
         dispatch(fetchResidentFlat(user._id));
       }
-      toast.success(`Welcome back, ${user?.firstName || 'Resident'}!`, {
-        icon: '👋',
-        style: { borderRadius: '15px', background: '#0f172a', color: '#fff', border: '1px solid #1e293b' }
-      });
     }
   }, [dispatch, isLoggedIn, role, user?._id]);
 
