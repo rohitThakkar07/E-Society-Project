@@ -8,6 +8,10 @@ router.post("/initiate", paymentController.initiatePayment);
 // Step 2 — Verify payment signature and save to database
 router.post("/verify", paymentController.createPayment);
 
+// Facility booking payments (must stay before "/:paymentId")
+router.post("/facility/initiate", paymentController.initiateFacilityBookingPayment);
+router.post("/facility/verify", paymentController.verifyFacilityBookingPayment);
+
 // Admin sees all receipts with filters
 router.get("/list", paymentController.getAllPayments);
 

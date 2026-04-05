@@ -10,7 +10,7 @@ import {
   FiSearch, FiPlus, FiCalendar, FiClock, 
   FiHome, FiUser, FiFilter, FiEye 
 } from "react-icons/fi";
-import { fetchBookings } from "../../../store/slices/facilityBookingSlice";
+import { fetchBookings, updateBooking } from "../../../store/slices/facilityBookingSlice";
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -28,13 +28,11 @@ const getResidentData = (resident) => {
   return { name, flat };
 };
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+const formatRange = (start, end) => {
+  if (!start || !end) return "—";
+  const a = new Date(start);
+  const b = new Date(end);
+  return `${a.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} → ${b.toLocaleTimeString("en-IN", { timeStyle: "short" })}`;
 };
 
 const STATUS_STYLE = {
@@ -88,6 +86,15 @@ const BookingList = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleApprove = async (bookingId) => {
+    await dispatch(updateBooking({ id: bookingId, data: { status: "Approved" } }));
+    dispatch(fetchBookings());
+  };
+  const handleReject = async (bookingId) => {
+    await dispatch(updateBooking({ id: bookingId, data: { status: "Rejected" } }));
+    dispatch(fetchBookings());
   };
 
   return (
@@ -169,6 +176,8 @@ const BookingList = () => {
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Facility</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Resident</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Schedule</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Payment</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
               <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Action</TableCell>
             </TableRow>
@@ -207,16 +216,28 @@ const BookingList = () => {
                       </div>
                     </TableCell>
 
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px]">
-                          <FiCalendar size={12} className="text-slate-300" /> {formatDate(booking.bookingDate)}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase">
-                          <FiClock size={12} className="text-slate-200" /> 
-                          {booking.startTime && booking.endTime ? `${booking.startTime} – ${booking.endTime}` : "—"}
-                        </div>
+                    <TableCell sx={{ maxWidth: 220 }}>
+                      <div className="flex items-start gap-1.5 text-slate-600 font-bold text-[11px] leading-snug">
+                        <FiClock size={12} className="text-slate-300 mt-0.5 flex-shrink-0" />
+                        <span>{formatRange(booking.startDateTime, booking.endDateTime)}</span>
                       </div>
+                    </TableCell>
+
+                    <TableCell sx={{ fontWeight: 800, color: '#0f172a' }}>
+                      ₹{Number(booking.totalAmount || 0).toLocaleString("en-IN")}
+                    </TableCell>
+
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={booking.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: "9px",
+                          bgcolor: booking.paymentStatus === "paid" ? "#ecfdf5" : "#fffbeb",
+                          color: booking.paymentStatus === "paid" ? "#059669" : "#d97706",
+                        }}
+                      />
                     </TableCell>
 
                     <TableCell>
@@ -235,27 +256,53 @@ const BookingList = () => {
                     </TableCell>
 
                     <TableCell align="center">
-                      <Tooltip title="View Details">
-                        <IconButton 
-                          onClick={() => navigate(`/admin/facility/booking/${booking._id}`)} 
-                          size="small"
-                          sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}
-                        >
-                          <FiEye size={16} />
-                        </IconButton>
-                      </Tooltip>
+                      <div className="flex items-center justify-center gap-1 flex-wrap">
+                        {booking.status === "Pending" &&
+                          booking.paymentStatus === "paid" && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleApprove(booking._id)}
+                                className="text-[10px] font-black uppercase px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleReject(booking._id)}
+                                className="text-[10px] font-black uppercase px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        <Tooltip title="View Details">
+                          <IconButton
+                            onClick={() => navigate(`/admin/facility/booking/${booking._id}`)}
+                            size="small"
+                            sx={{
+                              color: "#2563eb",
+                              bgcolor: "#eff6ff",
+                              borderRadius: "10px",
+                              "&:hover": { bgcolor: "#dbeafe" },
+                            }}
+                          >
+                            <FiEye size={16} />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
               }) : (
               [...Array(rowsPerPage)].map((_, i) => (
-                <TableRow key={i}><TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: '#cbd5e1' }}>Loading bookings...</TableCell></TableRow>
+                <TableRow key={i}><TableCell colSpan={9} sx={{ py: 6, textAlign: 'center', color: '#cbd5e1' }}>Loading bookings...</TableCell></TableRow>
               ))
             )}
 
             {!loading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} sx={{ py: 10, textAlign: 'center', fontWeight: 600, color: '#94a3b8' }}>
+                <TableCell colSpan={9} sx={{ py: 10, textAlign: 'center', fontWeight: 600, color: '#94a3b8' }}>
                   No reservations found.
                 </TableCell>
               </TableRow>

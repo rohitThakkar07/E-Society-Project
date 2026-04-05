@@ -21,7 +21,16 @@ const AddFacility = () => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      bookingType: "hourly",
+      pricePerHour: 0,
+      pricePerDay: 0,
+      openTime: "06:00",
+      closeTime: "22:00",
+      status: "Available",
+    },
+  });
 
   // 1. Fetch data if in Edit Mode
   useEffect(() => {
@@ -37,6 +46,11 @@ const AddFacility = () => {
         name: singleFacility.name || "",
         description: singleFacility.description || "",
         status: singleFacility.status || "Available",
+        bookingType: singleFacility.bookingType || "hourly",
+        pricePerHour: singleFacility.pricePerHour ?? 0,
+        pricePerDay: singleFacility.pricePerDay ?? 0,
+        openTime: singleFacility.openTime || "06:00",
+        closeTime: singleFacility.closeTime || "22:00",
       });
     }
   }, [singleFacility, isEditMode, reset]);
@@ -107,6 +121,62 @@ const AddFacility = () => {
                     <option value="Maintenance">Maintenance</option>
                     <option value="Closed">Closed</option>
                   </select>
+                </div>
+
+                <hr className="my-4" />
+                <h6 className="text-muted mb-3">Booking &amp; pricing</h6>
+
+                <div className="mb-3">
+                  <label className="form-label">Booking type *</label>
+                  <select {...register("bookingType")} className="form-select">
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="both">Both (days + extra hours)</option>
+                  </select>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Price / hour (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      {...register("pricePerHour", { valueAsNumber: true })}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Price / day (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      {...register("pricePerDay", { valueAsNumber: true })}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Opens (24h HH:mm)</label>
+                    <input
+                      type="text"
+                      placeholder="06:00"
+                      {...register("openTime")}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Closes (24h HH:mm)</label>
+                    <input
+                      type="text"
+                      placeholder="22:00"
+                      {...register("closeTime")}
+                      className="form-control"
+                    />
+                  </div>
                 </div>
 
                 <div className="d-flex justify-content-end gap-2 mt-4">

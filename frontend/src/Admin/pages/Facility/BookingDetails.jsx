@@ -6,13 +6,6 @@ import {
   updateBooking,
 } from "../../../store/slices/facilityBookingSlice";
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
-};
-
 const StatusBadge = ({ status }) => {
   const styles = {
     Approved:  "bg-green-100 text-green-700",
@@ -73,15 +66,21 @@ const BookingDetails = () => {
   
   // These fields depend on whether you kept them in the schema or not
   const facilityLocation = booking.facility?.location || "Main Premises"; 
-  const facilityHours = booking.facility?.openingTime && booking.facility?.closingTime
-      ? `${booking.facility.openingTime} – ${booking.facility.closingTime}`
-      : "Open 24/7"; // Fallback if times are not in schema
+  const facilityHours =
+    booking.facility?.openTime && booking.facility?.closeTime
+      ? `${booking.facility.openTime} – ${booking.facility.closeTime}`
+      : "—";
 
-  const timeSlot = booking.startTime && booking.endTime
-      ? `${booking.startTime} – ${booking.endTime}`
+  const range =
+    booking.startDateTime && booking.endDateTime
+      ? `${new Date(booking.startDateTime).toLocaleString("en-IN")} → ${new Date(
+          booking.endDateTime
+        ).toLocaleString("en-IN")}`
       : "—";
 
   const bookingStatus = booking.status || "Pending";
+  const canApprove =
+    bookingStatus === "Pending" && booking.paymentStatus === "paid";
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -109,12 +108,10 @@ const BookingDetails = () => {
             <Field label="Resident Name">{residentName}</Field>
             <Field label="Flat Number">{residentFlat}</Field>
             <Field label="Facility Name">{facilityName}</Field>
-            <Field label="Date">{formatDate(booking.bookingDate)}</Field>
-            <Field label="Time Slot"><span className="font-mono">{timeSlot}</span></Field>
-            
-            {/* ✅ Purpose Fix: Ensure field name matches your response object */}
-            <Field label="Purpose">{booking.purpose || "General Use"}</Field>
-            
+            <Field label="Schedule">{range}</Field>
+            <Field label="Total amount">₹{Number(booking.totalAmount || 0).toLocaleString("en-IN")}</Field>
+            <Field label="Payment">{booking.paymentStatus === "paid" ? "Paid" : "Unpaid"}</Field>
+            <Field label="Purpose">{booking.purpose || "—"}</Field>
             <Field label="Location">{facilityLocation}</Field>
             <Field label="Facility Hours">{facilityHours}</Field>
             <Field label="Status"><StatusBadge status={bookingStatus} /></Field>
@@ -122,9 +119,30 @@ const BookingDetails = () => {
         </div>
 
         {bookingStatus === "Pending" && (
-          <div className="flex gap-3 px-8 py-5 border-t bg-gray-50">
-            <button onClick={handleApprove} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition">Approve</button>
-            <button onClick={handleReject} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition">Reject</button>
+          <div className="flex flex-col gap-2 px-8 py-5 border-t bg-gray-50">
+            {!canApprove && (
+              <p className="text-xs text-amber-800 font-medium">
+                Approve is enabled after the resident pays via Razorpay. You can still reject unpaid requests.
+              </p>
+            )}
+            <div className="flex gap-3 flex-wrap">
+              {canApprove && (
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition"
+                >
+                  Approve
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleReject}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition"
+              >
+                Reject
+              </button>
+            </div>
           </div>
         )}
       </div>

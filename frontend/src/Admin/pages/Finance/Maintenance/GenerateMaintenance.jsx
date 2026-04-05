@@ -430,14 +430,14 @@ export default function GenerateMaintenance() {
 
 function ToggleRow({ label, value, onChange }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-4 ">
       <span className="text-sm text-slate-600 leading-snug">{label}</span>
       <button
         type="button"
         role="switch"
         aria-checked={value}
         onClick={() => onChange(!value)}
-        className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${
+        className={`relative w-11 h-6 rounded shrink-0 transition-colors ${
           value ? "bg-blue-600" : "bg-slate-200"
         }`}
       >

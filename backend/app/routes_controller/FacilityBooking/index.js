@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const controller = require("./lib/controller");
 
-// Must come before /:id to avoid "check-availability" being parsed as an id
+router.post("/preview", controller.previewBooking);
 router.get("/check-availability", controller.checkAvailability);
+router.get("/availability-range", controller.availabilityRange);
+router.get("/my", controller.getMyBookings);
 
 router.post("/create", controller.createBooking);
 router.get("/list", controller.getAllBookings);

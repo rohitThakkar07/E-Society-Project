@@ -54,7 +54,7 @@ const ResidentList = () => {
       {/* HEADER SECTION */}
       <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Resident Directory</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Resident </h1>
           <p className="text-sm text-slate-500 font-medium">Manage society members and occupancy details.</p>
         </div>
         <button 

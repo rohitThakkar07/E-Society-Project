@@ -1,6 +1,7 @@
 const PaymentRecord = require("../../../db/models/paymentRecordModal");
 const Maintenance = require("../../../db/models/maintenanceModel");
 const Resident = require("../../../db/models/residentsModel");
+const FacilityBooking = require("../../../db/models/facilityBookingModel");
 const { createOrder, verifyPaymentSignature, fetchPaymentDetails } = require("../../../../utils/razorpay");
 const { normalizePaymentMode, toSchemaPaymentMethod } = require("./paymentHelpers");
 
@@ -271,6 +272,171 @@ exports.createPayment = async (req, res) => {
     });
   } catch (error) {
     console.error("Payment confirmation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ── FACILITY BOOKING — Razorpay (amount stored on FacilityBooking) ─────────────
+exports.initiateFacilityBookingPayment = async (req, res) => {
+  try {
+    const { facilityBookingId } = req.body;
+    if (!facilityBookingId) {
+      return res.status(400).json({ success: false, message: "facilityBookingId is required" });
+    }
+
+    const booking = await FacilityBooking.findById(facilityBookingId).populate("resident");
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const residentId = req.user?.profileId?.toString();
+    if (req.user?.role !== "admin" && booking.resident?._id?.toString() !== residentId) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    if (booking.status === "Cancelled" || booking.status === "Rejected") {
+      return res.status(400).json({ success: false, message: "This booking cannot be paid" });
+    }
+
+    if (booking.paymentStatus === "paid") {
+      return res.status(400).json({ success: false, message: "Already paid" });
+    }
+
+    const totalAmount = Number(booking.totalAmount) || 0;
+    if (totalAmount <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid booking amount" });
+    }
+
+    const orderResult = await createOrder({
+      amount: totalAmount,
+      currency: "INR",
+      metadata: {
+        facilityBookingId: facilityBookingId.toString(),
+        resident: booking.resident._id.toString(),
+        facility: booking.facility?.toString?.() || String(booking.facility),
+      },
+    });
+
+    if (!orderResult.success) {
+      return res.status(500).json({ success: false, message: orderResult.error });
+    }
+
+    booking.razorpayOrderId = orderResult.orderId;
+    booking.paymentStatus = "unpaid";
+    await booking.save();
+
+    const r = booking.resident;
+    res.json({
+      success: true,
+      data: {
+        orderId: orderResult.orderId,
+        amount: orderResult.amount,
+        amountInPaise: orderResult.amountInPaise,
+        currency: orderResult.currency,
+        resident: {
+          id: r._id,
+          name: `${r.firstName || ""} ${r.lastName || ""}`.trim(),
+          email: r.email || "",
+          phone: r.mobileNumber || r.mobile || "",
+          flatNumber: r.flatNumber,
+        },
+        billDetails: {
+          facilityBookingId,
+          startDateTime: booking.startDateTime,
+          endDateTime: booking.endDateTime,
+          totalAmount,
+          facilityName: booking.facilitySnapshot?.name || "Facility",
+        },
+      },
+      message: "Order created",
+    });
+  } catch (error) {
+    console.error("Facility booking payment initiate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.verifyFacilityBookingPayment = async (req, res) => {
+  try {
+    const { facilityBookingId, orderId, paymentId, signature } = req.body;
+    if (!facilityBookingId || !orderId || !paymentId || !signature) {
+      return res.status(400).json({
+        success: false,
+        message: "facilityBookingId, orderId, paymentId and signature are required",
+      });
+    }
+
+    if (!verifyPaymentSignature({ orderId, paymentId, signature })) {
+      return res.status(403).json({ success: false, message: "Invalid payment signature" });
+    }
+
+    const paymentDetails = await fetchPaymentDetails(paymentId);
+    if (!paymentDetails.success) {
+      return res.status(500).json({ success: false, message: "Failed to fetch payment details" });
+    }
+
+    const booking = await FacilityBooking.findById(facilityBookingId).populate("resident");
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const residentId = req.user?.profileId?.toString();
+    if (req.user?.role !== "admin" && booking.resident?._id?.toString() !== residentId) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    if (booking.razorpayOrderId && booking.razorpayOrderId !== orderId) {
+      return res.status(400).json({ success: false, message: "Order mismatch" });
+    }
+
+    const due = Number(booking.totalAmount);
+    const paid = Number(paymentDetails.amount);
+    if (!Number.isFinite(paid) || Math.abs(paid - due) > 0.05) {
+      return res.status(400).json({ success: false, message: "Payment amount mismatch" });
+    }
+
+    if (booking.paymentStatus === "paid") {
+      return res.status(200).json({
+        success: true,
+        data: {
+          payment: {
+            razorpayPaymentId: booking.razorpayPaymentId,
+            orderId: booking.razorpayOrderId,
+            paidAt: booking.paidAt,
+            amount: booking.totalAmount,
+          },
+          booking: { _id: booking._id, status: booking.status },
+        },
+        message: "Already recorded",
+      });
+    }
+
+    booking.razorpayPaymentId = paymentId;
+    booking.razorpaySignature = signature;
+    booking.razorpayOrderId = orderId;
+    booking.paymentStatus = "paid";
+    booking.paidAt = new Date();
+    await booking.save();
+
+    res.status(201).json({
+      success: true,
+      data: {
+        payment: {
+          paymentId,
+          orderId,
+          paidAt: booking.paidAt,
+          amount: booking.totalAmount,
+        },
+        booking: {
+          _id: booking._id,
+          status: booking.status,
+          paymentStatus: booking.paymentStatus,
+        },
+      },
+      message: "Facility booking payment verified",
+    });
+  } catch (error) {
+    console.error("Facility booking verify error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
