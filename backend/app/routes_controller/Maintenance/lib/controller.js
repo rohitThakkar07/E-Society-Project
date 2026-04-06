@@ -3,6 +3,7 @@ const Resident = require("../../../db/models/residentsModel");
 const Flat = require("../../../db/models/flatModal"); 
 const MaintenanceSettings = require("../../../db/models/maintenanceSetting"); 
 const { sendMaintenanceBillEmail } = require("../../../../utils/maintenanceEmail"); 
+const { syncMaintenanceRecord, syncMaintenanceRecords } = require("./lateFee");
 
 const MONTHS = [
   "January","February","March","April","May","June",
@@ -58,9 +59,6 @@ const generateMonthlyBills = async (req, res) => {
 
     const settings = await MaintenanceSettings.findOne();
     const dueDays        = settings?.dueDays ?? 10;
-    const lateFeeType    = settings?.lateFeeType ?? "none";
-    const lateFeeAmount  = settings?.lateFeeAmount ?? 0;
-    const lateFeePercent = settings?.lateFeePercent ?? 0;
     const sendEmailOnGenerate = settings?.sendEmailOnGenerate !== false;
 
     const results = { created: [], skipped: [], errors: [] };
@@ -86,10 +84,6 @@ const generateMonthlyBills = async (req, res) => {
 
         const baseAmount = flat.monthlyMaintenance || 0;
 
-        let lateFee = 0;
-        if (lateFeeType === "flat")    lateFee = lateFeeAmount;
-        if (lateFeeType === "percent") lateFee = Math.round((baseAmount * lateFeePercent) / 100);
-
         const dueDate = new Date(year, MONTHS.indexOf(month), dueDays);
 
         const maintenance = await Maintenance.create({
@@ -98,7 +92,7 @@ const generateMonthlyBills = async (req, res) => {
           month,
           year,
           amount:   baseAmount,
-          lateFee,
+          lateFee:  0,
           dueDate,
           status:   "Pending",
         });
@@ -111,7 +105,7 @@ const generateMonthlyBills = async (req, res) => {
           flatNumber: flat.flatNumber,
           resident:   `${resident.firstName} ${resident.lastName || ""}`.trim(),
           amount:     baseAmount,
-          lateFee,
+          lateFee:    0,
           email:      resident.email || "—",
         });
 
@@ -211,6 +205,8 @@ const getMyMaintenance = async (req, res) => {
       .populate("resident", "firstName lastName flatNumber wing")
       .populate("flat", "flatNumber wing floor type");
 
+    await syncMaintenanceRecords(data);
+
     res.json({ success: true, data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -221,6 +217,7 @@ const getMyMaintenance = async (req, res) => {
 const getDashboardSummary = async (req, res) => {
   try {
     const all = await Maintenance.find();
+    await syncMaintenanceRecords(all);
 
     const paid    = all.filter(r => r.status === "Paid");
     const pending = all.filter(r => r.status === "Pending");
@@ -271,6 +268,8 @@ const getAllMaintenance = async (req, res) => {
       .populate("flat", "wing flatNumber type")
       .sort({ createdAt: -1 });
 
+    await syncMaintenanceRecords(records);
+
     res.json({ success: true, data: records });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -284,6 +283,7 @@ const getMaintenanceById = async (req, res) => {
       .populate("resident", "flatNumber name phone");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
+    await syncMaintenanceRecord(record);
     res.json({ success: true, data: record });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -302,6 +302,7 @@ const updateMaintenance = async (req, res) => {
     ).populate("resident", "flatNumber name phone");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
+    await syncMaintenanceRecord(record);
     res.json({ success: true, data: record });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -332,6 +333,7 @@ const addPayment = async (req, res) => {
       .populate("resident", "flatNumber name");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
+    await syncMaintenanceRecord(record);
     if (record.status === "Paid") return res.status(400).json({ success: false, message: "Already fully paid." });
 
     record.paymentHistory.push({ amount, mode: normalizeMode(mode), transactionId, date: new Date() });
@@ -365,6 +367,7 @@ const markAsPaid = async (req, res) => {
       .populate("resident", "flatNumber name");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
+    await syncMaintenanceRecord(record);
     if (record.status === "Paid") return res.status(400).json({ success: false, message: "Already paid." });
 
     const totalDue  = record.amount + (record.lateFee || 0);
@@ -413,3 +416,6 @@ module.exports = {
   saveSettings,
   resendEmail,
 };
+
+
+

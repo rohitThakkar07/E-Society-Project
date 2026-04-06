@@ -4,6 +4,7 @@ const Resident = require("../../../db/models/residentsModel");
 const FacilityBooking = require("../../../db/models/facilityBookingModel");
 const { createOrder, verifyPaymentSignature, fetchPaymentDetails } = require("../../../../utils/razorpay");
 const { normalizePaymentMode, toSchemaPaymentMethod } = require("./paymentHelpers");
+const { syncMaintenanceRecord } = require("../../Maintenance/lib/lateFee");
 
 // ── STEP 1: Create Razorpay Order ───────────────────────────────────────────
 // Frontend calls this first to get orderId and payment details
@@ -16,6 +17,8 @@ exports.initiatePayment = async (req, res) => {
     if (!bill) {
       return res.status(404).json({ success: false, message: "Maintenance bill not found" });
     }
+
+    await syncMaintenanceRecord(bill);
 
     if (bill.status === "Paid") {
       return res.status(400).json({ success: false, message: "Bill already paid" });
@@ -112,6 +115,8 @@ exports.createPayment = async (req, res) => {
     if (!bill) {
       return res.status(404).json({ success: false, message: "Bill not found" });
     }
+
+    await syncMaintenanceRecord(bill);
 
     const existingPayment = await PaymentRecord.findOne({ maintenance: maintenanceId, resident: bill.resident, status: "successful" });
     if (existingPayment && bill.status !== "Paid") {
@@ -582,3 +587,4 @@ exports.getReceipt = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+

@@ -40,7 +40,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ SERVE UPLOADED FILES
+// SERVE UPLOADED FILES
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 //upload image
@@ -70,7 +70,7 @@ app.use(errorHandler);
 
 /* ============ SERVER ============ */
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
 
 module.exports = app;

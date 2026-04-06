@@ -5,8 +5,35 @@ const { validationResult } = require("express-validator");
 const { sendResidentWelcomeEmail } = require("../../../../utils/sendMail");
 const Flat = require("../../../db/models/flatModal");
 
+const roleOf = (u) => (u?.role || "").toLowerCase();
+const isStaff = (u) => ["guard", "admin"].includes(roleOf(u));
+
+/** Fields a logged-in resident may change on their own profile */
+const RESIDENT_SELF_UPDATE_FIELDS = [
+  "firstName",
+  "lastName",
+  "gender",
+  "dateOfBirth",
+  "mobileNumber",
+  "email",
+];
+
+async function syncLinkedUserFromResident(resident) {
+  await User.findOneAndUpdate(
+    { profileId: resident._id, role: "resident" },
+    {
+      name: `${resident.firstName} ${resident.lastName || ""}`.trim(),
+      email: resident.email,
+    }
+  );
+}
+
 exports.createResident = async (req, res) => {
   try {
+    if (roleOf(req.user) !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
+
     const { firstName, lastName, email, password, flat, residentType, ...rest } = req.body;
 
     // 🔹 Check flat exists
@@ -72,6 +99,10 @@ exports.createResident = async (req, res) => {
 // In your getAllResidents function:
 exports.getAllResidents = async (req, res) => {
   try {
+    if (!isStaff(req.user)) {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
+
     // Add .populate("flat") here!
     const residents = await Resident.find()
       .populate("flat") 
@@ -91,6 +122,11 @@ exports.getAllResidents = async (req, res) => {
 exports.getResidentById = async (req, res) => {
   console.log("controller resident get by id",req.params.id);
   try {
+    if (roleOf(req.user) === "resident") {
+      if (req.params.id !== req.user.profileId.toString()) {
+        return res.status(403).json({ success: false, message: "Access denied." });
+      }
+    }
 
     const resident = await Resident.findById(req.params.id).populate('flat');
 
@@ -122,39 +158,81 @@ exports.getResidentById = async (req, res) => {
  */
 exports.updateResident = async (req, res) => {
   try {
+    const isSelfResident =
+      roleOf(req.user) === "resident" &&
+      req.params.id === req.user.profileId.toString();
 
-    const { password } = req.body;
-
-    if (password) {
-      req.body.password = await bcrypt.hash(password, 10);
+    if (roleOf(req.user) === "resident" && !isSelfResident) {
+      return res.status(403).json({ success: false, message: "Access denied." });
     }
 
-    const resident = await Resident.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    if (isSelfResident) {
+      const payload = {};
+      for (const key of RESIDENT_SELF_UPDATE_FIELDS) {
+        if (req.body[key] !== undefined) payload[key] = req.body[key];
+      }
+
+      if ("dateOfBirth" in payload) {
+        if (payload.dateOfBirth === "" || payload.dateOfBirth == null) {
+          payload.dateOfBirth = null;
+        } else {
+          const d = new Date(payload.dateOfBirth);
+          payload.dateOfBirth = isNaN(d.getTime()) ? null : d;
+        }
+      }
+
+      const resident = await Resident.findByIdAndUpdate(req.params.id, payload, {
+        new: true,
+        runValidators: true,
+      }).populate("flat");
+
+      if (!resident) {
+        return res.status(404).json({ success: false, message: "Resident not found" });
+      }
+
+      await syncLinkedUserFromResident(resident);
+
+      return res.json({
+        success: true,
+        message: "Profile updated successfully",
+        data: resident,
+      });
+    }
+
+    // Admin / staff: full update (flat assignment, status, etc.)
+    const body = { ...req.body };
+    delete body.password;
+
+    const resident = await Resident.findByIdAndUpdate(req.params.id, body, {
+      new: true,
+      runValidators: true,
+    }).populate("flat");
 
     if (!resident) {
       return res.status(404).json({
         success: false,
-        message: "Resident not found"
+        message: "Resident not found",
       });
     }
+
+    await syncLinkedUserFromResident(resident);
 
     res.json({
       success: true,
       message: "Resident updated successfully",
       data: resident,
     });
-
   } catch (error) {
-
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Email or mobile already in use.",
+      });
+    }
     res.status(500).json({
       success: false,
-      message: "Unable to update resident"
+      message: error.message || "Unable to update resident",
     });
-
   }
 };
 
@@ -164,6 +242,10 @@ exports.updateResident = async (req, res) => {
  */
 exports.deleteResident = async (req, res) => {
   try {
+    if (roleOf(req.user) !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
+
     const { id } = req.params;
 
     const resident = await Resident.findById(id);

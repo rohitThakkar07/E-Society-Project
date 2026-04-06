@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../db/models/userModel"); 
+const User = require("../db/models/userModel");
+const { assertResidentOrGuardProfileActive } = require("../../utils/profileAccess");
 
 const authMiddleware = async (req, res, next) => {
   let token = req.headers.authorization;
@@ -34,6 +35,16 @@ const authMiddleware = async (req, res, next) => {
       return res.status(403).json({
         success: false,
         message: "Account is inactive. Contact admin.",
+      });
+    }
+    const normalizedRole = String(user.role || "").trim().toLowerCase();
+    user.role = normalizedRole;
+
+    const profileCheck = await assertResidentOrGuardProfileActive(user);
+    if (!profileCheck.ok) {
+      return res.status(profileCheck.status || 403).json({
+        success: false,
+        message: profileCheck.message,
       });
     }
 

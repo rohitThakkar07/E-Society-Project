@@ -1,4 +1,5 @@
 const User = require("../../../db/models/userModel");
+const { assertResidentOrGuardProfileActive } = require("../../../../utils/profileAccess");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
@@ -7,7 +8,7 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
-  secure: false, // TLS
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -101,6 +102,14 @@ const login = async (req, res) => {
       });
     }
 
+    const profileCheck = await assertResidentOrGuardProfileActive(user);
+    if (!profileCheck.ok) {
+      return res.status(profileCheck.status || 403).json({
+        success: false,
+        message: profileCheck.message,
+      });
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -125,9 +134,6 @@ const login = async (req, res) => {
 /* Logout */
 const logout = async (req, res) => {
   try {
-    // If you are using Cookies to store the JWT, clear the cookie:
-    // res.clearCookie('token'); 
-
     res.status(200).json({
       success: true,
       message: "Logged out successfully"
