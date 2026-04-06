@@ -69,6 +69,7 @@ router.post("/create", createVisitorValidation, validate, controller.createVisit
 router.get("/list",    controller.getAllVisitors);
 router.get("/stats/today", controller.getTodayStats);
 router.get("/search-residents", controller.searchResidents);
+router.get("/my",               controller.getMyVisitors);
 router.get("/my/:residentId",   controller.getMyVisitors);
 router.get("/:id",  controller.getVisitorById);
 router.put("/update/:id", controller.updateVisitor);

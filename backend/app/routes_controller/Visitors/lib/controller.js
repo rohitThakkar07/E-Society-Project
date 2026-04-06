@@ -184,7 +184,36 @@
 // controllers/visitorController.js
 const Visitor  = require("../../../db/models/visitorModel");
 const Resident = require("../../../db/models/residentsModel");
-const User     = require("../../../db/models/userModel");
+
+const roleOf = (u) => (u?.role || "").toLowerCase();
+const isStaff = (u) => ["guard", "admin"].includes(roleOf(u));
+
+function getResidentIdFromVisitor(visitor) {
+  const vr = visitor.visitingResident;
+  if (!vr) return "";
+  if (typeof vr === "object" && vr._id) return vr._id.toString();
+  return vr.toString();
+}
+
+/** @returns {null | { status: number, message: string }} */
+function assertVisitorVisibleToUser(req, visitor) {
+  if (isStaff(req.user)) return null;
+  if (roleOf(req.user) === "resident") {
+    const vid = getResidentIdFromVisitor(visitor);
+    const pid = req.user.profileId?.toString();
+    if (vid && pid && vid === pid) return null;
+    return { status: 403, message: "Access denied." };
+  }
+  return { status: 403, message: "Access denied." };
+}
+
+function requireStaff(req, res) {
+  if (!isStaff(req.user)) {
+    res.status(403).json({ success: false, message: "Access denied." });
+    return false;
+  }
+  return true;
+}
 
 // ─── OTP HELPER ──────────────────────────────────────────────────────────────
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -260,6 +289,8 @@ const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName
 // ─── CREATE VISITOR & SEND OTP ───────────────────────────────────────────────
 exports.createVisitor = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const {
       visitorName, mobileNumber, visitingResident,
       wing, flatNumber, purpose, vehicleNumber, loggedBy, notes
@@ -315,6 +346,11 @@ exports.verifyOTP = async (req, res) => {
       return res.status(404).json({ success: false, message: "Visitor not found." });
     }
 
+    const denied = assertVisitorVisibleToUser(req, visitor);
+    if (denied) {
+      return res.status(denied.status).json({ success: false, message: denied.message });
+    }
+
     if (visitor.status === "Inside" || visitor.otpVerified) {
       return res.status(400).json({ success: false, message: "Visitor already verified and inside." });
     }
@@ -355,6 +391,12 @@ exports.resendOTP = async (req, res) => {
     if (!visitor) {
       return res.status(404).json({ success: false, message: "Visitor not found." });
     }
+
+    const denied = assertVisitorVisibleToUser(req, visitor);
+    if (denied) {
+      return res.status(denied.status).json({ success: false, message: denied.message });
+    }
+
     if (visitor.status !== "Pending") {
       return res.status(400).json({ success: false, message: "OTP can only be resent for pending visitors." });
     }
@@ -379,6 +421,8 @@ exports.resendOTP = async (req, res) => {
 // ─── DENY VISITOR ─────────────────────────────────────────────────────────────
 exports.denyVisitor = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const { id }    = req.params;
     const { notes } = req.body;
 
@@ -400,6 +444,8 @@ exports.denyVisitor = async (req, res) => {
 // ─── ALLOW ENTRY (Manual — bypass OTP, guard override) ───────────────────────
 exports.allowEntry = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const { id } = req.params;
 
     const visitor = await Visitor.findByIdAndUpdate(
@@ -420,6 +466,8 @@ exports.allowEntry = async (req, res) => {
 // ─── MARK EXIT ────────────────────────────────────────────────────────────────
 exports.markExit = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const { id } = req.params;
 
     const visitor = await Visitor.findById(id);
@@ -476,8 +524,25 @@ exports.getAllVisitors = async (req, res) => {
 // ─── GET VISITORS FOR A SPECIFIC RESIDENT ────────────────────────────────────
 exports.getMyVisitors = async (req, res) => {
   try {
-    const { residentId } = req.params;
+    const role = roleOf(req.user);
+    let residentId;
+
+    if (role === "resident") {
+      residentId = req.user.profileId.toString();
+      if (req.params.residentId && req.params.residentId !== residentId) {
+        return res.status(403).json({ success: false, message: "Access denied." });
+      }
+    } else if (isStaff(req.user)) {
+      residentId = req.params.residentId;
+      if (!residentId) {
+        return res.status(400).json({ success: false, message: "Resident ID is required." });
+      }
+    } else {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
+
     const visitors = await Visitor.find({ visitingResident: residentId })
+      .populate("visitingResident", "firstName lastName mobileNumber flatNumber wing")
       .populate("loggedBy", "name guardId")
       .sort({ createdAt: -1 });
 
@@ -496,6 +561,12 @@ exports.getVisitorById = async (req, res) => {
     if (!visitor) {
       return res.status(404).json({ success: false, message: "Visitor not found." });
     }
+
+    const denied = assertVisitorVisibleToUser(req, visitor);
+    if (denied) {
+      return res.status(denied.status).json({ success: false, message: denied.message });
+    }
+
     res.json({ success: true, data: visitor });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -505,6 +576,8 @@ exports.getVisitorById = async (req, res) => {
 // ─── UPDATE VISITOR ───────────────────────────────────────────────────────────
 exports.updateVisitor = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const visitor = await Visitor.findByIdAndUpdate(req.params.id, req.body, { new: true })
       .populate("visitingResident", "firstName lastName mobileNumber flatNumber wing");
     if (!visitor) {
@@ -519,6 +592,8 @@ exports.updateVisitor = async (req, res) => {
 // ─── DELETE VISITOR ───────────────────────────────────────────────────────────
 exports.deleteVisitor = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const visitor = await Visitor.findByIdAndDelete(req.params.id);
     if (!visitor) {
       return res.status(404).json({ success: false, message: "Visitor not found." });
@@ -532,6 +607,8 @@ exports.deleteVisitor = async (req, res) => {
 // ─── SEARCH RESIDENTS (for guard to find flat/resident) ──────────────────────
 exports.searchResidents = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const { q } = req.query;
     if (!q || q.length < 2) {
       return res.json({ success: true, data: [] });
@@ -559,6 +636,8 @@ exports.searchResidents = async (req, res) => {
 // ─── GET TODAY'S SUMMARY STATS ────────────────────────────────────────────────
 exports.getTodayStats = async (req, res) => {
   try {
+    if (!requireStaff(req, res)) return;
+
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date();
