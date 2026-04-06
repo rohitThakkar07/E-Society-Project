@@ -27,6 +27,9 @@ const VisitorDetail = () => {
 
   const { singleVisitor: visitor, loading } = useSelector((s) => s.visitor || {});
 
+  const user   = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isGuard = ["guard", "admin"].includes(user?.role?.toLowerCase());
+
   const [otp,        setOtp]        = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
   const [showOtpBox, setShowOtpBox] = useState(false);
@@ -233,6 +236,7 @@ const VisitorDetail = () => {
             </div>
           )}
 
+          {isGuard && (
           <div className="flex gap-3">
             <button onClick={handleOverride} disabled={actionLoad}
                     className="flex-1 py-2.5 font-semibold rounded-xl text-sm transition"
@@ -249,11 +253,12 @@ const VisitorDetail = () => {
               {actionLoad ? "…" : "Deny Entry"}
             </button>
           </div>
+          )}
         </div>
       )}
 
       {/* Actions — Inside */}
-      {isInside && (
+      {isInside && isGuard && (
         <button onClick={handleExit} disabled={actionLoad}
                 className="w-full flex items-center justify-center gap-3 text-white font-bold py-4 rounded-2xl text-base transition shadow-xl disabled:opacity-50"
                 style={{ background: "#F59E0B" }}>

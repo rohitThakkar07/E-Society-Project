@@ -5,7 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   Search, LogOut, Clock, ChevronRight, RefreshCw, Users, Filter, MapPin
 } from "lucide-react";
-import { fetchVisitors, markVisitorExit } from "../../store/slices/visitorSlice";
+import { fetchVisitors, fetchMyVisitors, markVisitorExit } from "../../store/slices/visitorSlice";
 import { PageLoaderInline } from "../../components/PageLoader";
 
 const ACCENT = "#4F6EF7";
@@ -29,17 +29,26 @@ const PURPOSE_COLORS = {
 const VisitorLog = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-  const { visitors = [], loading } = useSelector((s) => s.visitor || {});
+  const { visitors = [], myVisitors = [], loading } = useSelector((s) => s.visitor || {});
+
+  const user       = JSON.parse(localStorage.getItem("userData") || "{}");
+  const roleLower  = user?.role?.toLowerCase();
+  const isGuard    = ["guard", "admin"].includes(roleLower);
+  const isResident = roleLower === "resident";
+  const listSource = isResident ? myVisitors : visitors;
 
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatus] = useState(searchParams.get("status") || "All");
   const [dateFilter, setDate]     = useState("");
   const [exitingId, setExitingId] = useState(null);
 
-  useEffect(() => { dispatch(fetchVisitors()); }, [dispatch]);
+  useEffect(() => {
+    if (isResident) dispatch(fetchMyVisitors());
+    else dispatch(fetchVisitors());
+  }, [dispatch, isResident]);
 
   const filtered = useMemo(() => {
-    return (visitors || []).filter((v) => {
+    return (listSource || []).filter((v) => {
       const matchStatus = statusFilter === "All" || v.status === statusFilter;
       const matchSearch =
         v.visitorName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,7 +59,7 @@ const VisitorLog = () => {
         new Date(v.createdAt).toDateString() === new Date(dateFilter).toDateString();
       return matchStatus && matchSearch && matchDate;
     });
-  }, [visitors, search, statusFilter, dateFilter]);
+  }, [listSource, search, statusFilter, dateFilter]);
 
   const handleExit = async (id, e) => {
     e.preventDefault(); e.stopPropagation();
@@ -71,7 +80,7 @@ const VisitorLog = () => {
             {filtered.length} record{filtered.length !== 1 ? "s" : ""} · real-time gate management
           </p>
         </div>
-        <button onClick={() => dispatch(fetchVisitors())}
+        <button onClick={() => dispatch(isResident ? fetchMyVisitors() : fetchVisitors())}
                 className="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
           <RefreshCw size={15} className={`text-slate-500 ${loading ? "animate-spin" : ""}`} />
         </button>
@@ -136,7 +145,7 @@ const VisitorLog = () => {
               const isInside   = v.status === "Inside" || v.status === "Approved";
 
               return (
-                <Link key={v._id} to={`/guard/visitor/${v._id}`}
+                <Link key={v._id} to={isResident ? `/visitors/visitor/${v._id}` : `/guard/visitor/${v._id}`}
                       className="grid px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group items-center"
                       style={{ gridTemplateColumns: "2fr 1.5fr 1.2fr 1fr 1fr" }}>
 
@@ -189,7 +198,7 @@ const VisitorLog = () => {
 
                   {/* Action */}
                   <div className="flex items-center justify-center" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                    {isInside ? (
+                    {isInside && isGuard ? (
                       <button onClick={(e) => handleExit(v._id, e)}
                               disabled={exitingId === v._id}
                               className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition"

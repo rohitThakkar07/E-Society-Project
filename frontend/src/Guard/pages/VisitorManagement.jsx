@@ -8,7 +8,7 @@ import {
   Clock, MapPin, Key, ShieldCheck, RefreshCw, ChevronRight,
   ChevronLeft, Filter
 } from "lucide-react";
-import { fetchVisitors, denyVisitor, approveVisitor } from "../../store/slices/visitorSlice";
+import { fetchVisitors, fetchMyVisitors, denyVisitor, approveVisitor } from "../../store/slices/visitorSlice";
 import { toast } from "react-toastify";
 import { PageLoaderInline } from "../../components/PageLoader";
 
@@ -28,10 +28,13 @@ const ROWS_OPTIONS = [10, 20, 50];
 const VisitorManagement = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
-  const { visitors = [], loading } = useSelector((s) => s.visitor || {});
+  const { visitors = [], myVisitors = [], loading } = useSelector((s) => s.visitor || {});
 
-  const user    = JSON.parse(localStorage.getItem("userData") || "{}");
-  const isGuard = ["guard","admin"].includes(user?.role?.toLowerCase());
+  const user       = JSON.parse(localStorage.getItem("userData") || "{}");
+  const roleLower  = user?.role?.toLowerCase();
+  const isGuard    = ["guard", "admin"].includes(roleLower);
+  const isResident = roleLower === "resident";
+  const listSource = isResident ? myVisitors : visitors;
 
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp,          setOtp]          = useState("");
@@ -42,7 +45,10 @@ const VisitorManagement = () => {
   const [page,        setPage]        = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  useEffect(() => { dispatch(fetchVisitors()); }, [dispatch]);
+  useEffect(() => {
+    if (isResident) dispatch(fetchMyVisitors());
+    else dispatch(fetchVisitors());
+  }, [dispatch, isResident]);
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
@@ -54,7 +60,7 @@ const VisitorManagement = () => {
   };
 
   const filtered = useMemo(() =>
-    (visitors || []).filter((v) => {
+    (listSource || []).filter((v) => {
       const matchStatus = filter === "All" || v.status === filter;
       const q = search.toLowerCase();
       const matchSearch =
@@ -64,7 +70,7 @@ const VisitorManagement = () => {
         v.flatNumber?.toLowerCase().includes(q);
       return matchStatus && matchSearch;
     }),
-    [visitors, filter, search]
+    [listSource, filter, search]
   );
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -95,12 +101,13 @@ const VisitorManagement = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => dispatch(fetchVisitors())}
+            onClick={() => dispatch(isResident ? fetchMyVisitors() : fetchVisitors())}
             className="rounded-md border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50"
             title="Refresh"
           >
             <RefreshCw size={15} className={`text-slate-500 ${loading ? "animate-spin" : ""}`} />
           </button>
+          {isGuard && (
           <button
             type="button"
             onClick={() => navigate("/guard/visitor/add")}
@@ -109,6 +116,7 @@ const VisitorManagement = () => {
           >
             <Plus size={15} /> New entry
           </button>
+          )}
         </div>
       </motion.div>
 
@@ -178,7 +186,9 @@ const VisitorManagement = () => {
                 layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                onClick={() => navigate(`/guard/visitor/${v._id}`)}
+                onClick={() =>
+                  navigate(isResident ? `/visitors/visitor/${v._id}` : `/guard/visitor/${v._id}`)
+                }
                 className="group grid cursor-pointer items-center gap-3 border-b border-slate-100 px-4 py-4 transition-colors last:border-0 hover:bg-slate-50/90 sm:px-5"
                 style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr" }}
               >

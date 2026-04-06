@@ -62,7 +62,7 @@ const AddEditFlat = () => {
           isEditMode ? "Flat updated successfully" : "Flat added successfully"
         );
 
-        navigate("/admin/flats");
+        navigate("/admin/flat/list");
       } else {
         toast.error(response.data.message);
       }
