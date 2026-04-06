@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import {
@@ -11,25 +11,52 @@ import {
   Calendar,
   Mail,
   Sparkles,
+  X,
+  Loader2,
 } from "lucide-react";
 import dayjs from "dayjs";
-import { fetchResidentById } from "../../store/slices/residentSlice";
+import { toast } from "react-toastify";
+import { fetchResidentById, updateResident } from "../../store/slices/residentSlice";
 import { PageLoader } from "../../components/PageLoader";
+
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  gender: "Male",
+  dateOfBirth: "",
+  mobileNumber: "",
+  email: "",
+};
 
 const ProfilePage = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
   const id = user?.profileId;
+  const isResident = user?.role?.toLowerCase() === "resident";
 
   const [activeTab, setActiveTab] = useState("Personal");
-  const dispatch = useDispatch();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(emptyForm);
 
-  const { singleResident: data, profileLoading } = useSelector((state) => state.resident);
+  const dispatch = useDispatch();
+  const { singleResident: data, profileLoading, loading } = useSelector((state) => state.resident);
 
   useEffect(() => {
     if (id) {
       dispatch(fetchResidentById(id));
     }
   }, [id, dispatch]);
+
+  useEffect(() => {
+    if (!data || editing) return;
+    setForm({
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      gender: data.gender === "Female" ? "Female" : "Male",
+      dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
+      mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
+      email: data.email || "",
+    });
+  }, [data, editing]);
 
   const tabs = [
     { id: "Personal", icon: <User size={18} />, label: "Personal" },
@@ -38,9 +65,76 @@ const ProfilePage = () => {
     { id: "Address", icon: <MapPin size={18} />, label: "Flat" },
   ];
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "mobileNumber") {
+      setForm((prev) => ({ ...prev, [name]: value.replace(/\D/g, "").slice(0, 10) }));
+      return;
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    if (data) {
+      setForm({
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        gender: data.gender === "Female" ? "Female" : "Male",
+        dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
+        mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
+        email: data.email || "",
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!id) return;
+    const payload = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      gender: form.gender,
+      dateOfBirth: form.dateOfBirth || null,
+      mobileNumber: form.mobileNumber.replace(/\D/g, "").slice(0, 10),
+      email: form.email.trim().toLowerCase(),
+    };
+
+    if (payload.mobileNumber.length !== 10) {
+      toast.error("Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    const result = await dispatch(updateResident({ id, formData: payload }));
+    if (result.meta.requestStatus === "fulfilled" && result.payload) {
+      const updated = result.payload;
+      try {
+        const u = JSON.parse(localStorage.getItem("userData") || "{}");
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            ...u,
+            name: `${updated.firstName || ""} ${updated.lastName || ""}`.trim(),
+            email: updated.email,
+          })
+        );
+        window.dispatchEvent(new Event("esociety-userdata-updated"));
+      } catch {
+        /* ignore */
+      }
+      setEditing(false);
+    }
+  };
+
+  const mobileValid = useMemo(() => {
+    const d = (form.mobileNumber || "").replace(/\D/g, "");
+    return d.length === 10;
+  }, [form.mobileNumber]);
+
   if (profileLoading || !data) {
     return <PageLoader message="Loading profile…" />;
   }
+
+  const showEditChrome = isResident;
 
   return (
     <div className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 font-sans text-[var(--text)] transition-colors duration-300 sm:p-6">
@@ -55,7 +149,11 @@ const ProfilePage = () => {
               <Sparkles size={12} /> Account
             </span>
             <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">My profile</h1>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">Your details as registered with the society</p>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              {showEditChrome
+                ? "Update your personal and contact details. Flat assignment is managed by the office."
+                : "Your details as registered with the society"}
+            </p>
           </div>
         </motion.div>
 
@@ -88,17 +186,10 @@ const ProfilePage = () => {
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="absolute -bottom-1 -right-1 rounded-md bg-[var(--accent)] p-2 text-white shadow-md transition hover:opacity-90"
-                    title="Edit photo"
-                  >
-                    <Edit2 size={14} />
-                  </button>
                 </div>
 
                 <h2 className="mt-4 text-center text-xl font-black text-[var(--text)]">
-                  {data.firstName} {data.lastName}
+                  {editing ? `${form.firstName} ${form.lastName}`.trim() || "—" : `${data.firstName} ${data.lastName}`}
                 </h2>
 
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
@@ -113,7 +204,7 @@ const ProfilePage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Email</p>
-                      <p className="truncate text-sm font-bold">{data.email}</p>
+                      <p className="truncate text-sm font-bold">{editing ? form.email || "—" : data.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-3">
@@ -122,7 +213,7 @@ const ProfilePage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Phone</p>
-                      <p className="text-sm font-bold">{data.mobileNumber}</p>
+                      <p className="text-sm font-bold">{editing ? form.mobileNumber || "—" : data.mobileNumber}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between rounded-md border border-[var(--border)] px-3 py-2">
@@ -170,24 +261,78 @@ const ProfilePage = () => {
 
               {activeTab === "Personal" && (
                 <div className="grid gap-6 md:grid-cols-2">
-                  <InputGroup label="First name" value={data.firstName} />
-                  <InputGroup label="Last name" value={data.lastName} />
-                  <InputGroup
-                    label="Date of birth"
-                    icon={<Calendar size={14} />}
-                    value={data.dateOfBirth ? dayjs(data.dateOfBirth).format("DD MMM YYYY") : "—"}
-                  />
-                  <InputGroup label="Gender" value={data.gender} />
-                  <InputGroup label="Resident type" value={data.residentType} />
+                  {editing && showEditChrome ? (
+                    <>
+                      <EditableField label="First name" name="firstName" value={form.firstName} onChange={handleChange} />
+                      <EditableField label="Last name" name="lastName" value={form.lastName} onChange={handleChange} />
+                      <div className="group flex flex-col">
+                        <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                          Date of birth
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="date"
+                            name="dateOfBirth"
+                            value={form.dateOfBirth}
+                            onChange={handleChange}
+                            className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)]"
+                          />
+                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+                            <Calendar size={14} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="group flex flex-col">
+                        <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Gender</label>
+                        <select
+                          name="gender"
+                          value={form.gender}
+                          onChange={handleChange}
+                          className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)]"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </div>
+                      <InputGroup label="Resident type" value={data.residentType} />
+                    </>
+                  ) : (
+                    <>
+                      <InputGroup label="First name" value={data.firstName} />
+                      <InputGroup label="Last name" value={data.lastName} />
+                      <InputGroup
+                        label="Date of birth"
+                        icon={<Calendar size={14} />}
+                        value={data.dateOfBirth ? dayjs(data.dateOfBirth).format("DD MMM YYYY") : "—"}
+                      />
+                      <InputGroup label="Gender" value={data.gender} />
+                      <InputGroup label="Resident type" value={data.residentType} />
+                    </>
+                  )}
                 </div>
               )}
 
               {activeTab === "Contact" && (
                 <div className="grid gap-6 md:grid-cols-2">
-                  <InputGroup label="Primary mobile" value={data.mobileNumber} />
-                  <InputGroup label="Email" value={data.email} />
-                  <InputGroup label="Emergency contact" value={data.emergencyContactName} />
-                  <InputGroup label="Emergency number" value={data.emergencyContactNumber} />
+                  {editing && showEditChrome ? (
+                    <>
+                      <EditableField
+                        label="Primary mobile (10 digits)"
+                        name="mobileNumber"
+                        value={form.mobileNumber}
+                        onChange={handleChange}
+                        inputMode="numeric"
+                        maxLength={10}
+                        error={form.mobileNumber.length > 0 && !mobileValid ? "Enter a valid 10-digit mobile number" : null}
+                      />
+                      <EditableField label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
+                    </>
+                  ) : (
+                    <>
+                      <InputGroup label="Primary mobile" value={data.mobileNumber} />
+                      <InputGroup label="Email" value={data.email} />
+                    </>
+                  )}
                 </div>
               )}
 
@@ -206,24 +351,57 @@ const ProfilePage = () => {
               )}
 
               {activeTab === "Address" && (
-                <div className="grid gap-6 md:grid-cols-2">
-                  <InputGroup label="Wing / block" value={data.wing} />
-                  <InputGroup label="Floor" value={data.flat?.floor} />
-                  <InputGroup label="Flat number" value={data.flatNumber} />
-                  <InputGroup label="Flat type (BHK)" value={data.flat?.type} />
-                  <InputGroup label="Block" value={data.flat?.block} />
-                  <InputGroup
-                    label="Monthly maintenance"
-                    value={data.flat?.monthlyMaintenance ? `₹${data.flat.monthlyMaintenance}` : "—"}
-                  />
+                <div className="space-y-6">
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Wing, flat, and billing are assigned by the society office. Contact admin if you need a correction.
+                  </p>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <InputGroup label="Wing / block" value={data.wing} />
+                    <InputGroup label="Floor" value={data.flat?.floor} />
+                    <InputGroup label="Flat number" value={data.flatNumber} />
+                    <InputGroup label="Flat type (BHK)" value={data.flat?.type} />
+                    <InputGroup label="Block" value={data.flat?.block} />
+                    <InputGroup
+                      label="Monthly maintenance"
+                      value={data.flat?.monthlyMaintenance ? `₹${data.flat.monthlyMaintenance}` : "—"}
+                    />
+                  </div>
                 </div>
               )}
 
-              <div className="mt-10 flex justify-end border-t border-[var(--border)] pt-6">
-                <button type="button" className="user-btn-primary flex items-center gap-2 rounded-md px-6 py-2.5">
-                  <Edit2 size={16} /> Request update
-                </button>
-              </div>
+              {showEditChrome && (
+                <div className="mt-10 flex flex-wrap justify-end gap-3 border-t border-[var(--border)] pt-6">
+                  {editing ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-5 py-2.5 text-sm font-bold text-[var(--text)] transition hover:bg-[var(--accent-soft)] disabled:opacity-50"
+                      >
+                        <X size={16} /> Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={loading || !mobileValid || !form.email.trim()}
+                        className="user-btn-primary inline-flex items-center gap-2 rounded-md px-6 py-2.5 disabled:opacity-50"
+                      >
+                        {loading ? <Loader2 size={16} className="animate-spin" /> : <Edit2 size={16} />}
+                        Save changes
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditing(true)}
+                      className="user-btn-primary inline-flex items-center gap-2 rounded-md px-6 py-2.5"
+                    >
+                      <Edit2 size={16} /> Edit profile
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -243,6 +421,24 @@ const InputGroup = ({ label, value, icon }) => (
       />
       {icon && <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">{icon}</div>}
     </div>
+  </div>
+);
+
+const EditableField = ({ label, name, value, onChange, type = "text", error, inputMode, maxLength }) => (
+  <div className="group flex flex-col">
+    <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      inputMode={inputMode}
+      maxLength={maxLength}
+      className={`w-full rounded-md border bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)] ${
+        error ? "border-red-400" : "border-[var(--border)]"
+      }`}
+    />
+    {error && <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>}
   </div>
 );
 

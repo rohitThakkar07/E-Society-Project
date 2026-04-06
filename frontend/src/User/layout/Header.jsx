@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,12 +27,19 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [userDataTick, setUserDataTick] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { dark, toggle } = useTheme();
 
-  const user = JSON.parse(localStorage.getItem("userData") || "{}");
+  useEffect(() => {
+    const onUserData = () => setUserDataTick((t) => t + 1);
+    window.addEventListener("esociety-userdata-updated", onUserData);
+    return () => window.removeEventListener("esociety-userdata-updated", onUserData);
+  }, []);
+
+  const user = useMemo(() => JSON.parse(localStorage.getItem("userData") || "{}"), [userDataTick]);
   const role = user?.role?.toLowerCase();
   const isLoggedIn = !!localStorage.getItem("token");
 
@@ -70,7 +77,6 @@ const Header = () => {
       children: [
         { label: "Visitor Management", to: "/visitors", roles: ["admin", "resident"], desc: "Track arrivals", icon: ShieldCheck },
         { label: "Book Facilities", to: "/facilities", roles: ["resident"], desc: "Clubhouse & Gym", icon: Calendar },
-        { label: "Raise Complaint", to: "/raise-complaint", roles: ["resident"], desc: "Quick resolutions", icon: Megaphone },
         { label: "Gate Entry Logs", to: "/guard/visitors", roles: ["guard", "admin"], desc: "Security logs", icon: Activity },
       ],
     },

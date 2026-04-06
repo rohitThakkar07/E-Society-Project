@@ -161,7 +161,7 @@ const Home = () => {
                     key={i}
                     className="h-14 rounded-2xl flex items-center px-4 gap-4 border"
                     style={{ background: "var(--accent-bg)", borderColor: "var(--border)" }}
-                  >
+                  >asdfasf
                     <div className="w-8 h-8 rounded-full animate-pulse opacity-60" style={{ background: "var(--border)" }} />
                     <div className="h-2 rounded-full flex-1 max-w-[55%] opacity-40" style={{ background: "var(--border)" }} />
                   </div>

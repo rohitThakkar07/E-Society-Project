@@ -9,9 +9,10 @@ import {
 import { fetchMyMaintenance } from "../../store/slices/maintenanceSlice";
 import { fetchPaymentHistory } from "../../store/slices/paymentSlice";
 import RazorpayPaymentModal from "../components/RazorpayPaymentModal";
+import PaymentReceipt from "../components/PaymentReceipt";
 
 function formatPaymentMethod(m) {
-  if (m == null || m === "") return "—";
+  if (m == null || m === "") return "-";
   const x = String(m).toLowerCase();
   if (x === "upi") return "UPI";
   if (x === "card") return "Card";
@@ -31,6 +32,10 @@ const PayMaintenance = () => {
     isOpen: false,
     maintenanceId: null,
     billDetails: null,
+  });
+  const [receiptModal, setReceiptModal] = useState({
+    isOpen: false,
+    receiptNumber: null,
   });
   const [activeTab, setActiveTab] = useState("pay");
 
@@ -82,6 +87,14 @@ const PayMaintenance = () => {
     });
   };
 
+  const openReceiptModal = (receiptNumber) => {
+    if (!receiptNumber) return;
+    setReceiptModal({
+      isOpen: true,
+      receiptNumber,
+    });
+  };
+
   const statusConfig = {
     paid: "bg-emerald-100 text-emerald-700",
     pending: "bg-amber-100 text-amber-700",
@@ -111,7 +124,7 @@ const PayMaintenance = () => {
               <p className="text-slate-200/90 text-xs font-bold uppercase tracking-widest mb-2">
                 Total outstanding
               </p>
-              <p className="text-4xl font-black">₹{totalDue.toLocaleString("en-IN")}</p>
+              <p className="text-4xl font-black">Rs. {totalDue.toLocaleString("en-IN")}</p>
               <div className="mt-4 flex items-center gap-2 text-slate-200/80 text-xs">
                 <Clock size={12} /> {pending.length} bill{pending.length !== 1 ? "s" : ""}{" "}
                 pending
@@ -178,11 +191,11 @@ const PayMaintenance = () => {
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
                     <div className="text-left sm:text-right">
                       <p className="text-lg font-black text-slate-900 tabular-nums">
-                        ₹{(r.amount + (r.lateFee || 0)).toLocaleString("en-IN")}
+                        Rs. {(r.amount + (r.lateFee || 0)).toLocaleString("en-IN")}
                       </p>
                       {r.lateFee > 0 && (
                         <p className="text-[10px] text-red-500 font-bold">
-                          Includes ₹{r.lateFee} late fee
+                          Includes Rs. {r.lateFee.toLocaleString("en-IN")} late fee
                         </p>
                       )}
                     </div>
@@ -223,22 +236,21 @@ const PayMaintenance = () => {
                           {p.maintenance?.month} {p.maintenance?.year}
                         </p>
                         <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">
-                          {formatPaymentMethod(p.paymentMethod)} •{" "}
-                          {p.paidAt
-                            ? new Date(p.paidAt).toLocaleDateString()
-                            : "—"}{" "}
-                          • {p.receiptNumber || "—"}
+                          {formatPaymentMethod(p.paymentMethod)} � {p.paidAt
+                            ? new Date(p.paidAt).toLocaleDateString("en-IN")
+                            : "-"} � {p.receiptNumber || "-"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
                       <p className="font-black text-slate-900 tabular-nums">
-                        ₹{(p.totalAmount ?? 0).toLocaleString("en-IN")}
+                        Rs. {(p.totalAmount ?? 0).toLocaleString("en-IN")}
                       </p>
                       <button
                         type="button"
+                        onClick={() => openReceiptModal(p.receiptNumber)}
                         className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100"
-                        title="Download (coming soon)"
+                        title="Download receipt"
                       >
                         <Download size={18} />
                       </button>
@@ -264,6 +276,12 @@ const PayMaintenance = () => {
           dispatch(fetchMyMaintenance());
           dispatch(fetchPaymentHistory());
         }}
+      />
+
+      <PaymentReceipt
+        isOpen={receiptModal.isOpen}
+        onClose={() => setReceiptModal({ isOpen: false, receiptNumber: null })}
+        receiptNumber={receiptModal.receiptNumber}
       />
     </div>
   );
