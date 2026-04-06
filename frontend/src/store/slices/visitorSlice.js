@@ -54,9 +54,9 @@ export const fetchTodayStats = createAsyncThunk(
 
 export const fetchMyVisitors = createAsyncThunk(
   "visitor/fetchMyVisitors",
-  async (residentId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await API.get(`/visitor/my/${residentId}`);
+      const response = await API.get("/visitor/my");
       return response.data.data;
     } catch (err) {
       return rejectWithValue(parseError(err));

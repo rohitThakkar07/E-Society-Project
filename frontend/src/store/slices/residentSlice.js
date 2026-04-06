@@ -78,9 +78,20 @@ export const updateResident = createAsyncThunk(
       const state = getState();
       const currentResident = state.resident.singleResident;
 
-      const hasChanged = Object.keys(formData).some(
-        (key) => String(currentResident?.[key] || "") !== String(formData[key] || "")
-      );
+      const dateStr = (v) => {
+        if (v == null || v === "") return "";
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+      };
+
+      const hasChanged = Object.keys(formData).some((key) => {
+        const cur = currentResident?.[key];
+        const next = formData[key];
+        if (key === "dateOfBirth") {
+          return dateStr(cur) !== dateStr(next);
+        }
+        return String(cur ?? "").trim() !== String(next ?? "").trim();
+      });
 
       if (!hasChanged) {
         toast.warning("No changes detected.");
