@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+const { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
 const ResidentValidation = [
   // Personal Info
@@ -11,7 +12,6 @@ body("gender")
   
   // Contact Info
   body("mobileNumber").notEmpty().withMessage("Mobile number is required").matches(/^[0-9]{10}$/).withMessage("Mobile number must be exactly 10 digits"),
-  // Note: checkFalsy prevents empty strings from triggering 'Invalid email' errors
   body("email").optional({ checkFalsy: true }).trim().isEmail().withMessage("Invalid email").normalizeEmail(),
 
  // Flat Details - Allow fallback for denormalization
@@ -32,7 +32,9 @@ body("flatNumber").trim().notEmpty().withMessage("Flat number is required"),
   
   // Status & Account
   body("status").optional({ checkFalsy: true }).isIn(["Active", "Inactive"]).withMessage("Status must be Active or Inactive"),
-  body("password").notEmpty().withMessage("Password is required")
+  body("password")
+    .notEmpty().withMessage("Password is required")
+    .matches(STRONG_PASSWORD_REGEX).withMessage(STRONG_PASSWORD_MESSAGE)
 ];
 
 module.exports = {

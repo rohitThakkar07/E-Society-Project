@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const nodemailer = require("nodemailer");
+const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -216,8 +217,8 @@ const resetPassword = async (req, res) => {
     if (!user.resetTokenExpiry || user.resetTokenExpiry < new Date())
       return res.status(400).json({ message: "OTP has expired. Please request a new one." });
 
-    if (newPassword.length < 6)
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    if (!isStrongPassword(newPassword))
+      return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 

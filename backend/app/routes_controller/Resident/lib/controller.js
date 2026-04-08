@@ -36,13 +36,13 @@ exports.createResident = async (req, res) => {
 
     const { firstName, lastName, email, password, flat, residentType, ...rest } = req.body;
 
-    // 🔹 Check flat exists
+    //  Check flat exists
     const flatDoc = await Flat.findById(flat);
     if (!flatDoc) {
       return res.status(404).json({ success: false, message: "Flat not found" });
     }
 
-    // 🔹 Prevent assigning if already occupied
+    //  Prevent assigning if already occupied
     if (flatDoc.status === "Occupied") {
       return res.status(400).json({
         success: false,

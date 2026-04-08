@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { sendGuardWelcomeEmail } = require("../../../../utils/sendMail");
 const Guard = require("../../../db/models/guardModal");
 const User = require("../../../db/models/userModel");
+const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
 // ✅ CREATE GUARD
 exports.createGuard = async (req, res) => {
@@ -39,6 +40,13 @@ exports.createGuard = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Missing required fields: firstName, lastName, mobileNumber, password, city",
+      });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message: STRONG_PASSWORD_MESSAGE,
       });
     }
 
@@ -269,6 +277,13 @@ exports.updateGuard = async (req, res) => {
 
     // Handle password update
     if (password) {
+      if (!isStrongPassword(password)) {
+        return res.status(400).json({
+          success: false,
+          message: STRONG_PASSWORD_MESSAGE,
+        });
+      }
+
       updateData.password = await bcrypt.hash(password, 10);
       
       // Update user password as well

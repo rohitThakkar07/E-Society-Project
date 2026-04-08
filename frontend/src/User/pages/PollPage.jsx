@@ -19,17 +19,15 @@ import {
   createPoll,
   castVote,
   deletePoll,
-  closePoll
+  closePoll,
 } from "../../store/slices/pollSlice";
 import { SkeletonGrid } from "../../components/PageLoader";
 
 const COLORS = [
-  { fill: "bg-blue-500", soft: "bg-blue-50 border-blue-200", text: "text-blue-700", glow: "rgba(59,130,246,0.18)" },
-  { fill: "bg-violet-500", soft: "bg-violet-50 border-violet-200", text: "text-violet-700", glow: "rgba(139,92,246,0.18)" },
-  { fill: "bg-emerald-500", soft: "bg-emerald-50 border-emerald-200", text: "text-emerald-700", glow: "rgba(16,185,129,0.18)" },
-  { fill: "bg-amber-500", soft: "bg-amber-50 border-amber-200", text: "text-amber-700", glow: "rgba(245,158,11,0.18)" },
-  { fill: "bg-rose-500", soft: "bg-rose-50 border-rose-200", text: "text-rose-700", glow: "rgba(244,63,94,0.18)" },
-  { fill: "bg-cyan-500", soft: "bg-cyan-50 border-cyan-200", text: "text-cyan-700", glow: "rgba(6,182,212,0.18)" },
+  { fill: "bg-blue-500", soft: "bg-blue-500/10", text: "text-blue-500", glow: "rgba(59,130,246,0.3)" },
+  { fill: "bg-indigo-500", soft: "bg-indigo-500/10", text: "text-indigo-500", glow: "rgba(99,102,241,0.3)" },
+  { fill: "bg-emerald-500", soft: "bg-emerald-500/10", text: "text-emerald-500", glow: "rgba(16,185,129,0.3)" },
+  { fill: "bg-amber-500", soft: "bg-amber-500/10", text: "text-amber-500", glow: "rgba(245,158,11,0.3)" },
 ];
 
 const getTotalVotes = (poll) => (poll.options || []).reduce((sum, o) => sum + (o.votes || 0), 0);
@@ -39,7 +37,8 @@ const isPollClosed = (poll) => {
   return poll.isActive === false || isExpiredByDate;
 };
 
-const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
+// --- POLL CARD COMPONENT ---
+const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose, index }) => {
   const totalVotes = getTotalVotes(poll);
   const closed = isPollClosed(poll);
   const isExpiredByDate = poll.expiresAt && new Date(poll.expiresAt) < new Date();
@@ -55,68 +54,60 @@ const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
 
   return (
     <article
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all duration-300 ${
-        closed ? "opacity-90" : "hover:-translate-y-1.5 hover:shadow-xl"
+      className={`group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-7 transition-all duration-500 ${
+        closed ? "opacity-90" : "hover:-translate-y-2 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10"
       }`}
+      style={{ animation: `fadeUp 0.6s ease forwards ${index * 0.1}s`, opacity: 0 }}
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[var(--accent)] via-sky-400 to-emerald-400" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 opacity-60" />
 
-      <div className="p-6 pb-4">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {closed ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-                <Lock size={10} />
-                {isExpiredByDate ? "Expired" : "Closed"}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Poll
-              </span>
-            )}
-            {hasVoted && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
-                <UserCheck size={10} />
-                Your vote recorded
-              </span>
-            )}
-          </div>
-
-          {isAdmin && (
-            <div className="flex gap-1">
-              {!closed && (
-                <button onClick={() => onClose(poll._id)} className="rounded-xl p-2 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600">
-                  <Lock size={14} />
-                </button>
-              )}
-              <button onClick={() => onDelete(poll._id)} className="rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600">
-                <Trash2 size={14} />
-              </button>
-            </div>
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex flex-wrap gap-2">
+          {closed ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-500/20">
+              <Lock size={10} /> {isExpiredByDate ? "Expired" : "Closed"}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 border border-emerald-500/20">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Poll
+            </span>
+          )}
+          {hasVoted && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-500 border border-indigo-500/20">
+              <UserCheck size={10} /> Recorded
+            </span>
           )}
         </div>
 
-        <div className="mb-5">
-          <h3 className="mb-2 text-xl font-black leading-tight text-[var(--text)]">{poll.question}</h3>
-          <p className="line-clamp-2 text-sm leading-6 text-[var(--text-muted)]">
-            {poll.description || "Community opinion poll."}
-          </p>
-        </div>
+        {isAdmin && (
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => onDelete(poll._id)} className="rounded-xl bg-rose-500/10 p-2 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
+      </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            <Users size={14} />
-            {totalVotes} votes
-          </div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            <Clock size={14} />
-            {closed ? "Results locked" : "Vote now"}
-          </div>
+      <div className="mb-6">
+        <h3 className="text-xl font-black leading-tight text-[var(--text)] group-hover:text-indigo-400 transition-colors">{poll.question}</h3>
+        <p className="mt-2 line-clamp-2 text-xs font-medium text-[var(--text-muted)] opacity-70">
+          {poll.description || "Community opinion poll."}
+        </p>
+      </div>
+
+      <div className="mb-6 flex items-center justify-between rounded-2xl bg-[var(--bg)] px-4 py-3 border border-[var(--border)] group-hover:border-indigo-500/30 transition-all">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+          <Users size={14} className="text-indigo-500" />
+          {totalVotes} Votes
+        </div>
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+          <Clock size={14} className="text-indigo-500" />
+          {closed ? "Locked" : "Active"}
         </div>
       </div>
 
-      <div className="space-y-3 px-6 pb-6">
+      <div className="space-y-3 pb-2 flex-grow">
         {(poll.options || []).map((opt, idx) => {
           const palette = COLORS[idx % COLORS.length];
           const pct = getPercent(opt.votes || 0, totalVotes);
@@ -124,50 +115,38 @@ const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
           const showResults = closed || hasVoted;
           const isLeading = winningVotes > 0 && (opt.votes || 0) === winningVotes;
 
-          if (showResults) {
-            return (
-              <div
-                key={idx}
-                className={`relative overflow-hidden rounded-2xl border transition-all ${
-                  isUserChoice ? "border-blue-200 bg-blue-50 ring-1 ring-blue-100" : `bg-slate-50 ${palette.soft}`
-                }`}
-                style={{ boxShadow: `0 10px 30px -25px ${palette.glow}` }}
-              >
-                <div
-                  className={`absolute left-0 top-0 h-full ${isUserChoice ? "bg-blue-500" : palette.fill} opacity-20 transition-all duration-1000`}
-                  style={{ width: `${pct}%` }}
-                />
-                <div className="relative flex items-center justify-between gap-3 px-4 py-3.5">
-                  <div className={`flex items-center gap-2 text-sm font-bold ${isUserChoice ? "text-blue-700" : "text-slate-700"}`}>
-                    {isUserChoice && <UserCheck size={15} className="text-blue-600" />}
-                    {isLeading && !isUserChoice && <CheckCircle2 size={15} className={palette.text} />}
-                    <span>{opt.text}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-xs font-black ${isUserChoice ? "text-blue-600" : "text-slate-500"}`}>{pct}%</div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{opt.votes || 0} votes</div>
+          return (
+            <div key={idx} className="relative">
+              {showResults ? (
+                <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${isUserChoice ? "border-indigo-500/50 bg-indigo-500/5" : "border-[var(--border)] bg-[var(--bg)]"}`}>
+                  <div 
+                    className={`absolute inset-y-0 left-0 ${isUserChoice ? "bg-indigo-500/20" : "bg-slate-500/10"} transition-all duration-1000 ease-out`}
+                    style={{ width: `${pct}%`, boxShadow: isUserChoice ? `0 0 15px ${palette.glow}` : "none" }}
+                  />
+                  <div className="relative flex items-center justify-between gap-3 px-4 py-3.5">
+                    <div className={`flex items-center gap-2 text-sm font-bold ${isUserChoice ? "text-indigo-500" : "text-[var(--text)]"}`}>
+                      {isUserChoice && <UserCheck size={14} />}
+                      {isLeading && !isUserChoice && <CheckCircle2 size={14} className="text-emerald-500" />}
+                      <span>{opt.text}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-black ${isUserChoice ? "text-indigo-500" : "text-[var(--text)]"}`}>{pct}%</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          }
-
-          return (
-            <button
-              key={idx}
-              disabled={!canVote}
-              onClick={() => onVote(poll._id, idx)}
-              className={`w-full rounded-2xl border px-5 py-4 text-left text-sm font-bold transition-all active:scale-[0.98] ${
-                canVote
-                  ? "border-slate-200 bg-[var(--bg)] text-slate-700 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50"
-                  : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
-              }`}
-            >
-              <span className="flex items-center justify-between gap-3">
-                <span>{opt.text}</span>
-                <ArrowRight size={16} className={canVote ? "text-blue-500" : "text-slate-300"} />
-              </span>
-            </button>
+              ) : (
+                <button
+                  disabled={!canVote}
+                  onClick={() => onVote(poll._id, idx)}
+                  className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-left text-sm font-bold text-[var(--text-muted)] transition-all hover:border-indigo-500/50 hover:bg-indigo-500/5 hover:text-indigo-500 active:scale-95"
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{opt.text}</span>
+                    <ArrowRight size={16} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                  </div>
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -177,9 +156,7 @@ const PollCard = ({ poll, userId, isAdmin, onVote, onDelete, onClose }) => {
 
 const PollsPage = () => {
   const dispatch = useDispatch();
-  const pollState = useSelector((state) => state.poll);
-  const { list: polls = [], loading } = pollState || {};
-
+  const { list: polls = [], loading } = useSelector((state) => state.poll || {});
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
   const userId = user?.profileId || user?._id;
   const isAdmin = user?.role?.toLowerCase() === "admin";
@@ -188,9 +165,7 @@ const PollsPage = () => {
   const [tab, setTab] = useState("active");
   const [form, setForm] = useState({ question: "", description: "", options: ["", ""] });
 
-  useEffect(() => {
-    dispatch(fetchPolls());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchPolls()); }, [dispatch]);
 
   const activePolls = useMemo(() => polls.filter((p) => !isPollClosed(p)), [polls]);
   const closedPolls = useMemo(() => polls.filter((p) => isPollClosed(p)), [polls]);
@@ -216,44 +191,36 @@ const PollsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-6 lg:p-10">
-      <div className="mx-auto max-w-7xl">
-        <section className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(99,102,241,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8">
-          <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-sky-400/10 blur-3xl" />
-          <div className="absolute left-1/3 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-indigo-400/10 blur-3xl" />
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-all duration-300 sm:p-8 lg:p-12 pt-28">
+      <div className="mx-auto max-w-7xl m-12">
+        
+        {/* --- HEADER BOX (AS PER IMAGE) --- */}
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(14,165,233,0.15),rgba(99,102,241,0.08),rgba(255,255,255,0.02))] p-8 shadow-sm transition-all duration-500 hover:shadow-[0_20px_50px_rgba(59,130,246,0.1)]">
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] backdrop-blur">
-                <Sparkles size={13} className="text-sky-500" />
-                Community voting space
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] backdrop-blur-md">
+                <Sparkles size={14} className="text-sky-500 animate-pulse" />
+                Community Voting Space
               </div>
-              <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">
-                <BarChart2 className="text-[var(--accent)]" size={32} />
-                Discussions & Polls
-              </h1>
-              <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--text-muted)] sm:text-base">
+              <div className="flex items-center gap-4 mb-4">
+                <BarChart2 className="text-indigo-500 shrink-0" size={40} />
+                <h1 className="text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl">Discussions & Polls</h1>
+              </div>
+              <p className="text-sm font-medium leading-relaxed text-[var(--text-muted)] opacity-80 max-w-xl">
                 Share opinions, see live community sentiment, and make society decisions feel transparent and participatory.
               </p>
-              {activePolls[0] && (
-                <div className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-black text-[var(--text)] shadow-sm">
-                  <Vote size={16} className="text-[var(--accent)]" />
-                  Hottest live poll:
-                  <span className="max-w-[240px] truncate text-[var(--accent)]">{activePolls[0].question}</span>
-                </div>
-              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
               {[
-                { label: "Active", value: activePolls.length, tone: "bg-emerald-50 text-emerald-600" },
-                { label: "Closed", value: closedPolls.length, tone: "bg-slate-100 text-slate-600" },
-                { label: "Total Votes", value: totalVotesAcrossPolls, tone: "bg-sky-50 text-sky-600" },
-                { label: "You Joined", value: votedPollsCount, tone: "bg-indigo-50 text-indigo-600" },
+                { label: "Active", value: activePolls.length, tone: "bg-emerald-500/10 text-emerald-500" },
+                { label: "Closed", value: closedPolls.length, tone: "bg-slate-500/10 text-slate-500" },
+                { label: "Total Votes", value: totalVotesAcrossPolls, tone: "bg-blue-500/10 text-blue-500" },
+                { label: "You Joined", value: votedPollsCount, tone: "bg-indigo-500/10 text-indigo-500" },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-                  <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>
-                    {item.label}
-                  </div>
+                <div key={item.label} className="min-w-[120px] rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm transition-all hover:-translate-y-1">
+                  <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[9px] font-black uppercase tracking-widest ${item.tone}`}>{item.label}</div>
                   <div className="text-2xl font-black text-[var(--text)]">{item.value}</div>
                 </div>
               ))}
@@ -261,8 +228,9 @@ const PollsPage = () => {
           </div>
         </section>
 
-        <div className="mt-6 flex flex-col gap-4 rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-1.5 shadow-sm">
+        {/* --- TABS BOX (AS PER IMAGE) --- */}
+        <div className="mt-8 flex flex-col gap-4 rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-2 p-1 rounded-2xl border border-[var(--border)] bg-[var(--bg)] w-fit">
             {[
               { key: "active", label: "Active", count: activePolls.length },
               { key: "closed", label: "Closed", count: closedPolls.length },
@@ -270,12 +238,9 @@ const PollsPage = () => {
             ].map((t) => (
               <button
                 key={t.key}
-                type="button"
                 onClick={() => setTab(t.key)}
-                className={`rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-[0.18em] transition-all ${
-                  tab === t.key
-                    ? "bg-[var(--accent)] text-white shadow-md"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                className={`rounded-xl px-7 py-3 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  tab === t.key ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" : "text-[var(--text-muted)] hover:text-[var(--text)]"
                 }`}
               >
                 {t.label} ({t.count})
@@ -285,129 +250,72 @@ const PollsPage = () => {
 
           {isAdmin && (
             <button
-              type="button"
               onClick={() => setShowForm(true)}
-              className="user-btn-primary flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold active:scale-95"
+              className="flex items-center gap-2 rounded-2xl bg-slate-900 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-indigo-600 hover:-translate-y-1 active:scale-95"
             >
-              <Plus size={20} /> Create New Poll
+              <Plus size={18} /> New Poll
             </button>
           )}
         </div>
 
-        <div className="mt-4 flex items-center justify-between px-1">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            {filteredPolls.length} polls in this view
-          </p>
-          <p className="text-sm font-semibold text-[var(--text-muted)]">
-            {tab === "active" ? "Vote before these close." : tab === "closed" ? "Browse completed community decisions." : "See every discussion in one place."}
-          </p>
-        </div>
-
+        {/* --- GRID & EMPTY STATE --- */}
         {loading ? (
-          <div className="mt-6">
-            <SkeletonGrid count={6} gridClassName="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-80" />
-          </div>
+          <div className="mt-10"><SkeletonGrid count={6} gridClassName="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-96 rounded-[3rem]" /></div>
         ) : filteredPolls.length > 0 ? (
-          <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPolls.map((poll) => (
+          <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+            {filteredPolls.map((poll, idx) => (
               <PollCard
                 key={poll._id}
+                index={idx}
                 poll={poll}
                 userId={userId}
                 isAdmin={isAdmin}
                 onVote={(id, optionIndex) => dispatch(castVote({ id, data: { optionIndex } }))}
-                onDelete={(id) => window.confirm("Delete this poll?") && dispatch(deletePoll(id))}
-                onClose={(id) => window.confirm("Close this poll?") && dispatch(closePoll(id))}
+                onDelete={(id) => window.confirm("Delete?") && dispatch(deletePoll(id))}
+                onClose={(id) => window.confirm("Close?") && dispatch(closePoll(id))}
               />
             ))}
           </div>
         ) : (
-          <div className="mt-6 rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] py-24 text-center shadow-sm">
-            <BarChart2 size={48} className="mx-auto mb-4 text-[var(--border)]" />
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">No {tab} polls found</p>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">Try creating a new poll or switching tabs.</p>
+          <div className="mt-10 py-32 rounded-[3rem] border border-dashed border-[var(--border)] bg-[var(--card)] text-center">
+            <BarChart2 size={48} className="mx-auto mb-4 opacity-20" />
+            <p className="font-black uppercase tracking-[0.3em] opacity-40">No Discussions Found</p>
           </div>
         )}
       </div>
 
+      {/* --- FORM MODAL --- */}
       {showForm && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: "color-mix(in srgb, var(--text) 50%, transparent)" }}>
-          <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--card)] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--accent-bg)] p-6">
-              <h2 className="font-black uppercase tracking-tight text-[var(--text)]">Launch Society Poll</h2>
-              <button type="button" onClick={() => setShowForm(false)} className="rounded-xl p-2 text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)]">
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate} className="space-y-5 p-8">
-              <div>
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Question</label>
-                <input
-                  required
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 font-bold text-[var(--text)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                  placeholder="e.g. Best time for Holi event?"
-                  value={form.question}
-                  onChange={(e) => setForm({ ...form, question: e.target.value })}
-                />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-md" style={{ background: "rgba(0,0,0,0.7)" }}>
+          <div className="w-full max-w-md overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--card)] p-8 shadow-2xl animate-scaleUp">
+             <div className="mb-8 flex items-center justify-between">
+                <h2 className="text-2xl font-black uppercase tracking-tight">Create Poll</h2>
+                <button onClick={() => setShowForm(false)} className="rounded-2xl bg-[var(--bg)] p-3 hover:text-indigo-500 transition-colors border border-[var(--border)]"><X size={20} /></button>
               </div>
-
-              <div>
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Description</label>
-                <textarea
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-medium text-[var(--text)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                  placeholder="Give residents context before they vote..."
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Options</label>
-                {form.options.map((opt, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input
-                      required
-                      className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm font-medium text-[var(--text)] outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                      placeholder={`Option ${i + 1}`}
-                      value={opt}
-                      onChange={(e) => {
-                        const next = [...form.options];
-                        next[i] = e.target.value;
-                        setForm({ ...form, options: next });
-                      }}
-                    />
-                    {form.options.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, options: form.options.filter((_, idx) => idx !== i) })}
-                        className="text-[var(--text-muted)] transition hover:text-red-500"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-
-                {form.options.length < 6 && (
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, options: [...form.options, ""] })}
-                    className="mt-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent)]"
-                  >
-                    <Plus size={12} /> Add Choice
-                  </button>
-                )}
-              </div>
-
-              <button type="submit" className="user-btn-primary mt-4 w-full rounded-2xl py-4 font-black uppercase tracking-[0.2em] transition-all active:scale-95">
-                Broadcast Poll
-              </button>
-            </form>
+              <form onSubmit={handleCreate} className="space-y-6">
+                <input required className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-sm font-bold text-[var(--text)] outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Question?" value={form.question} onChange={e => setForm({...form, question: e.target.value})} />
+                <textarea rows={2} className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-sm font-medium text-[var(--text)] outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Context..." value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+                <div className="space-y-3">
+                  {form.options.map((opt, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input required className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-bold text-[var(--text)] outline-none" placeholder={`Choice ${i+1}`} value={opt} onChange={e => {
+                          const next = [...form.options]; next[i] = e.target.value; setForm({...form, options: next});
+                      }} />
+                      {form.options.length > 2 && <button type="button" onClick={() => setForm({...form, options: form.options.filter((_, idx) => idx !== i)})} className="text-rose-500"><X size={18}/></button>}
+                    </div>
+                  ))}
+                  {form.options.length < 5 && <button type="button" onClick={() => setForm({...form, options: [...form.options, ""]})} className="text-[10px] font-black uppercase text-indigo-500">+ Add Choice</button>}
+                </div>
+                <button type="submit" className="w-full rounded-2xl bg-indigo-600 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl hover:bg-indigo-700">Broadcast</button>
+              </form>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+      `}</style>
     </div>
   );
 };
