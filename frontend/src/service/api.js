@@ -6,8 +6,8 @@ const API = axios.create({
   timeout: 60000,
 });
 
-// Interceptor: Add token to every request
-API.interceptors.request.use((config) => {
+// Attach token to every request automatically
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -15,8 +15,8 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor: Handle errors globally
-API.interceptors.response.use(
+// Global response error handler
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
@@ -36,4 +36,4 @@ API.interceptors.response.use(
   }
 );
 
-export default API;
+export default api;

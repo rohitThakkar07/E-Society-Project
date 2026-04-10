@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -77,6 +77,7 @@ const AddVisitor = () => {
       if (result.type.endsWith("fulfilled")) navigate("/admin/visitors");
       return;
     }
+  };
 
     const result = await dispatch(createVisitor(data));
     if (result.type.endsWith("fulfilled")) {
