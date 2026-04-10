@@ -1,12 +1,13 @@
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import societyConfig from "../../../../../assets/societyConfig";
 
 const ReceiptGenerator = () => {
-  // Dummy Receipt Data (Replace with API data later)
+
   const receiptData = {
-    societyName: "Green Valley Society",
-    address: "Ahmedabad, Gujarat",
+    societyName: societyConfig.name,
+    address: `${societyConfig.city}, ${societyConfig.state}`,
     receiptNo: "RCPT-2026-03-001",
     date: "10-03-2026",
     resident: "Flat A-101",

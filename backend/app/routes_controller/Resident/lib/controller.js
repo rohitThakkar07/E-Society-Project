@@ -59,6 +59,7 @@ exports.createResident = async (req, res) => {
       email,
       flat,
       residentType,
+      profileImage: req.file ? req.file.path : null, // ADDED: handle image
       ...rest,
     });
 
@@ -202,6 +203,10 @@ exports.updateResident = async (req, res) => {
     // Admin / staff: full update (flat assignment, status, etc.)
     const body = { ...req.body };
     delete body.password;
+    
+    if (req.file) {
+      body.profileImage = req.file.path; // ADDED: handle image update
+    }
 
     const resident = await Resident.findByIdAndUpdate(req.params.id, body, {
       new: true,

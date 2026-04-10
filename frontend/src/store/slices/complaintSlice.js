@@ -80,7 +80,8 @@ export const updateComplaintStatus = createAsyncThunk(
   "complaint/updateComplaintStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
-      await API.put(`/complaint/update/${id}`, { status });
+      await API.patch(`/complaint/status-update/${id}`, { status });
+
       toast.info(`Status updated to ${status}`);
       return { id, status };
     } catch (error) {
@@ -136,7 +137,13 @@ const complaintSlice = createSlice({
         state.loading = false;
         const index = state.complaints.findIndex((c) => c._id === action.payload.id);
         if (index !== -1) state.complaints[index].status = action.payload.status;
+        
+        // Fix: Also update singleComplaint if it matches
+        if (state.singleComplaint && state.singleComplaint._id === action.payload.id) {
+          state.singleComplaint.status = action.payload.status;
+        }
       });
+
 
     // 🔥 Global Matchers for Loading and Error State
     builder.addMatcher(

@@ -4,6 +4,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const PASSWORD_HINT = "Use 8+ characters with uppercase, lowercase, number, and special character.";
 
 const ForgotPasswordModal = ({ onClose }) => {
   const [email, setEmail] = useState("");
@@ -130,8 +132,8 @@ const ForgotPasswordModal = ({ onClose }) => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
+      toast.error(PASSWORD_HINT);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -323,7 +325,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    placeholder="Minimum 6 characters"
+                    placeholder="Create a strong password"
                     className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
                   />
                   <button
@@ -344,6 +346,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                   </button>
                 </div>
               </div>
+              <p className="text-xs text-slate-400 -mt-2">{PASSWORD_HINT}</p>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Confirm Password</label>
                 <div className="relative">

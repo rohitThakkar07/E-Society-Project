@@ -5,6 +5,16 @@ const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
 const connectDB = require("./app/db/config/db");
+const fs = require("fs");
+
+// Ensure upload directories exist
+const uploadDirs = ["uploads", "uploads/guards", "uploads/residents", "uploads/complaints"];
+uploadDirs.forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created directory: ${dir}`);
+  }
+});
 
 const { startScheduler } = require("./service/Maintenancescheduler");
 mongoose.connection.once("open", () => startScheduler());
@@ -43,9 +53,6 @@ app.use(express.urlencoded({ extended: true }));
 // SERVE UPLOADED FILES
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-//upload image
-app.use("/uploads", express.static("uploads"));
-
 /* ============ ROUTES ============ */
 app.use("/api/auth", authRoutes);
 app.use("/api/resident", authMiddleware, residentRoutes);
@@ -61,9 +68,6 @@ app.use("/api/notice", authMiddleware, noticeRoutes);
 app.use("/api/poll", authMiddleware, pollRoutes);
 app.use("/api/payment", authMiddleware, paymentRoutes);
 app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
-
-// cron job connections
-mongoose.connection.once("open", () => startScheduler());
 
 /* ============ ERROR HANDLER ============ */
 app.use(errorHandler);

@@ -12,6 +12,8 @@ import {
 } from "react-icons/fi";
 import { fetchResidents, deleteResident, updateResidentStatus } from "../../../store/slices/residentSlice";
 
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
+
 const ResidentList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -59,7 +61,7 @@ const ResidentList = () => {
         </div>
         <button 
           onClick={() => navigate("/admin/residents/add")} 
-          className="bg-slate-900 text-white px-6 py-3 rounded-2xl hover:bg-slate-800 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
+          className="admin-btn-primary"
         >
           <FiPlus size={18} /> Add Resident
         </button>
@@ -99,7 +101,10 @@ const ResidentList = () => {
                 {/* Resident Identity */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <Avatar sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 36, height: 36 }}>
+                    <Avatar 
+                      src={r.profileImage ? `${BASE_URL}/${r.profileImage.replace(/\\/g, "/")}` : ""}
+                      sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 36, height: 36 }}
+                    >
                       <FiUser size={16} />
                     </Avatar>
                     <div>

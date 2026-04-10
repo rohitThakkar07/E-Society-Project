@@ -5,8 +5,8 @@ import { NavLink, useLocation } from "react-router-dom";
 const DropBtn = ({ isOpen, onClick, icon, label, open, active }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
-      active ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
+      active ? "bg-[#4F6EF7] text-white shadow-md" : "text-white/60 hover:bg-white/5 hover:text-white"
     } ${!isOpen ? "justify-center" : ""}`}
   >
     <span className="flex-shrink-0">{icon}</span>
@@ -24,9 +24,9 @@ const DropBtn = ({ isOpen, onClick, icon, label, open, active }) => (
 /* ── Section divider ────────────────────────────────────────────────────── */
 const SectionLabel = ({ isOpen, label }) =>
   isOpen ? (
-    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 pt-5 pb-1.5">{label}</p>
+    <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em] px-4 pt-5 pb-1.5">{label}</p>
   ) : (
-    <div className="border-t border-slate-100 my-3 mx-3" />
+    <div className="border-t border-white/10 my-3 mx-4" />
   );
 
 /* ── Icon helper ────────────────────────────────────────────────────────── */
@@ -47,31 +47,31 @@ const Sidebar = ({ isOpen }) => {
 
   /* nav-link class helper */
   const navItem = ({ isActive }) =>
-    `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
-      isActive ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
+      isActive ? "bg-[#4F6EF7] text-white shadow-md" : "text-white/60 hover:bg-white/5 hover:text-white"
     }`;
 
   /* sub-item class helper */
   const dropItem = ({ isActive }) =>
-    `text-[13px] py-2 px-3 rounded-lg transition-colors flex items-center gap-2 ${
-      isActive ? "text-blue-700 font-semibold bg-blue-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+    `text-[13px] py-2 px-3 rounded-lg transition-colors flex items-center gap-2 font-semibold ${
+      isActive ? "text-white bg-[#4F6EF7] shadow-sm" : "text-white/50 hover:text-white hover:bg-white/5"
     }`;
 
   return (
-    <aside className={`bg-white text-slate-800 h-screen sticky top-0 left-0 z-40 transition-all duration-300 border-r border-slate-200 flex flex-col shadow-sm ${isOpen ? "w-64" : "w-[70px]"}`}>
+    <aside className={`text-white h-screen sticky top-0 left-0 z-40 transition-all duration-300 flex flex-col shadow-xl ${isOpen ? "w-64" : "w-[70px]"}`} style={{ background: "#1E2235" }}>
 
       {/* ── Brand ── */}
-      <div className="h-[70px] flex items-center px-4 border-b border-slate-100 mb-1 overflow-hidden whitespace-nowrap flex-shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-blue-600 flex-shrink-0 flex items-center justify-center font-black text-lg text-white shadow-md">E</div>
+      <div className="h-[70px] flex items-center px-4 border-b border-white/5 mb-2 overflow-hidden whitespace-nowrap flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-lg text-white shadow-md" style={{ background: "#4F6EF7" }}>E</div>
         {isOpen && (
           <div className="ml-3">
-            <p className="font-black text-slate-900 text-base leading-none">E-SOCIETY</p>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Admin Portal</p>
+            <p className="font-extrabold text-white text-[15px] leading-none tracking-wide">E-SOCIETY</p>
+            <p className="text-[10px] font-bold text-[#F5A623] uppercase tracking-widest mt-1">Admin Portal</p>
           </div>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-10 space-y-0.5" style={{ scrollbarWidth: "none" }}>
+      <nav className="flex-1 overflow-y-auto px-3 pb-10 space-y-1" style={{ scrollbarWidth: "none" }}>
 
         {/* ── MAIN ── */}
         {/* <SectionLabel isOpen={isOpen} label="Main" /> */}
@@ -125,7 +125,7 @@ const Sidebar = ({ isOpen }) => {
             icon={<Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />}
           />
           {isOpen && openFacility && (
-            <div className="mt-1 ml-8 flex flex-col space-y-0.5 border-l-2 border-slate-100 pl-3">
+            <div className="mt-1 ml-8 flex flex-col space-y-0.5 border-l-2 border-white/10 pl-3">
               <NavLink to="/admin/facility/dashboard"     className={dropItem}>Dashboard</NavLink>
               <NavLink to="/admin/facility-booking/list"  className={dropItem}>Bookings</NavLink>
               <NavLink to="/admin/facility/calendar"      className={dropItem}>Calendar</NavLink>
@@ -139,10 +139,10 @@ const Sidebar = ({ isOpen }) => {
         <NavLink
           to="/admin/maintenance/dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
+            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
               isActive || location.pathname.includes("/maintenance")
-                ? "bg-blue-50 text-blue-700 font-semibold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-[#4F6EF7] text-white shadow-md"
+                : "text-white/60 hover:bg-white/5 hover:text-white"
             }`
           }
           title="Maintenance"
@@ -157,10 +157,10 @@ const Sidebar = ({ isOpen }) => {
         <NavLink
           to="/admin/expense/dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
+            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
               isActive || location.pathname.includes("/expense")
-                ? "bg-blue-50 text-blue-700 font-semibold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-[#4F6EF7] text-white shadow-md"
+                : "text-white/60 hover:bg-white/5 hover:text-white"
             }`
           }
           title="Expense"
@@ -190,7 +190,7 @@ const Sidebar = ({ isOpen }) => {
             icon={<Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />}
           />
           {isOpen && openCommunity && (
-            <div className="mt-1 ml-8 flex flex-col space-y-0.5 border-l-2 border-slate-100 pl-3">
+            <div className="mt-1 ml-8 flex flex-col space-y-0.5 border-l-2 border-white/10 pl-3">
               <NavLink to="/admin/notice/list"     className={dropItem}>Notice Board</NavLink>
               <NavLink to="/admin/poll/list"       className={dropItem}>Polls &amp; Voting</NavLink>
             </div>

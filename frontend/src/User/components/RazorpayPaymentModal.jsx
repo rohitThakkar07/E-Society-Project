@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { X, AlertCircle, CheckCircle, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import API from "../../service/api";
+import societyConfig from "../../assets/societyConfig";
 
 const RAZORPAY_KEY =
   import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SZ3mYhzzSVN0ov";
@@ -96,7 +97,7 @@ export default function RazorpayPaymentModal({
       amount: data.amountInPaise,
       currency: data.currency || "INR",
       order_id: data.orderId,
-      name: "E-Society",
+      name: societyConfig.name,
       description: `Maintenance ${data.billDetails?.month || ""} ${data.billDetails?.year || ""}`.trim(),
       prefill: {
         name: data.resident?.name || "",

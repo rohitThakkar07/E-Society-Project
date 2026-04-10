@@ -143,6 +143,7 @@ const VisitorLog = () => {
               const sc         = STATUS_CONFIG[v.status] || STATUS_CONFIG.Pending;
               const pc         = PURPOSE_COLORS[v.purpose] || PURPOSE_COLORS.Other;
               const isInside   = v.status === "Inside" || v.status === "Approved";
+              const unit       = v.wing && v.flatNumber && String(v.flatNumber).startsWith(v.wing) ? v.flatNumber : `${v.wing || "?"}-${v.flatNumber || "?"}`;
 
               return (
                 <Link key={v._id} to={isResident ? `/visitors/visitor/${v._id}` : `/guard/visitor/${v._id}`}
@@ -157,7 +158,7 @@ const VisitorLog = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-800 truncate">{v.visitorName}</p>
-                      <p className="text-xs text-slate-400 sm:hidden">{v.wing}-{v.flatNumber}</p>
+                      <p className="text-xs text-slate-400 sm:hidden">{unit}</p>
                     </div>
                   </div>
 
@@ -165,7 +166,7 @@ const VisitorLog = () => {
                   <div className="hidden sm:flex items-center gap-2">
                     <span className="flex items-center gap-1 text-xs font-semibold text-slate-600">
                       <MapPin size={11} className="text-slate-400" />
-                      {v.wing}-{v.flatNumber}
+                      {unit}
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-md"
                           style={{ background: pc.bg, color: pc.color }}>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Mail, Phone, MapPin, Heart, Sparkles } from "lucide-react";
 import { FaFacebook, FaWhatsapp, FaLinkedin, FaInstagram } from "react-icons/fa";
+import societyConfig from "../../assets/societyConfig";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -75,7 +76,7 @@ const Footer = () => {
                 <Shield size={28} className="text-white" />
               </motion.div>
               <div>
-                <span className="text-white text-2xl font-black leading-none block tracking-tight">e-Society</span>
+                <span className="text-white text-2xl font-black leading-none block tracking-tight">{societyConfig.name}</span>
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] mt-1.5 block opacity-80">
                   Digital Hub
                 </span>
@@ -88,7 +89,7 @@ const Footer = () => {
             <div className="flex flex-wrap gap-3">
               {[
                 { Icon: FaFacebook, href: "https://facebook.com", hover: "hover:bg-blue-600" },
-                { Icon: FaWhatsapp, href: "https://wa.me/919999988888", hover: "hover:bg-emerald-500" },
+                { Icon: FaWhatsapp, href: `https://wa.me/91${societyConfig.contact.phone}`, hover: "hover:bg-emerald-500" },
                 { Icon: FaLinkedin, href: "https://linkedin.com", hover: "hover:bg-blue-700" },
                 { Icon: FaInstagram, href: "https://instagram.com", hover: "hover:bg-pink-600" },
               ].map((item, i) => (
@@ -149,16 +150,16 @@ const Footer = () => {
                   <MapPin size={18} />
                 </div>
                 <p className="text-sm font-bold leading-relaxed opacity-90">
-                  Galaxy Heights, Block C,
+                  {societyConfig.address},
                   <br />
-                  Ahmedabad, Gujarat
+                  {societyConfig.city}, {societyConfig.state}
                 </p>
               </div>
-              <a href="mailto:admin@esociety.in" className="flex items-center gap-4 group">
+              <a href={`mailto:${societyConfig.contact.email}`} className="flex items-center gap-4 group">
                 <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300">
                   <Mail size={18} />
                 </div>
-                <span className="text-sm font-bold opacity-90">admin@esociety.in</span>
+                <span className="text-sm font-bold opacity-90">{societyConfig.contact.email}</span>
               </a>
             </div>
 
@@ -176,8 +177,8 @@ const Footer = () => {
                 <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 Security desk
               </p>
-              <a href="tel:+919999988888" className="flex items-center justify-between gap-2">
-                <span className="text-lg sm:text-xl font-black tracking-tight">+91 99999 88888</span>
+              <a href={`tel:+91${societyConfig.contact.phone}`} className="flex items-center justify-between gap-2">
+                <span className="text-lg sm:text-xl font-black tracking-tight">+91 {societyConfig.contact.phone.replace(/(\d{5})(\d{5})/, "$1 $2")}</span>
                 <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md shrink-0">
                   <Phone size={20} fill="currentColor" />
                 </div>
@@ -194,7 +195,7 @@ const Footer = () => {
             variants={itemVars}
             className="text-[11px] font-black uppercase tracking-[0.18em] flex flex-wrap items-center justify-center gap-3 opacity-70"
           >
-            © {currentYear} e-Society Hub
+            © {currentYear} {societyConfig.name} Hub
             <span className="hidden md:inline opacity-30">|</span>
             <span className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
               Made with <Heart size={14} className="text-rose-400 fill-rose-400" /> for community

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { createExpense } from "../../../../store/slices/expenseSlice";
+import { fetchGuards } from "../../../../store/slices/guardSlice";
 
 const TABS = [
   { label: "Overview",     path: "/admin/expense/dashboard" },
@@ -17,7 +18,28 @@ const AddExpense = () => {
   const dispatch  = useDispatch();
   const { loading = false } = useSelector((s) => s.expense) ?? {};
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
+  const selectedCategory = watch("category");
+
+  const { guards = [] } = useSelector((s) => s.guard) ?? {};
+
+  React.useEffect(() => {
+    dispatch(fetchGuards());
+  }, [dispatch]);
+
+  const onGuardChange = (e) => {
+    const guardId = e.target.value;
+    if (!guardId) return;
+    
+    const selectedGuard = guards.find(g => g._id === guardId);
+    if (selectedGuard) {
+      const month = new Date().toLocaleString("default", { month: "long" });
+      const year = new Date().getFullYear();
+      setValue("title", `Salary for ${selectedGuard.name} - ${month} ${year}`);
+      setValue("amount", selectedGuard.monthlySalary || 0);
+      setValue("description", `Monthly salary for ${selectedGuard.name} (${selectedGuard.guardId})`);
+    }
+  };
 
   const onSubmit = async (data) => {
     const res = await dispatch(createExpense({ ...data, amount: Number(data.amount) }));
@@ -84,6 +106,19 @@ const AddExpense = () => {
                 </select>
                 {errors.category && <p className="text-xs text-red-500 font-medium">{errors.category.message}</p>}
               </div>
+
+              {selectedCategory === "Salary" && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Select Guard *</label>
+                  <select onChange={onGuardChange} className="admin-input">
+                    <option value="">Choose Guard</option>
+                    {guards.map(g => (
+                      <option key={g._id} value={g._id}>{g.name} ({g.guardId})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Payment Mode *</label>
                 <select {...register("paymentMode", { required: "Payment mode is required" })} className={`admin-input ${errors.paymentMode ? "admin-input-error" : ""}`}>

@@ -17,6 +17,7 @@ const residentSchema = new mongoose.Schema({
 
   residentType: { type: String, enum: ["Owner", "Tenant"], required: true },
   status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+  profileImage: { type: String }, // ADDED: Resident profile image
 }, { timestamps: true });
 
 module.exports = mongoose.model("Resident", residentSchema);

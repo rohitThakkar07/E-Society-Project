@@ -6,12 +6,10 @@ import {
   TableHead, TableRow, Paper, TablePagination,
   IconButton, Tooltip, Chip, InputBase, MenuItem, Select, FormControl, Avatar, Switch
 } from "@mui/material";
-import { 
-  FiEdit, FiTrash2, FiSearch, FiPlus, 
-  FiShield, FiClock, FiPhone, FiCalendar, FiMail
-} from "react-icons/fi";
+import { FiEdit, FiTrash2, FiSearch, FiPlus, FiShield, FiClock, FiPhone, FiCalendar, FiMail, FiExternalLink } from "react-icons/fi";
+import { fetchGuards, deleteGuard, updateGuardStatus } from "../../../store/slices/guardSlice";
 
-import { fetchGuards, deleteGuard, updateGuardStatus } from "../../../store/slices/guardSlice"; 
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
 
 const STATUS_STYLE = { 
   Active: { bg: "#ecfdf5", color: "#059669" }, 
@@ -80,7 +78,7 @@ const GuardList = () => {
         </div>
         <button 
           onClick={() => navigate("/admin/guards/add")} 
-          className="bg-slate-900 text-white px-6 py-3 rounded-2xl hover:bg-slate-800 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
+          className="admin-btn-primary"
         >
           <FiPlus size={18} /> Add Guard
         </button>
@@ -123,6 +121,7 @@ const GuardList = () => {
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Joining Date</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>ID Proof</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly Salary</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
               <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
             </TableRow>
@@ -132,7 +131,7 @@ const GuardList = () => {
             {!loading ? (
               filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} sx={{ py: 8, textAlign: 'center', color: '#94a3b8' }}>
+                  <TableCell colSpan={8} sx={{ py: 8, textAlign: 'center', color: '#94a3b8' }}>
                     <div className="flex flex-col items-center gap-2">
                       <FiShield size={32} className="text-slate-200" />
                       <span className="text-sm font-medium">No guards found</span>
@@ -199,9 +198,27 @@ const GuardList = () => {
                         <div className="text-xs text-slate-600 font-semibold">
                           {g.idProofType || "—"}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        {/* <div className="text-[10px] text-slate-400 font-medium mt-0.5">
                           #{g.idProofNumber || "—"}
+                        </div> */}
+                        {g.idImage && (
+                          <Tooltip title="View ID Proof">
+                            <button 
+                              onClick={() => window.open(`${BASE_URL}/${g.idImage.replace(/\\/g, "/")}`, "_blank")}
+                              className="mt-1 flex items-center gap-1 text-[9px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <FiExternalLink size={10} /> View Proof
+                            </button>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+
+                      {/* Salary */}
+                      <TableCell>
+                        <div className="font-bold text-slate-900 text-xs">
+                          ₹{(g.monthlySalary || 0).toLocaleString()}
                         </div>
+                        <div className="text-[10px] text-slate-400 font-medium">Per Month</div>
                       </TableCell>
 
                       {/* Status */}
@@ -258,7 +275,7 @@ const GuardList = () => {
             ) : (
               [...Array(rowsPerPage)].map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: '#94a3b8' }}>
+                  <TableCell colSpan={8} sx={{ py: 6, textAlign: 'center', color: '#94a3b8' }}>
                     Loading guard registry...
                   </TableCell>
                 </TableRow>

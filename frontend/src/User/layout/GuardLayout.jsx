@@ -6,6 +6,7 @@ import {
   Shield, Home, Users, Search, LogOut, Menu, X,
   UserCheck, ClipboardList, Bell, ChevronRight
 } from "lucide-react";
+import societyConfig from "../../assets/societyConfig";
 
 const SIDEBAR_BG   = "#1E2235";
 const SIDEBAR_ITEM = "#2B3050";
@@ -53,7 +54,7 @@ const GuardLayout = () => {
             <Shield size={20} className="text-white" />
           </div>
           <div>
-            <p className="font-extrabold text-white text-[15px] leading-none tracking-wide">E-SOCIETY</p>
+            <p className="font-extrabold text-white text-[15px] leading-none tracking-wide">{societyConfig.name.toUpperCase()}</p>
             <p className="text-[10px] font-bold uppercase tracking-widest mt-1"
                style={{ color: "#F5A623" }}>Guard Portal</p>
           </div>

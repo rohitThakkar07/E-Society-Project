@@ -41,7 +41,7 @@ const EventList = () => {
         </div>
         <button
           onClick={() => navigate("/admin/event/add")}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95"
+          className="admin-btn-primary"
         >
           <FiPlus /> Add Event
         </button>

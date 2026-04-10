@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { TablePagination, IconButton, Tooltip, Chip, InputBase } from "@mui/material";
+import { Chip, InputBase } from "@mui/material";
 import {
   Bell,
   Search,
   Calendar,
   Plus,
   X,
-  Eye,
-  Trash2,
   AlertCircle,
   Info,
   Megaphone,
@@ -16,6 +14,7 @@ import {
   Sparkles,
   ArrowRight,
   Filter,
+  Trash2,
 } from "lucide-react";
 import { fetchNotices, createNotice, deleteNotice } from "../../store/slices/noticeSlice";
 import { PageLoaderInline } from "../../components/PageLoader";
@@ -29,11 +28,11 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  General: { bg: "#f1f5f9", color: "#64748b", glow: "rgba(100, 116, 139, 0.18)" },
-  Maintenance: { bg: "#fff7ed", color: "#ea580c", glow: "rgba(234, 88, 12, 0.18)" },
-  Event: { bg: "#eff6ff", color: "#2563eb", glow: "rgba(37, 99, 235, 0.18)" },
-  Emergency: { bg: "#fef2f2", color: "#dc2626", glow: "rgba(220, 38, 38, 0.18)" },
-  Finance: { bg: "#ecfdf5", color: "#059669", glow: "rgba(5, 150, 105, 0.18)" },
+  General:     { bg: "rgba(148,163,184,0.1)", color: "#94a3b8", glow: "rgba(148,163,184,0.3)" },
+  Maintenance: { bg: "rgba(245,158,11,0.1)",  color: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
+  Event:       { bg: "rgba(99,102,241,0.1)",   color: "#6366f1", glow: "rgba(99,102,241,0.3)" },
+  Emergency:   { bg: "rgba(239,68,68,0.1)",    color: "#ef4444", glow: "rgba(239,68,68,0.4)" },
+  Finance:     { bg: "rgba(16,185,129,0.1)",   color: "#10b981", glow: "rgba(16,185,129,0.3)" },
 };
 
 const NoticeBoard = () => {
@@ -47,12 +46,8 @@ const NoticeBoard = () => {
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", category: "General" });
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(6);
 
-  useEffect(() => {
-    dispatch(fetchNotices());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchNotices()); }, [dispatch]);
 
   const categories = ["All", "General", "Maintenance", "Event", "Emergency", "Finance"];
 
@@ -65,18 +60,11 @@ const NoticeBoard = () => {
     });
   }, [notices, search, filter]);
 
-  const paginatedNotices = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   const latestNotice = filtered[0];
   const emergencyCount = notices.filter((n) => n.category === "Emergency").length;
   const eventCount = notices.filter((n) => n.category === "Event").length;
   const maintenanceCount = notices.filter((n) => n.category === "Maintenance").length;
   const hasActiveFilters = filter !== "All" || search.trim() !== "";
-
-  const handleChangePage = (event, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -92,57 +80,56 @@ const NoticeBoard = () => {
     }
   };
 
-  const clearFilters = () => {
-    setSearch("");
-    setFilter("All");
-    setPage(0);
-  };
+  const clearFilters = () => { setSearch(""); setFilter("All"); };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <section className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(244,63,94,0.14),rgba(59,130,246,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8">
-          <div className="absolute -right-16 -top-12 h-40 w-40 rounded-full bg-rose-400/10 blur-3xl" />
-          <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-all duration-300 sm:p-4 md:p-8">
+      <div className="mx-auto max-w-7xl m-12">
+
+        {/* Header Hero */}
+        <section className="group relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm transition-all duration-500 hover:shadow-[0_20px_50px_rgba(244,63,94,0.1)]">
+          <div className="absolute -right-16 -top-12 h-64 w-64 rounded-full bg-rose-400/10 blur-[100px] transition-all group-hover:bg-rose-400/20" />
+          <div className="absolute left-1/4 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-sky-400/5 blur-[80px]" />
+
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] backdrop-blur">
-                <Sparkles size={13} className="text-rose-500" />
-                Community updates
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)] backdrop-blur">
+                <Sparkles size={14} className="text-rose-500 animate-pulse" />
+                Live Notice Board
               </div>
-              <div className="mb-3 flex items-center gap-3">
-                <div className="rounded-2xl bg-rose-500 p-3 text-white shadow-lg shadow-rose-500/20">
-                  <Bell size={24} />
+              <div className="mb-4 flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-xl shadow-rose-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <Bell size={30} className="group-hover:animate-ring" />
                 </div>
-                <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">Society Notice Board</h1>
+                <h1 className="text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl">Notice Board</h1>
               </div>
-              <p className="max-w-xl text-sm font-medium leading-6 text-[var(--text-muted)] sm:text-base">
-                Browse announcements, maintenance alerts, event reminders, and finance updates in a more visual, easier-to-scan board.
+              <p className="max-w-xl text-sm font-medium leading-relaxed text-[var(--text-muted)] opacity-80">
+                Stay updated with the latest community announcements, emergency alerts, and upcoming events.
               </p>
+
               {latestNotice && (
                 <button
                   type="button"
                   onClick={() => setSelected(latestNotice)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[var(--card)] px-4 py-3 text-sm font-black text-[var(--text)] shadow-sm ring-1 ring-[var(--border)] transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  className="group/latest mt-6 inline-flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3.5 text-sm font-black text-[var(--text)] shadow-sm transition-all hover:-translate-y-1 active:scale-95"
                 >
-                  <span className="text-[var(--accent)]">Latest:</span>
-                  <span className="max-w-[220px] truncate">{latestNotice.title}</span>
-                  <ArrowRight size={16} className="text-[var(--accent)]" />
+                  <span className="text-rose-500">LATEST:</span>
+                  <span className="max-w-[200px] truncate">{latestNotice.title}</span>
+                  <ArrowRight size={16} className="text-rose-500 group-hover/latest:translate-x-1 transition-transform" />
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
-                { label: "Visible", value: filtered.length, tone: "text-sky-600 bg-sky-50" },
-                { label: "Emergency", value: emergencyCount, tone: "text-rose-600 bg-rose-50" },
-                { label: "Events", value: eventCount, tone: "text-indigo-600 bg-indigo-50" },
-                { label: "Maintenance", value: maintenanceCount, tone: "text-amber-600 bg-amber-50" },
+                { label: "Visible",    value: filtered.length,  tone: "text-sky-500" },
+                { label: "Emergency",  value: emergencyCount,   tone: "text-rose-500" },
+                { label: "Events",     value: eventCount,       tone: "text-indigo-500" },
+                { label: "Alerts",     value: maintenanceCount, tone: "text-amber-500" },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-                  <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>
-                    {item.label}
-                  </div>
+                <div key={item.label} className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5 transition-all hover:-translate-y-1.5 hover:shadow-lg">
+                  <div className={`mb-2 text-[9px] font-black uppercase tracking-widest ${item.tone}`}>{item.label}</div>
                   <div className="text-2xl font-black text-[var(--text)]">{item.value}</div>
                 </div>
               ))}
@@ -150,33 +137,28 @@ const NoticeBoard = () => {
           </div>
         </section>
 
-        <div className="mt-6 flex flex-col gap-4 rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 shadow-sm">
-              <Search size={18} className="text-[var(--text-muted)]" />
+        {/* Filter Bar */}
+        <div className="mt-8 flex flex-col gap-6 rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm sm:p-6 transition-all duration-300 hover:shadow-md">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 shadow-sm transition-all focus-within:ring-2 focus-within:ring-rose-500/50">
+              <Search size={20} className="text-[var(--text-muted)]" />
               <InputBase
-                placeholder="Search title, message, or update type..."
+                placeholder="Search notices, updates or keywords..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(0);
-                }}
-                className="w-full font-medium text-sm"
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full font-bold text-sm"
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {categories.map((c) => (
                 <button
                   key={c}
-                  onClick={() => {
-                    setFilter(c);
-                    setPage(0);
-                  }}
-                  className={`rounded-2xl border px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition-all ${
+                  onClick={() => setFilter(c)}
+                  className={`rounded-2xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-90 ${
                     filter === c
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-white shadow-md"
-                      : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)] hover:-translate-y-0.5 hover:bg-[var(--accent-soft)]"
+                      ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
+                      : "bg-[var(--bg)] text-[var(--text-muted)] border border-[var(--border)] hover:border-rose-500/50"
                   }`}
                 >
                   {c}
@@ -187,297 +169,261 @@ const NoticeBoard = () => {
             {isAdmin && (
               <button
                 onClick={() => setShowForm(true)}
-                className="user-btn-primary flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold shadow-lg active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-rose-600 hover:-translate-y-0.5 active:scale-95"
               >
                 <Plus size={18} /> New Notice
               </button>
             )}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-              <Filter size={14} />
-              <span>{filtered.length} results</span>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-5">
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+              <Filter size={16} />
+              <span>{filtered.length} Announcements</span>
               {hasActiveFilters && (
-                <>
-                  <span className="rounded-full bg-[var(--accent-bg)] px-3 py-1 text-[var(--accent)]">filtered</span>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="rounded-full border border-[var(--border)] px-3 py-1 transition-colors hover:bg-[var(--bg)]"
-                  >
-                    Clear
-                  </button>
-                </>
+                <button onClick={clearFilters} className="rounded-full bg-rose-500/10 px-4 py-1.5 text-rose-500 transition hover:bg-rose-500/20">
+                  Clear Filters
+                </button>
               )}
             </div>
-
-            {latestNotice && (
-              <p className="text-sm font-semibold text-[var(--text-muted)]">
-                Highlighted update:
-                <button
-                  type="button"
-                  onClick={() => setSelected(latestNotice)}
-                  className="ml-2 text-[var(--accent)] underline decoration-transparent underline-offset-4 transition hover:decoration-current"
-                >
-                  {latestNotice.title}
-                </button>
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden">
+        {/* Notice Grid — all filtered results, no pagination */}
+        <div className="mt-8">
           {loading ? (
-            <div className="p-8">
-              <PageLoaderInline message="Loading notices..." />
+            <div className="rounded-[2.5rem] bg-[var(--card)] p-20">
+              <PageLoaderInline message="Syncing with society board..." />
             </div>
           ) : filtered.length > 0 ? (
-            <>
-              <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
-                {paginatedNotices.map((n, index) => {
-                  const tone = categoryColors[n.category] || categoryColors.General;
-                  return (
-                    <article
-                      key={n._id}
-                      onClick={() => setSelected(n)}
-                      className="group relative cursor-pointer overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
-                      style={{
-                        boxShadow: `0 12px 30px -24px ${tone.glow}`,
-                        animationDelay: `${index * 80}ms`,
-                      }}
-                    >
-                      <div
-                        className="absolute inset-x-0 top-0 h-1.5"
-                        style={{ background: `linear-gradient(90deg, ${tone.color}, transparent)` }}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((n, index) => {
+                const tone = categoryColors[n.category] || categoryColors.General;
+                return (
+                  <article
+                    key={n._id}
+                    onClick={() => setSelected(n)}
+                    className="group relative cursor-pointer overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-7 transition-all duration-500 hover:-translate-y-2"
+                    style={{
+                      boxShadow: `0 20px 40px -15px ${tone.glow}`,
+                      animation: `fadeUp 0.5s ease forwards ${index * 0.08}s`,
+                      opacity: 0,
+                    }}
+                  >
+                    {/* Category accent line */}
+                    <div
+                      className="absolute inset-x-0 top-0 h-1.5 opacity-60 transition-opacity group-hover:opacity-100"
+                      style={{ background: `linear-gradient(90deg, ${tone.color}, transparent)` }}
+                    />
+
+                    <div className="mb-6 flex items-start justify-between">
+                      <Chip
+                        icon={categoryIcons[n.category] || <Info size={12} />}
+                        label={n.category}
+                        sx={{
+                          fontWeight: 900,
+                          fontSize: "9px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                          bgcolor: tone.bg,
+                          color: tone.color,
+                          borderRadius: "14px",
+                          "& .MuiChip-icon": { color: "inherit" },
+                        }}
                       />
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(n._id); }}
+                          className="rounded-xl bg-rose-500/10 p-2.5 text-rose-500 transition-all hover:bg-rose-500 hover:text-white"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
 
-                      <div className="mb-4 flex items-start justify-between gap-3">
-                        <Chip
-                          icon={categoryIcons[n.category] || <Info size={12} />}
-                          label={n.category || "General"}
-                          size="small"
-                          sx={{
-                            fontWeight: 900,
-                            fontSize: "9px",
-                            textTransform: "uppercase",
-                            bgcolor: tone.bg,
-                            color: tone.color,
-                            borderRadius: "999px",
-                            "& .MuiChip-icon": { color: "inherit" }
-                          }}
-                        />
-
-                        <div className="flex gap-1">
-                          <Tooltip title="View Details">
-                            <IconButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelected(n);
-                              }}
-                              size="small"
-                              sx={{ color: tone.color, bgcolor: tone.bg, borderRadius: "12px", "&:hover": { opacity: 0.85, bgcolor: tone.bg } }}
-                            >
-                              <Eye size={16} />
-                            </IconButton>
-                          </Tooltip>
-                          {isAdmin && (
-                            <Tooltip title="Delete Notice">
-                              <IconButton
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(n._id);
-                                }}
-                                size="small"
-                                sx={{ color: "#ef4444", bgcolor: "#fef2f2", borderRadius: "12px", "&:hover": { bgcolor: "#fee2e2" } }}
-                              >
-                                <Trash2 size={16} />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
+                        <Sparkles size={12} style={{ color: tone.color }} />
+                        Posted on Board
                       </div>
+                      <h2 className="text-xl font-black leading-tight text-[var(--text)] group-hover:text-rose-500 transition-colors line-clamp-2">
+                        {n.title}
+                      </h2>
+                      <p className="text-sm leading-relaxed text-[var(--text-muted)] opacity-80 line-clamp-3">
+                        {n.description || n.content}
+                      </p>
+                    </div>
 
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                          <Sparkles size={12} style={{ color: tone.color }} />
-                          Notice update
-                        </div>
-                        <h2 className="text-lg font-black leading-snug text-[var(--text)] line-clamp-2">{n.title}</h2>
-                        <p className="min-h-[72px] text-sm leading-relaxed text-[var(--text-muted)] line-clamp-4">
-                          {n.description || n.content}
-                        </p>
+                    <div className="mt-8 flex items-center justify-between border-t border-[var(--border)] pt-5">
+                      <div className="flex items-center gap-2 text-[11px] font-black text-[var(--text-muted)]">
+                        <Calendar size={14} className="opacity-50" />
+                        {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                       </div>
-
-                      <div className="mt-5 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-                        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                          <Calendar size={13} className="opacity-50" />
-                          {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                        </div>
-                        <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.18em]" style={{ color: tone.color }}>
-                          Open
-                          <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-                        </span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-
-              <TablePagination
-                rowsPerPageOptions={[6, 9, 12]}
-                component="div"
-                count={filtered.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                sx={{
-                  borderTop: "1px solid #f1f5f9",
-                  ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": {
-                    fontWeight: 800,
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    color: "#94a3b8"
-                  }
-                }}
-              />
-            </>
+                      <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest" style={{ color: tone.color }}>
+                        Details <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           ) : (
-            <div className="px-6 py-20 text-center text-[var(--text-muted)]">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent-bg)]">
-                <Bell size={32} className="opacity-60" />
+            <div className="rounded-[3rem] border-2 border-dashed border-[var(--border)] bg-[var(--card)] py-28 text-center">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-[var(--bg)] text-[var(--text-muted)] opacity-30">
+                <Bell size={48} />
               </div>
-              <p className="text-sm font-black uppercase tracking-[0.24em]">No notices found</p>
-              <p className="mt-2 text-sm">Try another keyword or clear the current filters.</p>
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition hover:bg-[var(--bg)]"
-                >
-                  Reset Filters
-                </button>
-              )}
+              <h3 className="text-2xl font-black uppercase tracking-widest text-[var(--text)]">Silence in the Hall</h3>
+              <p className="mt-2 text-[var(--text-muted)]">No notices match your current search or filters.</p>
             </div>
           )}
         </div>
       </div>
 
+      {/* Detail Modal */}
       {selected && (
         <div
-          className="fixed inset-0 z-[130] flex items-center justify-center p-4 backdrop-blur-sm"
-          style={{ background: "color-mix(in srgb, var(--text) 45%, transparent)" }}
+          className="fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-md"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-2xl rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-8 shadow-2xl"
+            className="w-full max-w-2xl overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--card)] shadow-2xl animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div className="space-y-3">
-                <Chip
-                  label={selected.category}
-                  sx={{
-                    fontWeight: 900,
-                    fontSize: "10px",
-                    borderRadius: "999px",
-                    bgcolor: categoryColors[selected.category]?.bg,
-                    color: categoryColors[selected.category]?.color
-                  }}
-                />
-                <h2 className="text-3xl font-black tracking-tight text-[var(--text)]">{selected.title}</h2>
+            <div className="p-8">
+              <div className="mb-6 flex items-start justify-between">
+                <div className="space-y-3">
+                  <Chip
+                    label={selected.category}
+                    sx={{
+                      fontWeight: 900,
+                      fontSize: "10px",
+                      bgcolor: categoryColors[selected.category]?.bg,
+                      color: categoryColors[selected.category]?.color,
+                      borderRadius: "12px",
+                    }}
+                  />
+                  <h2 className="text-3xl font-black text-[var(--text)]">{selected.title}</h2>
+                </div>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="rounded-2xl bg-[var(--bg)] p-3 text-[var(--text-muted)] hover:text-rose-500 transition-colors"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => setSelected(null)}
-                className="rounded-full p-2 transition-colors hover:bg-[var(--accent-soft)]"
-              >
-                <X size={20} className="text-[var(--text-muted)]" />
-              </button>
-            </div>
 
-            <div className="mb-6 rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg)] p-6">
-              <p className="text-sm leading-7 text-[var(--text-muted)] whitespace-pre-wrap">
+              <div className="mb-8 min-h-[200px] rounded-[2rem] border border-[var(--border)] bg-[var(--bg)] p-8 leading-relaxed text-[var(--text-muted)]">
                 {selected.description || selected.content}
-              </p>
-            </div>
+              </div>
 
-            <div className="flex flex-col gap-4 border-t border-[var(--border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                <Calendar size={14} /> Posted on {new Date(selected.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-              </p>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="rounded-2xl bg-[var(--accent)] px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-white shadow-md transition hover:opacity-90"
-              >
-                Close Notice
-              </button>
+              <div className="flex items-center justify-between border-t border-[var(--border)] pt-6">
+                <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">
+                  <Calendar size={16} />
+                  {new Date(selected.createdAt).toLocaleDateString("en-IN", { dateStyle: "long" })}
+                </p>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="rounded-2xl bg-rose-500 px-8 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-600"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Create Modal */}
       {showForm && (
         <div
-          className="fixed inset-0 z-[130] flex items-center justify-center p-4 backdrop-blur-sm"
-          style={{ background: "color-mix(in srgb, var(--text) 45%, transparent)" }}
+          className="fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-md"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
         >
-          <div className="w-full max-w-md rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-8 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-black uppercase tracking-tight text-[var(--text)]">Post New Notice</h2>
-              <button onClick={() => setShowForm(false)} className="rounded-full p-2 transition-colors hover:bg-[var(--accent-soft)]">
-                <X size={20} className="text-[var(--text-muted)]" />
-              </button>
+          <div className="w-full max-w-md rounded-[3rem] border border-[var(--border)] bg-[var(--card)] shadow-2xl overflow-hidden animate-scaleUp">
+            <div className="p-8">
+              <div className="mb-8 flex items-center justify-between">
+                <h2 className="text-2xl font-black text-[var(--text)] uppercase tracking-tight">Post Update</h2>
+                <button onClick={() => setShowForm(false)} className="rounded-2xl bg-[var(--bg)] p-2 text-[var(--text-muted)] hover:text-rose-500">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreate} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] ml-2">Subject</label>
+                  <input
+                    required
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-sm font-bold text-[var(--text)] focus:ring-2 focus:ring-rose-500 outline-none transition-all"
+                    placeholder="Enter notice title..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] ml-2">Tag Category</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-sm font-bold text-[var(--text)] focus:ring-2 focus:ring-rose-500 outline-none appearance-none"
+                  >
+                    {categories.filter((c) => c !== "All").map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] ml-2">Full Message</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-4 text-sm font-medium text-[var(--text)] focus:ring-2 focus:ring-rose-500 outline-none resize-none transition-all"
+                    placeholder="Type announcement details..."
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 rounded-2xl border border-[var(--border)] py-4 text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)] transition hover:bg-[var(--bg)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-2xl bg-rose-500 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-rose-500/20 hover:bg-rose-600 transition-all"
+                  >
+                    Publish
+                  </button>
+                </div>
+              </form>
             </div>
-            <form onSubmit={handleCreate} className="space-y-5">
-              <div>
-                <label className="ml-1 mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Title</label>
-                <input
-                  required
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="Notice title..."
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-bold text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                />
-              </div>
-              <div>
-                <label className="ml-1 mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Category</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-bold text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                >
-                  {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="ml-1 mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Message</label>
-                <textarea
-                  required
-                  rows={4}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Type notice details here..."
-                  className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-medium text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                />
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--accent-bg)] py-3 text-xs font-black uppercase tracking-[0.18em] text-[var(--text-muted)] transition-all hover:opacity-90"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="user-btn-primary flex-1 rounded-2xl py-3 text-xs shadow-lg">
-                  Post
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleUp {
+          from { opacity: 0; transform: scale(0.95); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .animate-scaleUp { animation: scaleUp 0.3s cubic-bezier(0.22,1,0.36,1) forwards; }
+        @keyframes ring {
+          0%,50%,100% { transform: rotate(0); }
+          10%  { transform: rotate(15deg); }
+          20%  { transform: rotate(-15deg); }
+          30%  { transform: rotate(10deg); }
+          40%  { transform: rotate(-10deg); }
+        }
+        .group:hover .group-hover\\:animate-ring { animation: ring 1s ease-in-out; }
+      `}</style>
     </div>
   );
 };

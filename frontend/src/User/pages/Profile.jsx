@@ -1,18 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  User,
-  Phone,
-  FileText,
-  MapPin,
-  Edit2,
-  ShieldCheck,
-  Calendar,
-  Mail,
-  Sparkles,
-  X,
-  Loader2,
+  User, Phone, FileText, MapPin, Edit2, ShieldCheck,
+  Calendar, Mail, Sparkles, Loader2, Camera, CheckCircle2,
+  Trash2, Home, Hash, Layers, CreditCard, Building2, X
 } from "lucide-react";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -28,22 +20,31 @@ const emptyForm = {
   email: "",
 };
 
+const TABS = [
+  { id: "Personal", icon: User, label: "Identity" },
+  { id: "Contact", icon: Phone, label: "Contact" },
+  { id: "Address", icon: MapPin, label: "Property" },
+  { id: "Document", icon: FileText, label: "Vault" },
+];
+
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
+
 const ProfilePage = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const id = user?.profileId;
-  const isResident = user?.role?.toLowerCase() === "resident";
+  const id = user?.profileId || user?._id;
 
   const [activeTab, setActiveTab] = useState("Personal");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [previewImg, setPreviewImg] = useState(null);
+  const [newImageFile, setNewImageFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   const dispatch = useDispatch();
-  const { singleResident: data, profileLoading, loading } = useSelector((state) => state.resident);
+  const { singleResident: data, profileLoading, loading } = useSelector((s) => s.resident);
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchResidentById(id));
-    }
+    if (id) dispatch(fetchResidentById(id));
   }, [id, dispatch]);
 
   useEffect(() => {
@@ -51,394 +52,492 @@ const ProfilePage = () => {
     setForm({
       firstName: data.firstName || "",
       lastName: data.lastName || "",
-      gender: data.gender === "Female" ? "Female" : "Male",
+      gender: data.gender || "Male",
       dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
       mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
       email: data.email || "",
     });
+    
+    // If it's a relative path from server, add BASE_URL
+    if (data.profileImage && !data.profileImage.startsWith("data:") && !data.profileImage.startsWith("http")) {
+      setPreviewImg(`${BASE_URL}/${data.profileImage.replace(/\\/g, "/")}`);
+    } else {
+      setPreviewImg(data.profileImage || null);
+    }
+    setNewImageFile(null);
   }, [data, editing]);
 
-  const tabs = [
-    { id: "Personal", icon: <User size={18} />, label: "Personal" },
-    { id: "Contact", icon: <Phone size={18} />, label: "Contact" },
-    { id: "Document", icon: <FileText size={18} />, label: "Document" },
-    { id: "Address", icon: <MapPin size={18} />, label: "Flat" },
-  ];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error("File must be under 2 MB"); return; }
+    
+    setNewImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewImg(reader.result);
+    reader.readAsDataURL(file);
+  };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "mobileNumber") {
-      setForm((prev) => ({ ...prev, [name]: value.replace(/\D/g, "").slice(0, 10) }));
-      return;
-    }
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleRemovePhoto = () => {
+    setPreviewImg(null);
+    setNewImageFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCancel = () => {
     setEditing(false);
+    // Reset form to current data
     if (data) {
       setForm({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
-        gender: data.gender === "Female" ? "Female" : "Male",
+        gender: data.gender || "Male",
         dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
         mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
         email: data.email || "",
       });
+      if (data.profileImage && !data.profileImage.startsWith("data:") && !data.profileImage.startsWith("http")) {
+        setPreviewImg(`${BASE_URL}/${data.profileImage.replace(/\\/g, "/")}`);
+      } else {
+        setPreviewImg(data.profileImage || null);
+      }
+      setNewImageFile(null);
     }
   };
 
   const handleSave = async () => {
     if (!id) return;
-    const payload = {
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      gender: form.gender,
-      dateOfBirth: form.dateOfBirth || null,
-      mobileNumber: form.mobileNumber.replace(/\D/g, "").slice(0, 10),
-      email: form.email.trim().toLowerCase(),
-    };
-
-    if (payload.mobileNumber.length !== 10) {
+    if (!/^\d{10}$/.test(form.mobileNumber)) {
       toast.error("Enter a valid 10-digit mobile number.");
       return;
     }
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      toast.error("First and last name are required.");
+      return;
+    }
 
-    const result = await dispatch(updateResident({ id, formData: payload }));
-    if (result.meta.requestStatus === "fulfilled" && result.payload) {
-      const updated = result.payload;
-      try {
-        const u = JSON.parse(localStorage.getItem("userData") || "{}");
-        localStorage.setItem(
-          "userData",
-          JSON.stringify({
-            ...u,
-            name: `${updated.firstName || ""} ${updated.lastName || ""}`.trim(),
-            email: updated.email,
-          })
-        );
-        window.dispatchEvent(new Event("esociety-userdata-updated"));
-      } catch {
-        /* ignore */
-      }
+    const formData = new FormData();
+    formData.append("firstName", form.firstName.trim());
+    formData.append("lastName", form.lastName.trim());
+    formData.append("gender", form.gender);
+    formData.append("dateOfBirth", form.dateOfBirth);
+    formData.append("mobileNumber", form.mobileNumber);
+    formData.append("email", form.email.trim().toLowerCase());
+
+    if (newImageFile) {
+      formData.append("profileImage", newImageFile);
+    } else if (previewImg === null) {
+      // Logic for removing image could go here if server supports it via field
+      formData.append("profileImage", ""); 
+    }
+
+    const result = await dispatch(updateResident({ id, formData }));
+    if (result.meta.requestStatus === "fulfilled") {
+      toast.success("Profile updated successfully!");
       setEditing(false);
+      const u = JSON.parse(localStorage.getItem("userData") || "{}");
+      localStorage.setItem("userData", JSON.stringify({ ...u, name: `${form.firstName} ${form.lastName}` }));
+      window.dispatchEvent(new Event("esociety-userdata-updated"));
+    } else {
+      toast.error("Update failed. Please try again.");
     }
   };
 
-  const mobileValid = useMemo(() => {
-    const d = (form.mobileNumber || "").replace(/\D/g, "");
-    return d.length === 10;
-  }, [form.mobileNumber]);
+  const setField = (key) => (e) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  if (profileLoading || !data) {
-    return <PageLoader message="Loading profile…" />;
-  }
+  const fullName = `${form.firstName} ${form.lastName}`.trim() || "—";
+  const initials = [form.firstName?.[0], form.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "?";
 
-  const showEditChrome = isResident;
+  if (profileLoading || !data) return <PageLoader message="Loading profile..." />;
 
   return (
-    <div className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 font-sans text-[var(--text)] transition-colors duration-300 sm:p-6">
-      <div className="relative z-[1] mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
-        >
-          <div>
-            <span className="mb-2 inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
-              <Sparkles size={12} /> Account
-            </span>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">My profile</h1>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {showEditChrome
-                ? "Update your personal and contact details. Flat assignment is managed by the office."
-                : "Your details as registered with the society"}
-            </p>
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans transition-colors duration-300">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
 
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar card */}
-          <motion.aside
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.05 }}
-            className="w-full shrink-0 lg:w-[380px]"
-          >
-            <div className="overflow-hidden rounded-xl border bg-[var(--card)] shadow-[var(--shadow-lg)] transition-colors" style={{ borderColor: "var(--border)" }}>
-              <div
-                className="relative h-28 w-full"
-                style={{
-                  background: "linear-gradient(125deg, var(--accent), #6366f1, #8b5cf6)",
-                }}
+        {/* ── Page Header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles size={14} className="text-indigo-500" />
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-indigo-500">Account Profile</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Profile</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-1">Manage your personal information and settings</p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {editing ? (
+              <>
+                <button
+                  onClick={handleCancel}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium hover:bg-[var(--bg-hover)] transition-all"
+                >
+                  <X size={15} /> Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all disabled:opacity-60 shadow-lg shadow-indigo-500/20"
+                >
+                  {loading ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                  Save Changes
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
               >
-                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+                <Edit2 size={15} /> Edit Profile
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+
+          {/* ── Sidebar ── */}
+          <aside className="space-y-4">
+            {/* Profile Card */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+              {/* Cover */}
+              <div className="h-28 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative">
+                {editing && (
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                    <span className="text-white/80 text-[10px] font-semibold uppercase tracking-widest">Editing</span>
+                  </div>
+                )}
               </div>
 
-              <div className="-mt-14 flex flex-col items-center px-6 pb-8 pt-0">
-                <div className="relative">
-                  <div className="rounded-xl border-4 border-[var(--card)] bg-[var(--card)] p-0.5 shadow-lg">
-                    <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)]">
-                      {data.profileImage ? (
-                        <img src={data.profileImage} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <User size={48} className="text-[var(--text-muted)]" />
-                      )}
-                    </div>
+              <div className="px-6 pb-6">
+                {/* Avatar */}
+                <div className="relative -mt-12 mb-4 w-fit">
+                  <div className={`w-24 h-24 rounded-2xl border-4 border-[var(--card)] overflow-hidden bg-indigo-100 flex items-center justify-center shadow-xl transition-all ${editing ? "ring-2 ring-indigo-500 ring-offset-2 ring-offset-[var(--card)]" : ""}`}>
+                    {previewImg ? (
+                      <img src={previewImg} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl font-bold text-indigo-600">{initials}</span>
+                    )}
                   </div>
+                  <AnimatePresence>
+                    {editing && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="absolute -bottom-1 -right-1 flex gap-1.5"
+                      >
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-500 transition-colors"
+                          title="Upload photo"
+                        >
+                          <Camera size={13} />
+                        </button>
+                        {previewImg && (
+                          <button
+                            onClick={handleRemovePhoto}
+                            className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-lg hover:bg-rose-500 transition-colors"
+                            title="Remove photo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                 </div>
 
-                <h2 className="mt-4 text-center text-xl font-black text-[var(--text)]">
-                  {editing ? `${form.firstName} ${form.lastName}`.trim() || "—" : `${data.firstName} ${data.lastName}`}
-                </h2>
-
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
-                  <ShieldCheck size={12} />
-                  {data.residentType}
+                <h2 className="text-xl font-bold truncate">{fullName}</h2>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 text-[11px] font-semibold border border-indigo-500/20">
+                    <ShieldCheck size={11} /> Resident Member
+                  </span>
                 </div>
 
-                <div className="mt-8 w-full space-y-3">
-                  <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[var(--card)] text-[var(--accent)] shadow-sm">
-                      <Mail size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Email</p>
-                      <p className="truncate text-sm font-bold">{editing ? form.email || "—" : data.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-bg)] p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[var(--card)] text-emerald-600 shadow-sm">
-                      <Phone size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--text-muted)]">Phone</p>
-                      <p className="text-sm font-bold">{editing ? form.mobileNumber || "—" : data.mobileNumber}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md border border-[var(--border)] px-3 py-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Status</span>
-                    <span
-                      className={`rounded-md px-3 py-1 text-xs font-black uppercase ${
-                        data.status === "Active" ? "bg-emerald-500/15 text-emerald-600" : "bg-red-500/15 text-red-600"
-                      }`}
-                    >
-                      {data.status}
-                    </span>
-                  </div>
+                {/* Quick info */}
+                <div className="mt-5 space-y-3">
+                  <QuickInfoRow icon={Mail} label="Email" value={data.email} color="text-indigo-500" bg="bg-indigo-500/10" />
+                  <QuickInfoRow icon={Phone} label="Mobile" value={data.mobileNumber ? `+91 ${data.mobileNumber}` : "—"} color="text-emerald-600" bg="bg-emerald-500/10" />
+                  <QuickInfoRow icon={Calendar} label="Member Since" value={data.createdAt ? dayjs(data.createdAt).format("MMM YYYY") : "—"} color="text-amber-600" bg="bg-amber-500/10" />
                 </div>
               </div>
             </div>
-          </motion.aside>
 
-          {/* Main */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="min-w-0 flex-1 space-y-6"
-          >
-            <div className="flex gap-1 overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
-              {tabs.map((tab) => (
+            {/* Property Summary Card */}
+            {data.flat && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">Property</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <MiniStat label="Wing" value={data.wing || "—"} />
+                  <MiniStat label="Flat No." value={data.flatNumber || "—"} />
+                  <MiniStat label="Floor" value={data.flat?.floor ?? "—"} />
+                  <MiniStat label="Type" value={data.flat?.type || "—"} />
+                </div>
+              </div>
+            )}
+          </aside>
+
+          {/* ── Main Content ── */}
+          <main>
+            {/* Tabs */}
+            <div className="flex gap-1 p-1 rounded-xl bg-[var(--card)] border border-[var(--border)] mb-5 overflow-x-auto scrollbar-hide">
+              {TABS.map((t) => (
                 <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition-all sm:min-w-0 ${
-                    activeTab === tab.id
-                      ? "bg-[var(--accent)] text-white shadow-md"
-                      : "text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex flex-1 items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-semibold uppercase tracking-wider whitespace-nowrap transition-all min-w-[80px] ${
+                    activeTab === t.id
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-[var(--text-muted)] hover:bg-[var(--bg)]"
                   }`}
                 >
-                  {tab.icon}
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <t.icon size={14} />
+                  <span>{t.label}</span>
                 </button>
               ))}
             </div>
 
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow)] sm:p-8">
-              <h2 className="mb-6 text-lg font-black text-[var(--text)]">{activeTab}</h2>
+            {/* Tab Content */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {/* Tab Header */}
+                  <div className="px-6 pt-6 pb-4 border-b border-[var(--border)] flex items-center gap-3">
+                    {(() => { const T = TABS.find(t => t.id === activeTab); return T ? <T.icon size={18} className="text-indigo-500" /> : null; })()}
+                    <div>
+                      <h3 className="font-bold text-base">
+                        {activeTab === "Personal" && "Identity Information"}
+                        {activeTab === "Contact" && "Contact Details"}
+                        {activeTab === "Address" && "Property Information"}
+                        {activeTab === "Document" && "Document Vault"}
+                      </h3>
+                      <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                        {activeTab === "Personal" && "Your name, gender and date of birth"}
+                        {activeTab === "Contact" && "Phone number and email address"}
+                        {activeTab === "Address" && "Your flat and block details"}
+                        {activeTab === "Document" && "Stored identity and occupancy documents"}
+                      </p>
+                    </div>
+                  </div>
 
-              {activeTab === "Personal" && (
-                <div className="grid gap-6 md:grid-cols-2">
-                  {editing && showEditChrome ? (
-                    <>
-                      <EditableField label="First name" name="firstName" value={form.firstName} onChange={handleChange} />
-                      <EditableField label="Last name" name="lastName" value={form.lastName} onChange={handleChange} />
-                      <div className="group flex flex-col">
-                        <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-                          Date of birth
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            name="dateOfBirth"
-                            value={form.dateOfBirth}
-                            onChange={handleChange}
-                            className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)]"
-                          />
-                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
-                            <Calendar size={14} />
+                  <div className="p-6">
+
+                    {/* ── Personal Tab ── */}
+                    {activeTab === "Personal" && (
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <FormField
+                          label="First Name"
+                          value={form.firstName}
+                          editing={editing}
+                          onChange={setField("firstName")}
+                          placeholder="Enter first name"
+                        />
+                        <FormField
+                          label="Last Name"
+                          value={form.lastName}
+                          editing={editing}
+                          onChange={setField("lastName")}
+                          placeholder="Enter last name"
+                        />
+                        <FormField
+                          label="Date of Birth"
+                          type="date"
+                          value={form.dateOfBirth}
+                          editing={editing}
+                          onChange={setField("dateOfBirth")}
+                          display={form.dateOfBirth ? dayjs(form.dateOfBirth).format("DD MMM YYYY") : "—"}
+                        />
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Gender</label>
+                          {editing ? (
+                            <select
+                              value={form.gender}
+                              onChange={setField("gender")}
+                              className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                            >
+                              <option>Male</option>
+                              <option>Female</option>
+                              <option>Other</option>
+                            </select>
+                          ) : (
+                            <DisplayValue value={data.gender} />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Contact Tab ── */}
+                    {activeTab === "Contact" && (
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <FormField
+                          label="Mobile Number"
+                          value={form.mobileNumber}
+                          editing={editing}
+                          maxLength={10}
+                          placeholder="10-digit mobile"
+                          onChange={(e) => setForm(f => ({ ...f, mobileNumber: e.target.value.replace(/\D/g, "") }))}
+                          display={data.mobileNumber ? `+91 ${data.mobileNumber}` : "—"}
+                          prefix={editing ? "+91" : undefined}
+                        />
+                        <FormField
+                          label="Email Address"
+                          type="email"
+                          value={form.email}
+                          editing={editing}
+                          onChange={setField("email")}
+                          placeholder="Enter email"
+                        />
+
+                        {/* Read-only info */}
+                        <div className="sm:col-span-2">
+                          <div className="mt-2 p-4 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-700/30">
+                            <p className="text-[12px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                              <ShieldCheck size={13} />
+                              Email and mobile are used for login. Contact the administrator to change verified credentials.
+                            </p>
                           </div>
                         </div>
                       </div>
-                      <div className="group flex flex-col">
-                        <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Gender</label>
-                        <select
-                          name="gender"
-                          value={form.gender}
-                          onChange={handleChange}
-                          className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)]"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                        </select>
+                    )}
+
+                    {/* ── Address Tab ── */}
+                    {activeTab === "Address" && (
+                      <div className="space-y-6">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                          <AddressBox icon={Building2} label="Wing" value={data.wing} color="indigo" />
+                          <AddressBox icon={Hash} label="Flat Number" value={data.flatNumber} color="purple" />
+                          <AddressBox icon={Home} label="Block" value={data.flat?.block} color="pink" />
+                          <AddressBox icon={Layers} label="Floor" value={data.flat?.floor} color="sky" />
+                          <AddressBox icon={Home} label="Flat Type" value={data.flat?.type} color="amber" />
+                          <AddressBox
+                            icon={CreditCard}
+                            label="Monthly Maintenance"
+                            value={data.flat?.monthlyMaintenance ? `₹${Number(data.flat.monthlyMaintenance).toLocaleString("en-IN")}` : null}
+                            color="emerald"
+                          />
+                        </div>
+
+                        {data.flat?.description && (
+                          <div className="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+                            <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-2">Description</p>
+                            <p className="text-sm leading-relaxed">{data.flat.description}</p>
+                          </div>
+                        )}
+
+                        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-700/30">
+                          <p className="text-[12px] text-indigo-700 dark:text-indigo-400 font-medium">
+                            Property details are managed by the society administrator and cannot be edited here.
+                          </p>
+                        </div>
                       </div>
-                      <InputGroup label="Resident type" value={data.residentType} />
-                    </>
-                  ) : (
-                    <>
-                      <InputGroup label="First name" value={data.firstName} />
-                      <InputGroup label="Last name" value={data.lastName} />
-                      <InputGroup
-                        label="Date of birth"
-                        icon={<Calendar size={14} />}
-                        value={data.dateOfBirth ? dayjs(data.dateOfBirth).format("DD MMM YYYY") : "—"}
-                      />
-                      <InputGroup label="Gender" value={data.gender} />
-                      <InputGroup label="Resident type" value={data.residentType} />
-                    </>
-                  )}
-                </div>
-              )}
+                    )}
 
-              {activeTab === "Contact" && (
-                <div className="grid gap-6 md:grid-cols-2">
-                  {editing && showEditChrome ? (
-                    <>
-                      <EditableField
-                        label="Primary mobile (10 digits)"
-                        name="mobileNumber"
-                        value={form.mobileNumber}
-                        onChange={handleChange}
-                        inputMode="numeric"
-                        maxLength={10}
-                        error={form.mobileNumber.length > 0 && !mobileValid ? "Enter a valid 10-digit mobile number" : null}
-                      />
-                      <EditableField label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
-                    </>
-                  ) : (
-                    <>
-                      <InputGroup label="Primary mobile" value={data.mobileNumber} />
-                      <InputGroup label="Email" value={data.email} />
-                    </>
-                  )}
-                </div>
-              )}
+                    {/* ── Document Tab ── */}
+                    {activeTab === "Document" && (
+                      <div className="py-10 flex flex-col items-center justify-center text-center">
+                        <div className="w-20 h-20 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-5">
+                          <FileText size={36} strokeWidth={1.5} />
+                        </div>
+                        <h4 className="text-lg font-bold mb-2">Document Vault</h4>
+                        <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-6">
+                          Your identity and occupancy documents are securely stored here. Only you and the administrator can access this data.
+                        </p>
+                        <button className="px-6 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-500 text-sm font-medium hover:bg-indigo-500/10 transition-all">
+                          Request Documents
+                        </button>
+                      </div>
+                    )}
 
-              {activeTab === "Document" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="rounded-md border border-dashed border-[var(--border)] bg-[var(--accent-bg)]/40 p-8 text-center"
-                >
-                  <FileText className="mx-auto mb-3 text-[var(--accent)]" size={36} />
-                  <p className="font-bold text-[var(--text)]">Documents</p>
-                  <p className="mt-2 text-sm text-[var(--text-muted)]">
-                    ID and society documents will appear here when uploaded by the office.
-                  </p>
-                </motion.div>
-              )}
-
-              {activeTab === "Address" && (
-                <div className="space-y-6">
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Wing, flat, and billing are assigned by the society office. Contact admin if you need a correction.
-                  </p>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <InputGroup label="Wing / block" value={data.wing} />
-                    <InputGroup label="Floor" value={data.flat?.floor} />
-                    <InputGroup label="Flat number" value={data.flatNumber} />
-                    <InputGroup label="Flat type (BHK)" value={data.flat?.type} />
-                    <InputGroup label="Block" value={data.flat?.block} />
-                    <InputGroup
-                      label="Monthly maintenance"
-                      value={data.flat?.monthlyMaintenance ? `₹${data.flat.monthlyMaintenance}` : "—"}
-                    />
                   </div>
-                </div>
-              )}
-
-              {showEditChrome && (
-                <div className="mt-10 flex flex-wrap justify-end gap-3 border-t border-[var(--border)] pt-6">
-                  {editing ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={handleCancel}
-                        disabled={loading}
-                        className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-5 py-2.5 text-sm font-bold text-[var(--text)] transition hover:bg-[var(--accent-soft)] disabled:opacity-50"
-                      >
-                        <X size={16} /> Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={loading || !mobileValid || !form.email.trim()}
-                        className="user-btn-primary inline-flex items-center gap-2 rounded-md px-6 py-2.5 disabled:opacity-50"
-                      >
-                        {loading ? <Loader2 size={16} className="animate-spin" /> : <Edit2 size={16} />}
-                        Save changes
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setEditing(true)}
-                      className="user-btn-primary inline-flex items-center gap-2 rounded-md px-6 py-2.5"
-                    >
-                      <Edit2 size={16} /> Edit profile
-                    </button>
-                  )}
-                </div>
-              )}
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </motion.div>
+          </main>
         </div>
       </div>
     </div>
   );
 };
 
-const InputGroup = ({ label, value, icon }) => (
-  <div className="group flex flex-col">
-    <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
-    <div className="relative">
-      <input
-        readOnly
-        value={value || "—"}
-        className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition group-hover:border-[var(--accent)]"
-      />
-      {icon && <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">{icon}</div>}
+/* ── Helper Components ── */
+
+const QuickInfoRow = ({ icon: Icon, label, value, color, bg }) => (
+  <div className="flex items-center gap-3">
+    <div className={`w-8 h-8 rounded-lg ${bg} ${color} flex items-center justify-center shrink-0`}>
+      <Icon size={14} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)] leading-none mb-0.5">{label}</p>
+      <p className="text-sm font-medium truncate">{value || "—"}</p>
     </div>
   </div>
 );
 
-const EditableField = ({ label, name, value, onChange, type = "text", error, inputMode, maxLength }) => (
-  <div className="group flex flex-col">
-    <label className="mb-1.5 px-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      inputMode={inputMode}
-      maxLength={maxLength}
-      className={`w-full rounded-md border bg-[var(--bg-alt)] px-3 py-3 text-sm font-bold text-[var(--text)] outline-none transition focus:border-[var(--accent)] ${
-        error ? "border-red-400" : "border-[var(--border)]"
-      }`}
-    />
-    {error && <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>}
+const MiniStat = ({ label, value }) => (
+  <div className="rounded-xl bg-[var(--bg)] border border-[var(--border)] px-3 py-2.5">
+    <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-1">{label}</p>
+    <p className="text-sm font-bold">{value}</p>
+  </div>
+);
+
+const DisplayValue = ({ value }) => (
+  <div className="px-4 py-3 bg-[var(--bg)] rounded-xl border border-[var(--border)] text-sm font-medium">
+    {value || "—"}
+  </div>
+);
+
+const FormField = ({ label, value, editing, onChange, type = "text", placeholder, maxLength, display, prefix }) => (
+  <div className="flex flex-col gap-2">
+    <label className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
+    {editing ? (
+      <div className={`flex items-center bg-[var(--bg)] border border-[var(--border)] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 transition-all`}>
+        {prefix && (
+          <span className="px-3 text-sm text-[var(--text-muted)] font-medium border-r border-[var(--border)] bg-[var(--card)] py-3 shrink-0">
+            {prefix}
+          </span>
+        )}
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          maxLength={maxLength}
+          placeholder={placeholder}
+          className="w-full bg-transparent px-4 py-3 text-sm font-medium outline-none placeholder:text-[var(--text-muted)]/50"
+        />
+      </div>
+    ) : (
+      <DisplayValue value={display !== undefined ? display : value} />
+    )}
+  </div>
+);
+
+const colorMap = {
+  indigo: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  purple: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  pink:   "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  sky:    "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  amber:  "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  emerald:"bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+};
+
+const AddressBox = ({ icon: Icon, label, value, color }) => (
+  <div className="p-5 rounded-xl bg-[var(--bg)] border border-[var(--border)] flex items-start gap-3 hover:border-indigo-500/30 transition-colors">
+    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${colorMap[color] || colorMap.indigo}`}>
+      <Icon size={15} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>
+      <p className="text-base font-bold truncate">{value || "—"}</p>
+    </div>
   </div>
 );
 

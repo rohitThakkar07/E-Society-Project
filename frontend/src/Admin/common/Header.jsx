@@ -44,12 +44,12 @@ const Header = ({ toggleSidebar }) => {
         {/* Reset Password */}
         <button
           onClick={() => setShowForgotModal(true)}
-          className="hidden sm:flex items-center gap-2 text-sm text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all font-medium"
+          title="Reset Password"
+          className="hidden sm:flex items-center justify-center text-slate-600 border border-slate-200 w-9 h-9 rounded-lg hover:bg-slate-50 transition-all hover:text-slate-900 shadow-sm"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
           </svg>
-          Reset Password
         </button>
 
         {/* Divider */}
@@ -58,8 +58,7 @@ const Header = ({ toggleSidebar }) => {
         {/* User Info */}
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-slate-800 leading-none">{user.name || "Admin"}</p>
-            <p className="text-xs text-blue-600 font-semibold capitalize mt-0.5">{role}</p>
+            <p className="text-sm font-bold text-slate-800 texe-center leading-none">{user.name || "Admin"}</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center font-bold text-blue-700 text-sm">
             {(user.name?.charAt(0) || "A").toUpperCase()}
@@ -70,12 +69,16 @@ const Header = ({ toggleSidebar }) => {
         <button
           onClick={handleLogout}
           disabled={loading}
-          className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-all active:scale-95 disabled:opacity-50"
+          title="Logout"
+          className="flex items-center justify-center bg-slate-800 text-white w-9 h-9 rounded-lg hover:bg-red-600 transition-all active:scale-95 disabled:opacity-50 shadow-md"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          {loading ? "..." : "Logout"}
+          {loading ? (
+            <span className="text-xs font-bold leading-none">...</span>
+          ) : (
+            <svg className="w-4 h-4 translate-x-[1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          )}
         </button>
       </div>
 

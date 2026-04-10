@@ -5,6 +5,10 @@ import {
   CheckCircle,
   Clock,
   Download,
+  Sparkles,
+  Receipt,
+  ArrowRight,
+  AlertCircle,
 } from "lucide-react";
 import { fetchMyMaintenance } from "../../store/slices/maintenanceSlice";
 import { fetchPaymentHistory } from "../../store/slices/paymentSlice";
@@ -24,7 +28,6 @@ function formatPaymentMethod(m) {
 
 const PayMaintenance = () => {
   const dispatch = useDispatch();
-
   const { list: records = [] } = useSelector((s) => s.maintenance || {});
   const myPayments = useSelector((s) => s.payment?.history || []);
 
@@ -60,10 +63,9 @@ const PayMaintenance = () => {
     [records]
   );
 
-  const totalDue = pending.reduce(
-    (sum, r) => sum + (r.amount || 0) + (r.lateFee || 0),
-    0
-  );
+  const totalDue = pending.reduce((sum, r) => sum + (r.amount || 0) + (r.lateFee || 0), 0);
+  const totalPaid = myPayments.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+  const latestPayment = myPayments[0];
 
   const openPayModal = (record) => {
     setPaymentModalData({
@@ -89,182 +91,189 @@ const PayMaintenance = () => {
 
   const openReceiptModal = (receiptNumber) => {
     if (!receiptNumber) return;
-    setReceiptModal({
-      isOpen: true,
-      receiptNumber,
-    });
+    setReceiptModal({ isOpen: true, receiptNumber });
   };
 
   const statusConfig = {
-    paid: "bg-emerald-100 text-emerald-700",
-    pending: "bg-amber-100 text-amber-700",
-    overdue: "bg-red-100 text-red-700",
+    paid: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+    pending: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+    overdue: "bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse",
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 md:p-8 transition-colors duration-300">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-emerald-500 rounded-2xl text-white shadow-lg shadow-emerald-100">
-            <DollarSign size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-              Maintenance
-            </h1>
-            <p className="text-sm text-slate-500 font-medium">
-              Pay dues with Razorpay and view history
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="rounded-3xl p-6 text-white shadow-xl relative overflow-hidden bg-gradient-to-br from-[var(--accent)] to-indigo-700">
-            <div className="relative z-10">
-              <p className="text-slate-200/90 text-xs font-bold uppercase tracking-widest mb-2">
-                Total outstanding
-              </p>
-              <p className="text-4xl font-black">Rs. {totalDue.toLocaleString("en-IN")}</p>
-              <div className="mt-4 flex items-center gap-2 text-slate-200/80 text-xs">
-                <Clock size={12} /> {pending.length} bill{pending.length !== 1 ? "s" : ""}{" "}
-                pending
+    <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-all duration-300 md:p-8">
+      <div className="mx-auto max-w-5xl m-12">
+        
+        {/* Header Section with Glass Effect & Glow */}
+        <section className="group relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:p-8 transition-all duration-500 hover:shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+          <div className="absolute -right-12 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-[80px] group-hover:bg-emerald-400/20 transition-all duration-700" />
+          <div className="absolute left-1/3 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-indigo-400/5 blur-[80px]" />
+          
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] backdrop-blur">
+                <Sparkles size={13} className="text-emerald-500 animate-spin-slow" />
+                Smart payments
               </div>
+              <div className="mb-4 flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 group-hover:scale-110 transition-transform duration-500">
+                  <DollarSign size={28} />
+                </div>
+                <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">Payments</h1>
+              </div>
+              <p className="max-w-xl text-sm font-medium leading-relaxed text-[var(--text-muted)] opacity-80">
+                Pay dues, track receipts, and stay on top of your monthly society maintenance.
+              </p>
+              
+              {latestPayment && (
+                <button
+                  type="button"
+                  onClick={() => openReceiptModal(latestPayment.receiptNumber)}
+                  className="group/btn mt-6 inline-flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 text-sm font-black text-[var(--text)] shadow-sm transition-all hover:-translate-y-1 hover:border-emerald-500/30 active:scale-95"
+                >
+                  <Receipt size={18} className="text-emerald-500 group-hover/btn:rotate-12 transition-transform" />
+                  <span className="max-w-[150px] truncate">Recent: {latestPayment.receiptNumber}</span>
+                  <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                </button>
+              )}
             </div>
-            <DollarSign className="absolute -right-4 -bottom-4 text-slate-900/20 w-32 h-32" />
-          </div>
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">
-              Bills paid
-            </p>
-            <p className="text-3xl font-extrabold text-emerald-600">{paid.length}</p>
-          </div>
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">
-              Pending
-            </p>
-            <p className="text-3xl font-extrabold text-amber-500">{pending.length}</p>
-          </div>
-        </div>
 
-        <div className="flex gap-2 mb-6 bg-slate-200/50 p-1.5 rounded-2xl w-fit">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Outstanding", value: `₹${totalDue.toLocaleString()}`, tone: "text-rose-500 border-rose-500/20" },
+                { label: "Bills Paid", value: paid.length, tone: "text-emerald-500 border-emerald-500/20" },
+                { label: "Pending", value: pending.length, tone: "text-amber-500 border-amber-500/20" },
+                { label: "Total Paid", value: `₹${totalPaid.toLocaleString()}`, tone: "text-sky-500 border-sky-500/20" },
+              ].map((item) => (
+                <div key={item.label} className="group/stat rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 transition-all hover:-translate-y-1 hover:shadow-md">
+                  <div className={`mb-2 text-[9px] font-black uppercase tracking-widest ${item.tone}`}>{item.label}</div>
+                  <div className="text-lg font-black text-[var(--text)]">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Tab Switcher with Animation */}
+        <div className="mt-8 inline-flex rounded-[1.5rem] border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm">
           {["pay", "history"].map((t) => (
             <button
               key={t}
-              type="button"
               onClick={() => setActiveTab(t)}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-tight ${
-                activeTab === t
-                  ? "bg-white shadow-md text-slate-900"
-                  : "text-slate-500 hover:text-slate-700"
+              className={`rounded-xl px-7 py-3 text-[11px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 ${
+                activeTab === t 
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" 
+                  : "text-[var(--text-muted)] hover:text-[var(--text)]"
               }`}
             >
-              {t === "pay" ? "Outstanding" : "Payment history"}
+              {t === "pay" ? `Outstanding (${pending.length})` : `History (${myPayments.length})`}
             </button>
           ))}
         </div>
 
-        {activeTab === "pay" && (
-          <div className="space-y-4">
-            {pending.length > 0 ? (
-              pending.map((r) => (
-                <div
-                  key={r._id}
-                  className="bg-white rounded-3xl border border-slate-100 p-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-500 font-bold shrink-0">
-                      {r.month?.substring(0, 3)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-800">
-                        {r.month} {r.year}
-                      </p>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase inline-block mt-1 ${
-                          statusConfig[r?.status?.toLowerCase()] || "bg-slate-100"
-                        }`}
-                      >
-                        {r.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
-                    <div className="text-left sm:text-right">
-                      <p className="text-lg font-black text-slate-900 tabular-nums">
-                        Rs. {(r.amount + (r.lateFee || 0)).toLocaleString("en-IN")}
-                      </p>
-                      {r.lateFee > 0 && (
-                        <p className="text-[10px] text-red-500 font-bold">
-                          Includes Rs. {r.lateFee.toLocaleString("en-IN")} late fee
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => openPayModal(r)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-indigo-100 whitespace-nowrap"
-                    >
-                      Pay with Razorpay
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-                <CheckCircle size={48} className="mx-auto text-emerald-200 mb-4" />
-                <p className="text-slate-500 font-bold">All dues are cleared.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "history" && (
-          <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-            {myPayments.length ? (
-              <div className="divide-y divide-slate-50">
-                {myPayments.map((p) => (
+        {/* Dynamic Content */}
+        <div className="mt-8 transition-all duration-500">
+          {activeTab === "pay" ? (
+            <div className="space-y-4">
+              {pending.length > 0 ? (
+                pending.map((r) => (
                   <div
-                    key={p._id}
-                    className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 px-6 py-5 hover:bg-slate-50/50 transition-colors"
+                    key={r._id}
+                    className="group relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/5"
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 shrink-0">
-                        <CheckCircle size={20} />
+                    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-5">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[var(--bg)] text-xl font-black text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                          {r.month?.substring(0, 3)}
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-xl font-black text-[var(--text)]">{r.month} {r.year}</h3>
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${statusConfig[r?.status?.toLowerCase()] || "bg-slate-100"}`}>
+                              {r.status}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex gap-4 text-xs font-bold text-[var(--text-muted)]">
+                            <span>Base: ₹{r.amount?.toLocaleString()}</span>
+                            {r.lateFee > 0 && <span className="text-rose-500">Late Fee: ₹{r.lateFee.toLocaleString()}</span>}
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-800">
-                          {p.maintenance?.month} {p.maintenance?.year}
-                        </p>
-                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">
-                          {formatPaymentMethod(p.paymentMethod)} � {p.paidAt
-                            ? new Date(p.paidAt).toLocaleDateString("en-IN")
-                            : "-"} � {p.receiptNumber || "-"}
-                        </p>
+
+                      <div className="flex flex-col gap-4 sm:items-end">
+                        <div className="text-left sm:text-right">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">Total Amount</p>
+                          <p className="text-3xl font-black text-[var(--text)]">₹{(r.amount + (r.lateFee || 0)).toLocaleString()}</p>
+                        </div>
+                        <button
+                          onClick={() => openPayModal(r)}
+                          className="group/pay inline-flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95"
+                        >
+                          Pay with Razorpay
+                          <ArrowRight size={16} className="group-hover/pay:translate-x-1 transition-transform" />
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
-                      <p className="font-black text-slate-900 tabular-nums">
-                        Rs. {(p.totalAmount ?? 0).toLocaleString("en-IN")}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => openReceiptModal(p.receiptNumber)}
-                        className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100"
-                        title="Download receipt"
-                      >
-                        <Download size={18} />
-                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 text-slate-400 font-bold">
-                No payment history yet.
-              </div>
-            )}
-          </div>
-        )}
+                ))
+              ) : (
+                <div className="rounded-[3rem] border-2 border-dashed border-[var(--border)] bg-[var(--card)] py-24 text-center">
+                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                    <CheckCircle size={40} />
+                  </div>
+                  <h3 className="text-xl font-black text-[var(--text)]">All Clear!</h3>
+                  <p className="mt-2 text-[var(--text-muted)] opacity-70">No outstanding maintenance bills for you.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* History Section */
+            <div className="overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] shadow-sm">
+              {myPayments.length ? (
+                <div className="divide-y divide-[var(--border)]">
+                  {myPayments.map((p) => (
+                    <div
+                      key={p._id}
+                      className="group flex flex-col gap-5 px-8 py-6 transition-all hover:bg-[var(--bg)] sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex items-center gap-5">
+                        <div className="rounded-2xl bg-emerald-500/10 p-4 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                          <CheckCircle size={22} />
+                        </div>
+                        <div>
+                          <p className="text-lg font-black text-[var(--text)]">{p.maintenance?.month} {p.maintenance?.year}</p>
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
+                            {formatPaymentMethod(p.paymentMethod)} • {p.receiptNumber}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-6 pl-16 sm:pl-0">
+                        <div className="text-right">
+                          <p className="text-xl font-black text-[var(--text)]">₹{p.totalAmount?.toLocaleString()}</p>
+                          <p className="text-[10px] font-bold text-[var(--text-muted)]">{p.paidAt ? new Date(p.paidAt).toLocaleDateString() : ""}</p>
+                        </div>
+                        <button
+                          onClick={() => openReceiptModal(p.receiptNumber)}
+                          className="rounded-xl bg-[var(--bg)] p-3 text-[var(--text-muted)] transition-all hover:bg-indigo-600 hover:text-white hover:shadow-lg active:scale-90"
+                          title="Download Receipt"
+                        >
+                          <Download size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-24 text-center">
+                  <AlertCircle size={48} className="mx-auto mb-4 text-[var(--border)]" />
+                  <h3 className="text-xl font-black text-[var(--text)]">No records</h3>
+                  <p className="mt-2 text-[var(--text-muted)]">Your payment history will appear here.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <RazorpayPaymentModal
@@ -283,6 +292,16 @@ const PayMaintenance = () => {
         onClose={() => setReceiptModal({ isOpen: false, receiptNumber: null })}
         receiptNumber={receiptModal.receiptNumber}
       />
+      
+      <style>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 12s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };

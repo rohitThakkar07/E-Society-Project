@@ -64,7 +64,7 @@ const FlatList = () => {
         </div>
         <button 
           onClick={() => navigate("/admin/flat/add")} 
-          className="bg-blue-600 text-white px-6 py-3 rounded-2xl hover:bg-blue-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
+          className="admin-btn-primary"
         >
           <FiPlus size={18} /> Add Flat
         </button>

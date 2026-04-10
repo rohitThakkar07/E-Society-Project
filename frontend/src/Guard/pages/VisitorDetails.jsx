@@ -151,7 +151,7 @@ const VisitorDetail = () => {
         {/* Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <DetailItem icon={Phone}  label="Mobile"     value={visitor.mobileNumber || "—"} />
-          <DetailItem icon={MapPin} label="Flat"       value={`${visitor.wing}-${visitor.flatNumber}`} />
+          <DetailItem icon={MapPin} label="Flat"       value={visitor.wing && visitor.flatNumber && String(visitor.flatNumber).startsWith(visitor.wing) ? visitor.flatNumber : `${visitor.wing || "?"}-${visitor.flatNumber || "?"}`} />
           <DetailItem icon={Clock}  label="Entry Time" value={
             visitor.entryTime
               ? new Date(visitor.entryTime).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
@@ -188,7 +188,7 @@ const VisitorDetail = () => {
                 {visitor.visitingResident.firstName} {visitor.visitingResident.lastName}
               </p>
               <p className="text-sm font-semibold mt-0.5" style={{ color: ACCENT }}>
-                {visitor.visitingResident.wing}-{visitor.visitingResident.flatNumber}
+                {visitor.visitingResident.wing && visitor.visitingResident.flatNumber && String(visitor.visitingResident.flatNumber).startsWith(visitor.visitingResident.wing) ? visitor.visitingResident.flatNumber : `${visitor.visitingResident.wing || "?"}-${visitor.visitingResident.flatNumber || "?"}`}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">{visitor.visitingResident.mobileNumber}</p>
             </div>

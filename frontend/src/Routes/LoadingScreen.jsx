@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import societyConfig from "../assets/societyConfig";
 
 const LoadingScreen = () => {
   return (
@@ -35,7 +36,7 @@ const LoadingScreen = () => {
         transition={{ delay: 0.2 }}
         className="mt-4 text-gray-400 font-medium tracking-widest uppercase text-xs"
       >
-        E-Society Management
+        {societyConfig.name}
       </motion.p>
     </div>
   );

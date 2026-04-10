@@ -62,7 +62,7 @@ const NoticeList = () => {
         </div>
         <button
           onClick={() => navigate("/admin/notice/add")}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 font-semibold flex items-center gap-2 transition-all shadow-sm active:scale-95"
+          className="admin-btn-primary"
         >
           <FiPlus /> Post Notice
         </button>

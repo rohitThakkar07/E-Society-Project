@@ -21,7 +21,7 @@ import ProfileRoutes     from "./ProfileRoutes";
 import PollRoutes from './PollRoutes';
 const UserRouter = [
 
-  // 🔓 PUBLIC — visitors can see home + login
+  // PUBLIC — visitors can see home + login
   {
     path: "/",
     element: (
@@ -34,7 +34,7 @@ const UserRouter = [
     ],
   },
 
-  // 🔒 PROTECTED — login required
+  //  PROTECTED — login required
   {
     element: (
       <Suspense fallback={<PageLoader message="Loading portal…" />}>
@@ -59,7 +59,7 @@ const UserRouter = [
     ],
   },
 
-  // 🔓 LOGIN PAGE
+  // LOGIN PAGE
   {
     path: "/login",
     element: <Login />,

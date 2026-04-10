@@ -8,8 +8,8 @@ const PollList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
- const polls = useSelector((state) => state.polls?.list ?? []);
-const loading = useSelector((state) => state.polls?.loading ?? false);
+  const polls = useSelector((state) => state.poll?.list ?? []);
+  const loading = useSelector((state) => state.poll?.loading ?? false);
   const [filter, setFilter] = useState("All");
 
   useEffect(() => {
@@ -19,9 +19,12 @@ const loading = useSelector((state) => state.polls?.loading ?? false);
   // ✅ Helper to check expiry robustly
   const isExpiredPoll = (poll) => {
     if (!poll) return true;
+    if (poll.isActive === false) return true;
+    if (!poll.expiresAt) return false;
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
-    return poll.isActive === false || expiryDate <= now;
+    if (Number.isNaN(expiryDate.getTime())) return false;
+    return expiryDate <= now;
   };
 
   // ✅ Filtering logic
@@ -92,7 +95,7 @@ const loading = useSelector((state) => state.polls?.loading ?? false);
           filtered.map((poll) => {
             const expired = isExpiredPoll(poll);
             const winner = expired ? getWinner(poll) : null;
-            const totalVotes = poll.totalVotes || 0;
+            const totalVotes = (poll.options || []).reduce((sum, opt) => sum + (opt.votes || 0), 0);
 
             return (
               <div key={poll._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md transition-all">
@@ -109,12 +112,6 @@ const loading = useSelector((state) => state.polls?.loading ?? false);
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => navigate(`/admin/poll/${poll._id}`)}
-                        className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                      >
-                        <FiEye size={14} />
-                      </button>
                       <button
                         onClick={() => handleDelete(poll._id)}
                         className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"

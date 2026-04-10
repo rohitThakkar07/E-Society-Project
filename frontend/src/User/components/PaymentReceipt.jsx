@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import { PageLoaderInline } from "../../components/PageLoader";
 import API from "../../service/api";
+import societyConfig from "../../assets/societyConfig";
 
 const PaymentReceipt = (
   { isOpen, onClose, receiptNumber }) => {
@@ -53,7 +54,7 @@ const PaymentReceipt = (
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(255, 255, 255);
-    doc.text("E-Society Payment Receipt", 16, 15);
+    doc.text(`${societyConfig.name} Payment Receipt`, 16, 15);
 
     doc.setFontSize(11);
     doc.setTextColor(55, 65, 81);
@@ -142,7 +143,7 @@ const PaymentReceipt = (
             <>
               <div className="bg-white border border-gray-300 rounded-lg p-8" id="receipt-content">
                 <div className="text-center mb-8 pb-6 border-b-2 border-blue-600">
-                  <h1 className="text-3xl font-bold text-blue-600 mb-2">E-Society</h1>
+                  <h1 className="text-3xl font-bold text-blue-600 mb-2">{societyConfig.name}</h1>
                   <p className="text-gray-600">Payment Receipt</p>
                   <p className="text-gray-500 text-sm mt-2">{receipt.receiptNumber}</p>
                 </div>

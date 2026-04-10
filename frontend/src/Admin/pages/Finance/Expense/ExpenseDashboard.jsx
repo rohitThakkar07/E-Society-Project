@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDashboardSummary } from "../../../../store/slices/expenseSlice";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 
@@ -10,7 +9,6 @@ const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 const TABS = [
   { label: "Overview",     path: "/admin/expense/dashboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { label: "All Expenses", path: "/admin/expense/list",      icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-  { label: "Add Expense",  path: "/admin/expense/add",       icon: "M12 4v16m8-8H4" },
   { label: "Reports",      path: "/admin/expense/report",    icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
 ];
 
@@ -92,62 +90,6 @@ const ExpenseDashboard = () => {
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Annual Total</p>
             <p className="text-2xl font-black text-slate-900">{summaryLoading ? "…" : fmt(summary?.yearlyExpense)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid gap-5 lg:grid-cols-2 mb-6">
-        {/* Pie Chart */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-          <p className="text-sm font-bold text-slate-800 mb-1">Spending by Category</p>
-          <p className="text-[11px] text-slate-400 mb-4">Distribution of expenses</p>
-          <div className="h-64">
-            {summaryLoading ? (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm animate-pulse">Loading…</div>
-            ) : (summary?.categoryData?.length ?? 0) > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={summary.categoryData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={5}>
-                    {summary.categoryData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-                    formatter={(v) => fmt(v)}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm">No data logged.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Line Chart */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-          <p className="text-sm font-bold text-slate-800 mb-1">Spending Trends</p>
-          <p className="text-[11px] text-slate-400 mb-4">Monthly expense pattern</p>
-          <div className="h-64">
-            {summaryLoading ? (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm animate-pulse">Loading…</div>
-            ) : (summary?.monthlyTrend?.length ?? 0) > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={summary.monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} dy={10} />
-                  <YAxis hide />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-                    formatter={(v) => fmt(v)}
-                  />
-                  <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} dot={{ r: 5, fill: "#ef4444", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 7 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm">Trend data unavailable.</div>
-            )}
           </div>
         </div>
       </div>

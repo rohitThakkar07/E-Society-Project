@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const guardSchema = new mongoose.Schema({
-  // UNIFIED NAME: Changed fullName to name to match User and Resident models
+  //  Changed fullName to name to match User and Resident models
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -18,7 +18,7 @@ const guardSchema = new mongoose.Schema({
     match: [/^\d{10}$/, 'Please enter a valid 10-digit mobile number'],
     default: null
   },
-  email: { // Changed to match User model key name
+  email: {
     type: String,
     lowercase: true,
     trim: true,
@@ -70,6 +70,10 @@ const guardSchema = new mongoose.Schema({
   role: {
     type: String,
     default: 'guard'
+  },
+  monthlySalary: {
+    type: Number,
+    default: 0
   }
 
 }, {

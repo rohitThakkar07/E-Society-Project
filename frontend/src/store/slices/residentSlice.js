@@ -78,24 +78,27 @@ export const updateResident = createAsyncThunk(
       const state = getState();
       const currentResident = state.resident.singleResident;
 
-      const dateStr = (v) => {
-        if (v == null || v === "") return "";
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-      };
+      // Only perform change detection if formData is a plain object
+      if (!(formData instanceof FormData)) {
+        const dateStr = (v) => {
+          if (v == null || v === "") return "";
+          const d = new Date(v);
+          return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+        };
 
-      const hasChanged = Object.keys(formData).some((key) => {
-        const cur = currentResident?.[key];
-        const next = formData[key];
-        if (key === "dateOfBirth") {
-          return dateStr(cur) !== dateStr(next);
+        const hasChanged = Object.keys(formData).some((key) => {
+          const cur = currentResident?.[key];
+          const next = formData[key];
+          if (key === "dateOfBirth") {
+            return dateStr(cur) !== dateStr(next);
+          }
+          return String(cur ?? "").trim() !== String(next ?? "").trim();
+        });
+
+        if (!hasChanged) {
+          toast.warning("No changes detected.");
+          return rejectWithValue("No changes made");
         }
-        return String(cur ?? "").trim() !== String(next ?? "").trim();
-      });
-
-      if (!hasChanged) {
-        toast.warning("No changes detected.");
-        return rejectWithValue("No changes made");
       }
 
       const response = await API.put(`/resident/update/${id}`, formData);

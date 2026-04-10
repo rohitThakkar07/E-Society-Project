@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { X, AlertCircle, CheckCircle, Loader2, Building2 } from "lucide-react";
 import { toast } from "react-toastify";
 import API from "../../service/api";
+import societyConfig from "../../assets/societyConfig";
 
 const RAZORPAY_KEY =
   import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SZ3mYhzzSVN0ov";
@@ -92,7 +93,7 @@ export default function FacilityPaymentModal({
       amount: payload.amountInPaise,
       currency: payload.currency || "INR",
       order_id: payload.orderId,
-      name: "E-Society",
+      name: societyConfig.name,
       description: summary?.label || "Facility booking",
       prefill: {
         name: payload.resident?.name || "",

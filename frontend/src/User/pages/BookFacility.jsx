@@ -8,6 +8,9 @@ import {
   CheckCircle,
   IndianRupee,
   CreditCard,
+  Sparkles,
+  ArrowRight,
+  Wallet,
 } from "lucide-react";
 import { fetchFacilities } from "../../store/slices/facilitySlice";
 import {
@@ -35,7 +38,6 @@ function parseHM(str) {
   return { h, m };
 }
 
-/** Build 1-hour slot starts on `dateStr` between open/close (facility local wall clock). */
 function buildHourSlots(dateStr, openTime, closeTime, bookedRanges) {
   const { h: oh, m: om } = parseHM(openTime);
   const { h: ch, m: cm } = parseHM(closeTime);
@@ -58,7 +60,7 @@ function buildHourSlots(dateStr, openTime, closeTime, bookedRanges) {
       return bs < end && be > start;
     });
     slots.push({
-      label: `${pad(sh)}:${pad(sm)} – ${pad(eh)}:${pad(em)}`,
+      label: `${pad(sh)}:${pad(sm)} - ${pad(eh)}:${pad(em)}`,
       startIso: start.toISOString(),
       endIso: end.toISOString(),
       blocked,
@@ -164,7 +166,7 @@ const BookFacility = () => {
           amount: res.payload.totalAmount,
           label: `${selected.name} booking`,
           lines: [
-            `${new Date(res.payload.startDateTime).toLocaleString()} → ${new Date(
+            `${new Date(res.payload.startDateTime).toLocaleString()} -> ${new Date(
               res.payload.endDateTime
             ).toLocaleString()}`,
           ],
@@ -179,12 +181,12 @@ const BookFacility = () => {
   };
 
   const facilityIcons = {
-    "Swimming Pool": "🏊",
-    Gym: "💪",
-    Clubhouse: "🏛️",
-    "Tennis Court": "🎾",
-    Garden: "🌿",
-    Parking: "🅿️",
+    "Swimming Pool": "Pool",
+    Gym: "Gym",
+    Clubhouse: "Club",
+    "Tennis Court": "Court",
+    Garden: "Park",
+    Parking: "Park",
   };
 
   const statusColors = {
@@ -194,35 +196,57 @@ const BookFacility = () => {
     Cancelled: "bg-slate-100 text-slate-500",
   };
 
-  const typeLabel = (t) =>
-    ({ hourly: "Hourly", daily: "Daily", both: "Daily + hourly mix" }[t] || t);
+  const typeLabel = (t) => ({ hourly: "Hourly", daily: "Daily", both: "Daily + hourly mix" }[t] || t);
+  const availableCount = facilities.filter((f) => f.status === "Available").length;
+  const unpaidBookings = myBookings.filter((b) => b.paymentStatus !== "paid").length;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 transition-colors duration-300">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-2 mb-8">
-          <Building2 size={22} className="text-[var(--accent)]" />
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Book facility</h1>
-            <p className="text-sm text-slate-500 font-medium">
-              Choose slots, pay with Razorpay, wait for admin approval
-            </p>
+    <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-6">
+      <div className="mx-auto max-w-6xl mt-12">
+        <section className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.12),rgba(14,165,233,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8">
+          <div className="absolute -right-12 top-0 h-40 w-40 rounded-full bg-indigo-400/10 blur-3xl" />
+          <div className="absolute left-1/3 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] backdrop-blur">
+                <Sparkles size={13} className="text-indigo-500" />
+                Shared spaces
+              </div>
+              <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">
+                <Building2 className="text-[var(--accent)]" size={30} />
+                Book Facility
+              </h1>
+              <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--text-muted)] sm:text-base">
+                Reserve society spaces, preview charges instantly, and complete your booking payment without leaving the page.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Facilities", value: facilities.length, tone: "bg-slate-100 text-slate-600" },
+                { label: "Available", value: availableCount, tone: "bg-emerald-50 text-emerald-600" },
+                { label: "My Bookings", value: myBookings.length, tone: "bg-sky-50 text-sky-600" },
+                { label: "Unpaid", value: unpaidBookings, tone: "bg-amber-50 text-amber-600" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+                  <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>{item.label}</div>
+                  <div className="text-2xl font-black text-[var(--text)]">{item.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-white border border-slate-200 rounded-2xl flex p-1 mb-8 w-fit shadow-sm">
+        <div className="mt-6 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm">
           {[
-            ["facilities", "Facilities"],
-            ["bookings", "My bookings"],
+            ["facilities", `Facilities (${facilities.length})`],
+            ["bookings", `My bookings (${myBookings.length})`],
           ].map(([v, l]) => (
             <button
               key={v}
               type="button"
               onClick={() => setActiveTab(v)}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition ${
-                activeTab === v
-                  ? "bg-[var(--accent)] text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-50"
+              className={`rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-[0.18em] transition ${
+                activeTab === v ? "bg-[var(--accent)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"
               }`}
             >
               {l}
@@ -232,41 +256,33 @@ const BookFacility = () => {
 
         {activeTab === "facilities" &&
           (facilityLoading ? (
-            <SkeletonGrid
-              count={6}
-              gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-              itemClassName="h-48"
-            />
+            <div className="mt-6">
+              <SkeletonGrid count={6} gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-48" />
+            </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {facilities.map((f) => (
                 <div
                   key={f._id}
-                  className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition"
+                  className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                 >
-                  <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 text-center text-4xl">
-                    {facilityIcons[f.name] || "🏢"}
+                  <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-sm font-black text-slate-600 shadow-sm">
+                      {facilityIcons[f.name] || "Space"}
+                    </div>
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-slate-800 mb-1">{f.name}</h3>
-                    <p className="text-xs text-slate-400 mb-2 line-clamp-2">{f.description}</p>
-                    <div className="flex flex-wrap gap-1.5 mb-3 text-[10px] font-bold uppercase">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                        {typeLabel(f.bookingType)}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">
-                        ₹{f.pricePerHour || 0}/hr
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-violet-50 text-violet-700">
-                        ₹{f.pricePerDay || 0}/day
-                      </span>
+                    <h3 className="mb-1 text-lg font-black text-[var(--text)]">{f.name}</h3>
+                    <p className="mb-3 line-clamp-2 text-sm text-[var(--text-muted)]">{f.description}</p>
+                    <div className="mb-4 flex flex-wrap gap-1.5 text-[10px] font-black uppercase tracking-[0.16em]">
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">{typeLabel(f.bookingType)}</span>
+                      <span className="rounded-full bg-indigo-50 px-2 py-1 text-indigo-700">Rs. {f.pricePerHour || 0}/hr</span>
+                      <span className="rounded-full bg-violet-50 px-2 py-1 text-violet-700">Rs. {f.pricePerDay || 0}/day</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span
-                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                          f.status === "Available"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-red-50 text-red-600"
+                        className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
+                          f.status === "Available" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
                         }`}
                       >
                         {f.status}
@@ -280,13 +296,13 @@ const BookFacility = () => {
                           setEndDT("");
                         }}
                         disabled={f.status !== "Available"}
-                        className={`text-sm font-bold px-4 py-2 rounded-xl transition ${
+                        className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
                           f.status !== "Available"
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            ? "cursor-not-allowed bg-slate-100 text-slate-400"
                             : "bg-[var(--accent)] text-white hover:opacity-90"
                         }`}
                       >
-                        Book
+                        Book <ArrowRight size={15} />
                       </button>
                     </div>
                   </div>
@@ -296,97 +312,83 @@ const BookFacility = () => {
           ))}
 
         {activeTab === "bookings" && (
-          <div>
+          <div className="mt-6">
             {bookingLoading ? (
-              <p className="text-slate-400 text-center py-16">Loading…</p>
+              <p className="py-16 text-center text-slate-400">Loading...</p>
             ) : myBookings.length ? (
               <div className="space-y-3">
                 {myBookings.map((b) => (
                   <div
                     key={b._id}
-                    className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="text-2xl w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                        {facilityIcons[b.facility?.name] || "🏢"}
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800">{b.facility?.name || "Facility"}</p>
-                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            {new Date(b.startDateTime).toLocaleString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />→ {new Date(b.endDateTime).toLocaleString()}
-                          </span>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-xs font-black text-blue-700">
+                          {facilityIcons[b.facility?.name] || "Space"}
                         </div>
-                        <p className="text-sm font-black text-slate-900 mt-2 flex items-center gap-1">
-                          <IndianRupee size={14} />
-                          {Number(b.totalAmount || 0).toLocaleString("en-IN")}
-                          <span className="text-[10px] font-bold uppercase text-slate-400 ml-2">
-                            {b.paymentStatus === "paid" ? "Paid" : "Unpaid"}
-                          </span>
-                        </p>
+                        <div>
+                          <p className="font-black text-[var(--text)]">{b.facility?.name || "Facility"}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
+                            <span className="flex items-center gap-1"><Calendar size={12} />{new Date(b.startDateTime).toLocaleString()}</span>
+                            <span className="flex items-center gap-1"><Clock size={12} />{new Date(b.endDateTime).toLocaleString()}</span>
+                          </div>
+                          <p className="mt-2 flex items-center gap-1 text-sm font-black text-[var(--text)]">
+                            <IndianRupee size={14} />{Number(b.totalAmount || 0).toLocaleString("en-IN")}
+                            <span className="ml-2 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                              {b.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg ${
-                          statusColors[b.status] || statusColors.Pending
-                        }`}
-                      >
-                        {b.status}
-                      </span>
-                      {b.paymentStatus !== "paid" && b.status === "Pending" && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setPayModal({
-                              open: true,
-                              bookingId: b._id,
-                              summary: {
-                                amount: b.totalAmount,
-                                label: `${b.facility?.name || "Facility"}`,
-                                lines: [
-                                  `${new Date(b.startDateTime).toLocaleString()} – ${new Date(
-                                    b.endDateTime
-                                  ).toLocaleString()}`,
-                                ],
-                              },
-                            })
-                          }
-                          className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 text-white px-3 py-2 rounded-xl hover:bg-emerald-700"
-                        >
-                          <CreditCard size={14} /> Pay now
-                        </button>
-                      )}
-                      {b.status === "Pending" && (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            await dispatch(cancelBooking(b._id));
-                            dispatch(fetchMyBookings());
-                          }}
-                          className="text-xs font-bold text-red-600 border border-red-200 px-3 py-2 rounded-xl hover:bg-red-50"
-                        >
-                          Cancel
-                        </button>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${statusColors[b.status] || statusColors.Pending}`}>
+                          {b.status}
+                        </span>
+                        {b.paymentStatus !== "paid" && b.status === "Pending" && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPayModal({
+                                open: true,
+                                bookingId: b._id,
+                                summary: {
+                                  amount: b.totalAmount,
+                                  label: `${b.facility?.name || "Facility"}`,
+                                  lines: [
+                                    `${new Date(b.startDateTime).toLocaleString()} - ${new Date(b.endDateTime).toLocaleString()}`,
+                                  ],
+                                },
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white hover:bg-emerald-700"
+                          >
+                            <Wallet size={14} /> Pay now
+                          </button>
+                        )}
+                        {b.status === "Pending" && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await dispatch(cancelBooking(b._id));
+                              dispatch(fetchMyBookings());
+                            }}
+                            className="rounded-xl border border-red-200 px-3 py-2 text-xs font-black text-red-600 hover:bg-red-50"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 text-slate-400">
+              <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--card)] py-16 text-center text-[var(--text-muted)] shadow-sm">
                 <Building2 size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-medium">No bookings yet</p>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("facilities")}
-                  className="mt-3 text-sm text-blue-600 font-bold hover:underline"
-                >
-                  Browse facilities →
+                <p className="font-black text-[var(--text)]">No bookings yet</p>
+                <button type="button" onClick={() => setActiveTab("facilities")} className="mt-3 text-sm font-black text-[var(--accent)] hover:underline">
+                  Browse facilities ->
                 </button>
               </div>
             )}
@@ -395,15 +397,12 @@ const BookFacility = () => {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[130] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[92vh] overflow-y-auto border border-slate-100">
-            <div className="flex items-start justify-between mb-4 gap-3">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-black text-slate-900">Book {selected.name}</h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  {typeLabel(selected.bookingType)} · {selected.openTime || "06:00"}–
-                  {selected.closeTime || "22:00"}
-                </p>
+                <h2 className="text-lg font-black text-[var(--text)]">Book {selected.name}</h2>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">{typeLabel(selected.bookingType)} � {selected.openTime || "06:00"}-{selected.closeTime || "22:00"}</p>
               </div>
               <button
                 type="button"
@@ -411,7 +410,7 @@ const BookFacility = () => {
                   setSelected(null);
                   dispatch(clearBookedSlots());
                 }}
-                className="text-slate-400 hover:text-slate-700 p-1"
+                className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]"
               >
                 <X size={20} />
               </button>
@@ -420,28 +419,26 @@ const BookFacility = () => {
             <form onSubmit={handleCreate} className="space-y-4">
               {(selected.bookingType === "hourly" || selected.bookingType === "both") && (
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">Date</label>
+                  <label className="text-xs font-black uppercase text-[var(--text-muted)]">Date</label>
                   <input
                     type="date"
                     value={dateStr}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setDateStr(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                    className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm"
                   />
-                  <p className="text-[11px] text-slate-400 mt-2">
-                    {availabilityLoading ? "Loading availability…" : "Green = free · Red = booked"}
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                  <p className="mt-2 text-[11px] text-[var(--text-muted)]">{availabilityLoading ? "Loading availability..." : "Tap an available slot to autofill your booking time"}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {hourSlots.map((slot, i) => (
                       <button
                         key={i}
                         type="button"
                         disabled={slot.blocked}
                         onClick={() => handleSlotPick(slot)}
-                        className={`py-2 px-2 rounded-xl text-[11px] font-bold border ${
+                        className={`rounded-xl border px-2 py-2 text-[11px] font-black transition ${
                           slot.blocked
-                            ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed line-through"
-                            : "bg-slate-50 border-slate-200 hover:border-[var(--accent)] text-slate-700"
+                            ? "cursor-not-allowed border-red-100 bg-red-50 text-red-400 line-through"
+                            : "border-[var(--border)] bg-[var(--bg)] text-[var(--text)] hover:border-[var(--accent)]"
                         }`}
                       >
                         {slot.label}
@@ -451,60 +448,34 @@ const BookFacility = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">Start</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={startDT}
-                    onChange={(e) => setStartDT(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                  />
+                  <label className="text-xs font-black uppercase text-[var(--text-muted)]">Start</label>
+                  <input type="datetime-local" required value={startDT} onChange={(e) => setStartDT(e.target.value)} className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">End</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={endDT}
-                    onChange={(e) => setEndDT(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                  />
+                  <label className="text-xs font-black uppercase text-[var(--text-muted)]">End</label>
+                  <input type="datetime-local" required value={endDT} onChange={(e) => setEndDT(e.target.value)} className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm" />
                 </div>
               </div>
 
-              {previewLoading && (
-                <p className="text-xs text-slate-400">Calculating price…</p>
-              )}
+              {previewLoading && <p className="text-xs text-[var(--text-muted)]">Calculating price...</p>}
               {preview && !previewLoading && (
-                <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-sm">
-                  <p className="font-black text-indigo-900 flex items-center gap-1">
-                    <IndianRupee size={16} />
-                    {preview.totalAmount?.toLocaleString("en-IN")}
-                  </p>
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-sm">
+                  <p className="flex items-center gap-1 font-black text-indigo-900"><IndianRupee size={16} />{preview.totalAmount?.toLocaleString("en-IN")}</p>
                   {preview.pricingBreakdown && (
-                    <ul className="text-[11px] text-indigo-800 mt-2 space-y-0.5">
+                    <ul className="mt-2 space-y-0.5 text-[11px] text-indigo-800">
                       <li>Total hours: {preview.pricingBreakdown.totalHours}</li>
-                      {preview.pricingBreakdown.fullDays > 0 && (
-                        <li>Full days: {preview.pricingBreakdown.fullDays}</li>
-                      )}
-                      {preview.pricingBreakdown.extraBillableHours > 0 && (
-                        <li>Extra billable hours: {preview.pricingBreakdown.extraBillableHours}</li>
-                      )}
+                      {preview.pricingBreakdown.fullDays > 0 && <li>Full days: {preview.pricingBreakdown.fullDays}</li>}
+                      {preview.pricingBreakdown.extraBillableHours > 0 && <li>Extra billable hours: {preview.pricingBreakdown.extraBillableHours}</li>}
                     </ul>
                   )}
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase">Purpose</label>
-                <input
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  placeholder="Event / usage note"
-                  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                />
+                <label className="text-xs font-black uppercase text-[var(--text-muted)]">Purpose</label>
+                <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Event / usage note" className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm" />
               </div>
 
               <div className="flex gap-3 pt-1">
@@ -514,14 +485,14 @@ const BookFacility = () => {
                     setSelected(null);
                     dispatch(clearBookedSlots());
                   }}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600"
+                  className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm font-black text-[var(--text-muted)]"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
                   disabled={!startDT || !endDT || new Date(endDT) <= new Date(startDT)}
-                  className="flex-1 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-black disabled:opacity-40 flex items-center justify-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-2.5 text-sm font-black text-white disabled:opacity-40"
                 >
                   <CheckCircle size={16} /> Create &amp; pay
                 </button>

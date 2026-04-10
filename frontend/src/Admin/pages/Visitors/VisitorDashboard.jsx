@@ -150,7 +150,9 @@ const VisitorDashboard = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <FiHome className="text-indigo-400" size={14} />
-                        <span className="font-bold text-indigo-600">{v.flatNumber}</span>
+                        <span className="font-bold text-indigo-600">
+                          {v.wing && v.flatNumber && String(v.flatNumber).startsWith(v.wing) ? v.flatNumber : `${v.wing || "?"}-${v.flatNumber || "?"}`}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-500 italic text-[13px]">{v.purpose || "—"}</td>

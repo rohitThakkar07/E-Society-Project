@@ -22,6 +22,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import societyConfig from "../../assets/societyConfig";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,6 +34,13 @@ const Header = () => {
   const location = useLocation();
   const { dark, toggle } = useTheme();
 
+  // Stable header logic
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     const onUserData = () => setUserDataTick((t) => t + 1);
     window.addEventListener("esociety-userdata-updated", onUserData);
@@ -42,12 +50,6 @@ const Header = () => {
   const user = useMemo(() => JSON.parse(localStorage.getItem("userData") || "{}"), [userDataTick]);
   const role = user?.role?.toLowerCase();
   const isLoggedIn = !!localStorage.getItem("token");
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -64,7 +66,7 @@ const Header = () => {
   }, []);
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout from E-Society?")) {
+    if (window.confirm("Are you sure you want to logout?")) {
       localStorage.clear();
       navigate("/login");
     }
@@ -75,7 +77,7 @@ const Header = () => {
       label: "Operations",
       roles: ["resident", "admin", "guard"],
       children: [
-        { label: "Visitor Management", to: "/visitors", roles: ["admin", "resident"], desc: "Track arrivals", icon: ShieldCheck },
+        { label: "Visitor", to: "/visitors", roles: ["admin", "resident"], desc: "Track arrivals", icon: ShieldCheck },
         { label: "Book Facilities", to: "/facilities", roles: ["resident"], desc: "Clubhouse & Gym", icon: Calendar },
         { label: "Gate Entry Logs", to: "/guard/visitors", roles: ["guard", "admin"], desc: "Security logs", icon: Activity },
       ],
@@ -103,15 +105,12 @@ const Header = () => {
   const hasAccess = (roles) => roles.includes(role);
 
   const isParentActive = (item) => {
-    if (location.pathname === "/raise-complaint") return false;
     return item.children.some((child) => location.pathname === child.to);
   };
 
-  const linkBase =
-    "flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-bold transition-all duration-300";
+  const linkBase = "flex items-center gap-2 px-3 py-1.5 rounded-xl text-[13px] font-bold transition-all duration-300";
   const linkIdle = "text-[var(--nav-link)] hover:text-[var(--text)] hover:bg-[var(--accent-soft)]";
-  const linkActive =
-    "text-[var(--accent)] bg-[var(--nav-active-bg)] border border-[var(--border)] shadow-sm";
+  const linkActive = "text-[var(--accent)] bg-[var(--nav-active-bg)] border border-[var(--border)] shadow-sm";
 
   const flatMobileLinks = navItems
     .filter((item) => isLoggedIn && hasAccess(item.roles))
@@ -119,363 +118,211 @@ const Header = () => {
       item.children.filter((c) => hasAccess(c.roles)).map((c) => ({ ...c, group: item.label }))
     );
 
+  const logoVariants = {
+    animate: {
+      y: [0, -2, 0], 
+      rotate: [0, 2, -2, 0],
+      transition: {
+        y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+        rotate: { duration: 4, repeat: Infinity, ease: "linear" },
+      },
+    },
+  };
+
   return (
     <>
+      <style>{`
+        @keyframes auraPulse { 
+          0% { text-shadow: 0 0 2px var(--accent); } 
+          50% { text-shadow: 0 0 12px var(--accent), 0 0 20px #8B5CF6; opacity: 0.9; } 
+          100% { text-shadow: 0 0 2px var(--accent); }
+        }
+        .text-glow-aura { animation: auraPulse 5s infinite ease-in-out; } 
+      `}</style>
+
       <nav
-        className={`sticky top-0 z-[100] transition-all duration-500 ease-out border-b ${
-          scrolled
-            ? "shadow-[var(--shadow-lg)] py-2"
-            : "py-3 sm:py-4"
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+          scrolled ? "shadow-xl py-1 border-b border-[var(--border)]" : "py-1.5 border-b border-transparent"
         }`}
         style={{
           background: "var(--header-bg)",
-          borderColor: "var(--header-border)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[3.5rem]">
-          <NavLink to="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
+        <div className="w-full mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[3.2rem]">
+          
+          {/* Logo & Brand - Compact Height */}
+          <NavLink to="/" className="flex items-center gap-2.5 group shrink-0">
             <motion.div
-              whileHover={{ rotate: -6, scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18 }}
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--card)), var(--card))",
-                borderColor: "var(--border)",
-                boxShadow: "0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent)",
-              }}
+              variants={logoVariants}
+              animate="animate"
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center border border-[var(--border)] shadow-md overflow-hidden bg-[var(--card)]"
             >
-              <Building2 size={24} className="text-[var(--accent)]" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] to-transparent opacity-10" />
+              <Building2 size={20} className="text-[var(--accent)] relative z-10" />
             </motion.div>
-            <div className="flex flex-col min-w-0">
-              <span
-                className="text-xl sm:text-2xl font-black tracking-tight leading-none truncate"
+            
+            <div className="flex flex-col ml-0.5 relative pr-4">
+              <span className="text-xl font-black tracking-tighter leading-none italic text-glow-aura"
                 style={{
-                  background: "linear-gradient(135deg, var(--accent), #8B5CF6)",
+                  background: "linear-gradient(135deg, var(--text) 20%, var(--accent) 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
                 }}
               >
-                E-Society
+                {societyConfig.name.toUpperCase()}
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-[var(--text-muted)] mt-1 hidden sm:block">
-                Resident Portal
+              <div className="h-[1.5px] w-full bg-gradient-to-r from-[var(--accent)] to-transparent mt-0.5 rounded-full opacity-50" />
+              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-[var(--text-muted)] mt-0.5 hidden sm:block">
+                Resident Hub
               </span>
             </div>
           </NavLink>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            <motion.button
-              type="button"
-              onClick={toggle}
-              aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-              whileTap={{ scale: 0.92 }}
-              className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl border transition-colors"
-              style={{
-                background: "var(--card)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={dark ? "dark" : "light"}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.28 }}
-                  className="theme-toggle-icon absolute inset-0 flex items-center justify-center"
+          {/* CENTER NAVIGATION - Professional Compact */}
+          <div ref={dropdownRef} className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            {isLoggedIn && navItems.map((item) => hasAccess(item.roles) && (
+              <div key={item.label} className="relative">
+                <button
+                  type="button"
+                  onMouseEnter={() => setOpenDropdown(item.label)}
+                  className={`${linkBase} ${isParentActive(item) ? linkActive : linkIdle} ${
+                    openDropdown === item.label ? "bg-[var(--accent-soft)]" : ""
+                  }`}
                 >
-                  {dark ? <Sun size={20} strokeWidth={2.2} /> : <Moon size={20} strokeWidth={2.2} />}
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
+                  {item.label}
+                  <ChevronDown size={13} className={`transition-transform duration-300 ${openDropdown === item.label ? "rotate-180" : ""}`} />
+                </button>
+                
+                {openDropdown === item.label && (
+                  <div
+                    onMouseLeave={() => setOpenDropdown(null)}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-64 rounded-2xl p-1.5 z-50 user-glass shadow-2xl border border-[var(--border)]"
+                    style={{ background: "var(--card)" }}
+                  >
+                    {item.children.filter((c) => hasAccess(c.roles)).map((child) => {
+                      const Icon = child.icon;
+                      const active = location.pathname === child.to;
+                      return (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          onClick={() => setOpenDropdown(null)}
+                          className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                            active ? "bg-[var(--nav-active-bg)] border-l-4 border-[var(--accent)]" : "hover:bg-[var(--accent-soft)] border-l-4 border-transparent"
+                          }`}
+                        >
+                          <div className={`mt-0.5 p-1.5 rounded-lg ${active ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "bg-[var(--bg)] text-[var(--text-muted)] shadow-inner"}`}>
+                            <Icon size={13} strokeWidth={2.5} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[13px] font-bold block truncate text-[var(--text)]">{child.label}</span>
+                            <span className="text-[9px] text-[var(--text-muted)] font-bold">{child.desc}</span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT SIDE ACTIONS - No redundant borders */}
+          <div className="flex items-center gap-3 pr-1">
+            
+            <NavLink to="/" end className={({ isActive }) => `hidden lg:flex ${linkBase} ${isActive ? linkActive : linkIdle}`}>
+              <Home size={15} strokeWidth={2.5} /> Home
+            </NavLink>
+
+            {isLoggedIn && hasAccess(["resident", "admin"]) && (
+              <NavLink to="/raise-complaint" className={({ isActive }) => `hidden md:flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all ${
+                isActive ? "bg-orange-500/10 text-orange-500" : "text-orange-500 hover:bg-orange-500/5"
+              }`}>
+                <Bell size={14} /> Help Desk
+              </NavLink>
+            )}
 
             <button
               type="button"
-              className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border"
-              style={{
-                background: "var(--card)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
-              onClick={() => setMenuOpen((o) => !o)}
+              onClick={toggle}
+              className="p-2.5 rounded-xl transition-all duration-300 hover:bg-[var(--accent-soft)] text-[var(--text)] active:scale-90"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={dark ? "dark" : "light"}
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -5, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {dark ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
+                </motion.div>
+              </AnimatePresence>
+            </button>
+
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                <NavLink to="/profile" className={({ isActive }) => `flex items-center gap-2 p-1 rounded-full border transition-all ${isActive ? "bg-[var(--nav-active-bg)] border-[var(--border)]" : "border-transparent hover:bg-[var(--accent-soft)]"}`}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs bg-[var(--accent)] text-white shadow-lg">
+                    {user?.name?.[0] || "U"}
+                  </div>
+                  <div className="hidden lg:flex flex-col min-w-0 pr-1">
+                    <span className="text-[11px] font-black text-[var(--text)] leading-none truncate capitalize">{user?.name?.split(" ")[0]}</span>
+                    <span className="text-[8px] font-extrabold text-[var(--accent)] uppercase tracking-tighter opacity-80">{role}</span>
+                  </div>
+                </NavLink>
+
+                <button 
+                  onClick={handleLogout} 
+                  className="p-2 rounded-xl text-red-500 hover:bg-red-500/10 transition-all active:scale-90"
+                >
+                  <LogOut size={19} strokeWidth={2.5} />
+                </button>
+              </div>
+            ) : (
+              <NavLink to="/login" title="Login" className="p-2 rounded-xl bg-[var(--accent)] text-white shadow-lg active:scale-90 transition-all hover:opacity-90">
+                <LogIn size={19} strokeWidth={2.5} />
+              </NavLink>
+            )}
+
+            <button
+              className="lg:hidden p-2 rounded-xl text-[var(--text)] hover:bg-[var(--accent-soft)]"
+              onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
-
-          <div ref={dropdownRef} className="hidden lg:flex items-center gap-0.5 flex-1 justify-end min-w-0">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `${linkBase} ${isActive ? linkActive : linkIdle}`
-              }
-            >
-              <Home size={16} strokeWidth={2.2} /> Home
-            </NavLink>
-
-            {isLoggedIn &&
-              navItems.map(
-                (item) =>
-                  hasAccess(item.roles) && (
-                    <div key={item.label} className="relative">
-                      <button
-                        type="button"
-                        onMouseEnter={() => setOpenDropdown(item.label)}
-                        className={`${linkBase} ${isParentActive(item) ? linkActive : linkIdle} ${
-                          openDropdown === item.label ? "bg-[var(--accent-soft)]" : ""
-                        }`}
-                      >
-                        {item.label}{" "}
-                        <ChevronDown
-                          size={14}
-                          className={`transition-transform duration-300 ${openDropdown === item.label ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                      {openDropdown === item.label && (
-                        <div
-                          onMouseLeave={() => setOpenDropdown(null)}
-                          className="absolute top-full left-0 mt-2 w-80 rounded-2xl p-2 z-50 user-glass user-mobile-drawer"
-                          style={{ boxShadow: "var(--shadow-lg)" }}
-                        >
-                          {item.children
-                            .filter((c) => hasAccess(c.roles))
-                            .map((child) => {
-                              const Icon = child.icon;
-                              const active = location.pathname === child.to;
-                              return (
-                                <Link
-                                  key={child.to}
-                                  to={child.to}
-                                  onClick={() => setOpenDropdown(null)}
-                                  className={`flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-                                    active
-                                      ? "bg-[var(--nav-active-bg)] border-l-[3px] border-[var(--accent)]"
-                                      : "hover:bg-[var(--accent-soft)] border-l-[3px] border-transparent"
-                                  }`}
-                                >
-                                  <div
-                                    className="mt-0.5 p-2 rounded-lg"
-                                    style={{
-                                      background: active ? "var(--accent-soft)" : "color-mix(in srgb, var(--card) 50%, transparent)",
-                                      color: active ? "var(--accent)" : "var(--text-muted)",
-                                    }}
-                                  >
-                                    <Icon size={14} strokeWidth={2} />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <span
-                                      className={`text-sm font-bold block truncate ${active ? "text-[var(--text)]" : "text-[var(--text)]"}`}
-                                    >
-                                      {child.label}
-                                    </span>
-                                    <span className="text-[11px] text-[var(--text-muted)] font-medium">{child.desc}</span>
-                                  </div>
-                                </Link>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  )
-              )}
-
-            {isLoggedIn && hasAccess(["resident", "admin"]) && (
-              <NavLink
-                to="/raise-complaint"
-                className={({ isActive }) =>
-                  `${linkBase} ${
-                    isActive
-                      ? "text-orange-500 bg-orange-500/10 border border-orange-500/30"
-                      : `${linkIdle} border border-transparent`
-                  }`
-                }
-              >
-                <Bell size={16} strokeWidth={2.2} /> Help Desk
-              </NavLink>
-            )}
-
-            <div
-              className="w-px h-7 mx-2 shrink-0 opacity-40"
-              style={{ background: "var(--border)" }}
-            />
-
-            {isLoggedIn ? (
-              <div className="flex items-center gap-2 pl-1">
-                <NavLink
-                  to="/profile"
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 p-1 pr-3 rounded-full border transition-all max-w-[200px] ${
-                      isActive ? `${linkActive}` : "border-transparent hover:bg-[var(--accent-soft)]"
-                    }`
-                  }
-                >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm shrink-0 border"
-                    style={{
-                      background: "linear-gradient(145deg, var(--accent-soft), var(--card))",
-                      color: "var(--accent)",
-                      borderColor: "var(--border)",
-                    }}
-                  >
-                    {user?.name?.[0] || "U"}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[12px] font-extrabold text-[var(--text)] leading-none truncate capitalize">
-                      {user?.name?.split(" ")[0] || "User"}
-                    </span>
-                    <span className="text-[9px] font-bold text-[var(--accent)] uppercase mt-0.5 truncate">
-                      {role}
-                    </span>
-                  </div>
-                </NavLink>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="p-2.5 rounded-xl transition-colors hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500"
-                  title="Logout"
-                >
-                  <LogOut size={20} />
-                </button>
-              </div>
-            ) : (
-              <NavLink
-                to="/login"
-                className={`${linkBase} ${linkIdle} bg-[var(--accent-soft)]`}
-              >
-                <LogIn size={16} strokeWidth={2.2} />
-                Sign in
-              </NavLink>
-            )}
-          </div>
         </div>
       </nav>
 
+      {/* MOBILE DRAWER */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            <motion.button
-              type="button"
-              aria-label="Close menu overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] lg:hidden backdrop-blur-sm"
-              style={{ background: "color-mix(in srgb, var(--text) 42%, transparent)" }}
-              onClick={() => setMenuOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="fixed top-0 right-0 bottom-0 z-[120] w-[min(100%,20rem)] lg:hidden flex flex-col shadow-2xl border-l user-mobile-drawer"
-              style={{
-                background: "var(--card)",
-                borderColor: "var(--border)",
-              }}
-            >
-              <div
-                className="flex items-center justify-between p-4 border-b"
-                style={{ borderColor: "var(--border)" }}
-              >
-                <span className="font-black text-[var(--text)] tracking-tight">Menu</span>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  className="p-2 rounded-xl hover:bg-[var(--accent-soft)] text-[var(--text)]"
-                  aria-label="Close"
-                >
-                  <X size={22} />
-                </button>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen(false)} />
+            <motion.aside initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed top-0 right-0 bottom-0 z-[120] w-[260px] bg-[var(--card)] border-l border-[var(--border)] flex flex-col shadow-2xl">
+              <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
+                <span className="font-black text-lg tracking-tighter text-[var(--accent)] uppercase">{societyConfig.name}</span>
+                <button onClick={() => setMenuOpen(false)} className="p-2 rounded-xl bg-[var(--bg)] shadow-inner"><X size={20} /></button>
               </div>
-              <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <NavLink
-                  to="/"
-                  end
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-3 rounded-xl font-bold text-sm ${isActive ? linkActive : linkIdle}`
-                  }
-                >
-                  <Home size={18} /> Home
+              <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
+                <NavLink to="/" onClick={() => setMenuOpen(false)} className={({ isActive }) => `${linkBase} py-3.5 ${isActive ? linkActive : linkIdle}`}>
+                  <Home size={16} /> Home
                 </NavLink>
-                {!isLoggedIn && (
-                  <NavLink
-                    to="/login"
-                    onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-2 px-3 py-3 rounded-xl font-bold text-sm ${linkIdle}`}
-                  >
-                    <LogIn size={18} /> Sign in
+                {flatMobileLinks.map((link) => (
+                  <NavLink key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className={({ isActive }) => `flex items-center gap-4 p-3.5 rounded-2xl ${isActive ? linkActive : "bg-[var(--bg)]/50 hover:bg-[var(--accent-soft)]"}`}>
+                    <link.icon size={18} className="text-[var(--accent)]" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black">{link.label}</span>
+                      <span className="text-[9px] uppercase font-bold opacity-50">{link.group}</span>
+                    </div>
                   </NavLink>
-                )}
-                {flatMobileLinks.map((child) => {
-                  const Icon = child.icon;
-                  const active = location.pathname === child.to;
-                  return (
-                    <NavLink
-                      key={child.to + child.group}
-                      to={child.to}
-                      onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm transition-colors ${
-                        active ? linkActive : linkIdle
-                      }`}
-                    >
-                      <Icon size={18} strokeWidth={2} />
-                      <span className="flex flex-col items-start min-w-0">
-                        <span className="truncate">{child.label}</span>
-                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                          {child.group}
-                        </span>
-                      </span>
-                    </NavLink>
-                  );
-                })}
-                {isLoggedIn && hasAccess(["resident", "admin"]) && (
-                  <NavLink
-                    to="/raise-complaint"
-                    onClick={() => setMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 px-3 py-3 rounded-xl font-bold text-sm ${
-                        isActive
-                          ? "text-orange-500 bg-orange-500/10 border border-orange-500/25"
-                          : linkIdle
-                      }`
-                    }
-                  >
-                    <Bell size={18} /> Help Desk
-                  </NavLink>
-                )}
-                {isLoggedIn && (
-                  <>
-                    <NavLink
-                      to="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 px-3 py-3 rounded-xl font-bold text-sm ${
-                          isActive ? linkActive : linkIdle
-                        }`
-                      }
-                    >
-                      Profile
-                    </NavLink>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-500/10"
-                    >
-                      <LogOut size={18} /> Log out
-                    </button>
-                  </>
-                )}
+                ))}
+              </div>
+              <div className="p-4 border-t border-[var(--border)] bg-[var(--bg)]">
+                {isLoggedIn && <button onClick={handleLogout} className="w-full py-3.5 rounded-2xl bg-red-500 text-white font-black text-sm flex items-center justify-center gap-3 active:scale-95"><LogOut size={18}/> LOG OUT</button>}
               </div>
             </motion.aside>
           </>

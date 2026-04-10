@@ -20,6 +20,7 @@ import {
   Fingerprint,
 } from "lucide-react";
 import { ThemeProvider } from "../context/ThemeContext";
+import societyConfig from "../../assets/societyConfig";
 
 function getAuthApiUrl() {
   const raw = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:5000";
@@ -203,7 +204,7 @@ const ForgotPasswordModal = ({ onClose }) => {
         <div className="p-6 space-y-6" style={{ color: "var(--text)" }}>
           {step === 1 && (
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <p className="text-sm text-[var(--text-muted)]">Enter the email you use for E-Society.</p>
+              <p className="text-sm text-[var(--text-muted)]">Enter the email you use for {societyConfig.name}.</p>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
                 <input
@@ -426,7 +427,7 @@ const LoginInner = () => {
                 <Building2 size={26} />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.35em] text-white/70">E-Society</p>
+                <p className="text-xs font-black uppercase tracking-[0.35em] text-white/70">{societyConfig.name}</p>
                 <p className="text-lg font-black tracking-tight">Community portal</p>
               </div>
             </div>
@@ -603,7 +604,7 @@ const LoginInner = () => {
             </motion.button>
           </form>
 
-          <div className="mt-8 border-t border-[var(--border)] pt-6 text-center text-sm text-[var(--text-muted)]">
+          {/* <div className="mt-8 border-t border-[var(--border)] pt-6 text-center text-sm text-[var(--text-muted)]">
             {isLogin ? "Need an account?" : "Already registered?"}{" "}
             <button
               type="button"
@@ -615,7 +616,7 @@ const LoginInner = () => {
             >
               {isLogin ? "Switch to register" : "Back to sign in"}
             </button>
-          </div>
+          </div> */}
         </motion.div>
       </div>
 
