@@ -10,7 +10,7 @@ const facilityBookingSchema = new mongoose.Schema({
 
   resident: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Resident",
+    ref: "User",
     required: true
   },
 

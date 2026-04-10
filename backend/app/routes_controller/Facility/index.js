@@ -5,7 +5,7 @@ const auth = require("../../middlewares/authMiddleware"); // Protect these route
 
 // @route   GET /api/facilities
 // Description: Get all society facilities
-router.get("/", facilityController.getAllFacilities);
+router.get("/list", facilityController.getAllFacilities);
 
 // @route   GET /api/facilities/:id
 // Description: Get details for a specific facility
@@ -13,14 +13,14 @@ router.get("/:id", facilityController.getFacilityById);
 
 // @route   POST /api/facilities
 // Description: Add a new facility (Admin only recommended)
-router.post("/", auth, facilityController.createFacility);
+router.post("/create", auth, facilityController.createFacility);
 
 // @route   PUT /api/facilities/:id
 // Description: Update facility details/status
-router.put("/:id", auth, facilityController.updateFacility);
+router.put("/update/:id", auth, facilityController.updateFacility);
 
 // @route   DELETE /api/facilities/:id
 // Description: Remove a facility
-router.delete("/:id", auth, facilityController.deleteFacility);
+router.delete("/delete/:id", auth, facilityController.deleteFacility);
 
 module.exports = router;

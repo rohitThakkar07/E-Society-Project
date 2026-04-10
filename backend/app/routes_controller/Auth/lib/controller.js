@@ -4,46 +4,46 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
 /* Register Resident */
-// const registerResident = async (req, res) => {
+const registerResident = async (req, res) => {
 
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({ errors: errors.array() });
-//   }
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-//   try {
-//     const { fullName, name, email, password, role } = req.body;
-//     const residentName = name || fullName;
+  try {
+    const { fullName, name, email, password, role } = req.body;
+    const residentName = name || fullName;
 
-//     const existingUser = await User.findOne({ email: email.toLowerCase() });
-//     if (existingUser) {
-//       return res.status(400).json({ success: false, message: "User already exists" });
-//     }
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
 
-//     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-//     const user = await User.create({
-//       name: residentName,
-//       email: email.toLowerCase(),
-//       password: hashedPassword,
-//       role: role || "Resident"
-//     });
+    const user = await User.create({
+      name: residentName,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role: role || "Resident"
+    });
 
 
-//     console.log("after send email");
-//     const userResponse = user.toObject();
-//     delete userResponse.password;
+    console.log("after send email");
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
-//     res.status(201).json({
-//       success: true,
-//       message: "Resident created and welcome email sent!",
-//       user: userResponse
-//     });
+    res.status(201).json({
+      success: true,
+      message: "Resident created and welcome email sent!",
+      user: userResponse
+    });
 
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
 /* Login */
@@ -70,6 +70,8 @@ const login = async (req, res) => {
       });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+ console.log("hash password "+hashedPassword)
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {

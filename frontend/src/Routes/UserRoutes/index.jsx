@@ -1,39 +1,69 @@
 import React, { lazy, Suspense } from "react";
 
-// Layouts
+// Layout
 const UserLayout = lazy(() => import("../../User/layout/UserLayout"));
 
-// Route 
-import HomeRoutes from "./HomeRoutes";
-import EventRoutes from "./eventRoutes";
-import InvoiceRoutes from "./InvoiceRoutes";
-import complaintRoutes from "./ComplaintRoutes";
-import eventRoutes from "./eventRoutes";
-import Login from "../../User/pages/Login";
+// Auth
+import Login       from "../../User/pages/Login";
 import AuthContext from "../../User/context/AuthContext";
 
+// Route files
+import HomeRoutes        from "./HomeRoutes";
+import ComplaintRoutes   from "./ComplaintRoutes";
+import EventRoutes       from "./EventRoutes";
+import MaintenanceRoutes from "./MaintainenceRoutes";
+import InvoiceRoutes     from "./InvoiceRoutes";
+import VisitorRoutes     from "./VisitorRoutes";
+import FacilityRoutes    from "./FacilityRoutes";
+import NoticeRoutes      from "./NoticeRoutes";
+import ProfileRoutes     from "./ProfileRoutes";
+import PollRoutes from './PollRoutes';
 const UserRouter = [
-  // USER SECTION
+
+  // 🔓 PUBLIC — visitors can see home + login
   {
     path: "/",
     element: (
-      <Suspense fallback={<div>Loading App...</div>}>
-        <AuthContext>
-          <UserLayout />
-        </AuthContext>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+        <UserLayout />
       </Suspense>
     ),
     children: [
-     ...HomeRoutes,
-     ...complaintRoutes,
-     ...eventRoutes,
-     ...InvoiceRoutes,
-     ...EventRoutes,
+      ...HomeRoutes,  // index "/" is public
     ],
   },
+
+  // 🔒 PROTECTED — login required
   {
-    path:"login",
-    element:<Login/>
-  }
+    path: "/",
+    element: (
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+        <AuthContext />
+      </Suspense>
+    ),
+    children: [
+      {
+        element: <UserLayout />,
+        children: [
+          ...ComplaintRoutes,
+          ...EventRoutes,
+          ...MaintenanceRoutes,
+          ...InvoiceRoutes,
+          ...VisitorRoutes,
+          ...FacilityRoutes,
+          ...NoticeRoutes,
+          ...ProfileRoutes,
+          ...PollRoutes,
+        ],
+      },
+    ],
+  },
+
+  // 🔓 LOGIN PAGE
+  {
+    path: "/login",
+    element: <Login />,
+  },
 ];
+
 export default UserRouter;

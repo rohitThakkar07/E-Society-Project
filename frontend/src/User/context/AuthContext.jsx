@@ -1,13 +1,10 @@
-import { Navigate } from "react-router-dom";
+// src/context/AuthContext.jsx
+import { Navigate, Outlet } from "react-router-dom";
 
-const AuthContext = ({ children }) => {
+const AuthContext = () => {
   const token = localStorage.getItem("token");
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  if (!token) return <Navigate to="/login" replace />;
+  return <Outlet />;
 };
 
 export default AuthContext;

@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+// pages/AddGuard.jsx (Updated with Redux)
+import React from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { createGuard, updateGuard, fetchGuardById } from "../../../store/slices/guardSlice";
+import { useEffect } from "react";
 
 const AddGuard = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const isEditMode = Boolean(id);
+
+  const { singleGuard, loading } = useSelector((state) => state.guard);
 
   const {
     register,
@@ -15,49 +21,88 @@ const AddGuard = () => {
     formState: { errors },
   } = useForm({
     mode: "onBlur",
+    defaultValues: { status: "Active" },
   });
 
+  // Fetch guard data if editing
+  useEffect(() => {
+    if (isEditMode) {
+      dispatch(fetchGuardById(id));
+    }
+  }, [id, isEditMode, dispatch]);
+
+  // Populate form when singleGuard is fetched
+useEffect(() => {
+  if (singleGuard) {
+    const nameParts = singleGuard.fullName?.split(" ") || [];
+
+    reset({
+      firstName: nameParts[0] || "",
+      lastName: nameParts.slice(1).join(" ") || "",
+      mobileNumber: singleGuard.mobileNumber || "",
+      alternativeNumber: singleGuard.alternativeNumber || "",
+      emailAddress: singleGuard.emailAddress || "",
+      city: singleGuard.city || "",
+      shift: singleGuard.shift || "",
+      idType: singleGuard.idType || "",
+      idNumber: singleGuard.idNumber || "",
+      joiningDate: singleGuard.joiningDate
+        ? singleGuard.joiningDate.split("T")[0]
+        : "",
+      status: singleGuard.status || "Active",
+    });
+  }
+}, [singleGuard, reset]);
+
   const onSubmit = async (data) => {
-    setIsLoading(true);
 
-    try {
-      const formData = new FormData();
-
-      for (const key in data) {
-        if (key === "idImage" && data[key]?.length > 0) {
-          formData.append("idImage", data[key][0]);
-        } else {
-          formData.append(key, data[key]);
-        }
-      }
-
-      const response = await axios.post(
-        "http://localhost:4000/api/guard/create",
-        formData
-      );
-
-      if (response.data.success) {
-        toast.success("Guard registered successfully");
-        reset();
-        navigate("/admin/guards");
+    data.fullName = `${data.firstName} ${data.lastName}`;
+    const formData = new FormData();
+    for (const key in data) {
+      if (key === "idImage" && data[key]?.length > 0) {
+        formData.append("idImage", data[key][0]);
       } else {
-        toast.error(response.data.message);
+        formData.append(key, data[key]);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create guard"
-      );
-    } finally {
-      setIsLoading(false);
+    }
+
+    if (isEditMode) {
+      const result = await dispatch(updateGuard({ id, formData }));
+      if (result.type.endsWith('fulfilled')) {
+        setTimeout(() => navigate("/admin/guards"), 1500);
+      }
+    } else {
+      const result = await dispatch(createGuard(formData));
+      if (result.type.endsWith('fulfilled')) {
+        reset();
+        setTimeout(() => navigate("/admin/guards"), 1500);
+      }
     }
   };
+
+  if (loading && isEditMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-600">Loading guard data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
       <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
         <div className="mb-8 border-b pb-4">
-          <h2 className="text-3xl font-extrabold text-gray-800">Add New Guard</h2>
-          <p className="text-gray-500 mt-1">Register a new security personnel into the system.</p>
+          <h2 className="text-3xl font-extrabold text-gray-800">
+            {isEditMode ? "Edit Guard" : "Add New Guard"}
+          </h2>
+          <p className="text-gray-500 mt-1">
+            {isEditMode
+              ? "Update security personnel information."
+              : "Register a new security personnel into the system."}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -171,7 +216,7 @@ const AddGuard = () => {
                 >
                   <option value="">Select ID</option>
                   <option value="Aadhar Card">Aadhar Card</option>
-                  <option value="Voter ID">Voter ID</option>
+                 
                 </select>
                 {errors.idType && <span className="text-xs text-red-500">{errors.idType.message}</span>}
               </div>
@@ -207,15 +252,15 @@ const AddGuard = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-gray-700">Password {!isEditMode && <span className="text-red-500">*</span>}</label>
                 <input
                   type="password"
                   {...register("password", {
-                    required: "Password is required",
+                    required: isEditMode ? false : "Password is required",
                     minLength: { value: 6, message: "Password must be at least 6 characters" }
                   })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                  placeholder="Create a login password"
+                  placeholder={isEditMode ? "Leave empty to keep current password" : "Create a login password"}
                 />
                 {errors.password && <span className="text-xs text-red-500">{errors.password.message}</span>}
               </div>
@@ -224,7 +269,6 @@ const AddGuard = () => {
                 <label className="text-sm font-medium text-gray-700">Status</label>
                 <select
                   {...register("status")}
-                  defaultValue="Active"
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white"
                 >
                   <option value="Active">Active</option>
@@ -235,14 +279,21 @@ const AddGuard = () => {
           </div>
 
           {/* --- Submit Button --- */}
-          <div className="pt-6 border-t mt-8 flex justify-end">
+          <div className="pt-6 border-t mt-8 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-8 py-3 rounded-lg text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-all"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className={`px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all shadow-md 
-                ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg'}`}
+                ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg'}`}
             >
-              {isLoading ? "Saving..." : "Save Guard Record"}
+              {loading ? "Saving..." : isEditMode ? "Update Guard" : "Save Guard Record"}
             </button>
           </div>
         </form>
