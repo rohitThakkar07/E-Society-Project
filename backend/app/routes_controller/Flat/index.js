@@ -6,6 +6,7 @@ router.get("/dashboard", ctrl.getDashboardSummary);
 router.post("/create", ctrl.createFlat);
 router.get("/list", ctrl.getAllFlats);
 router.get("/:id", ctrl.getFlatById);
+router.get("/resident/:userId", ctrl.getResidentFlat);
 router.put("/update/:id", ctrl.updateFlat);
 router.delete("/delete/:id", ctrl.deleteFlat);
 

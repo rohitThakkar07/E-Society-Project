@@ -3,30 +3,56 @@ const bcrypt = require("bcrypt");
 const { sendGuardWelcomeEmail } = require("../../../../utils/sendMail");
 const Guard = require("../../../db/models/guardModal");
 const User = require("../../../db/models/userModel");
+const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
 // ✅ CREATE GUARD
 exports.createGuard = async (req, res) => {
+  console.log(req.body);
   try {
     const {
       firstName,
       lastName,
       mobileNumber,
       alternativeNumber,
+      // ✅ : frontend sends 'emailAddress' — accept both
+      email,
       emailAddress,
       city,
       shift,
       joiningDate,
+      idProofType,
       idType,
+      idProofNumber,
       idNumber,
       password,
       status,
+      monthlySalary,
     } = req.body;
+
+    // ✅ Normalize field names
+    const resolvedEmail = email || emailAddress || null;
+    const resolvedIdProofType = idProofType || idType || "Aadhar Card";
+    const resolvedIdProofNum = idProofNumber || idNumber || null;
 
     // Validate required fields
     if (!firstName || !lastName || !mobileNumber || !password || !city) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields: firstName, lastName, mobileNumber, password, city",
+      });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message: STRONG_PASSWORD_MESSAGE,
+      });
+    }
+
+    if (!resolvedIdProofNum) {
+      return res.status(400).json({
+        success: false,
+        message: "ID number is required.",
       });
     }
 
@@ -37,33 +63,28 @@ exports.createGuard = async (req, res) => {
     if (existingMobile) {
       return res.status(400).json({
         success: false,
-        message: "Mobile number already exists",
+        message: "A guard with this mobile number already exists.",
       });
     }
 
     // Check email duplicate (if provided)
-    if (emailAddress) {
-      const existingEmail = await Guard.findOne({ emailAddress });
+    if (resolvedEmail) {
+      const existingEmail = await Guard.findOne({ email: resolvedEmail });
       if (existingEmail) {
         return res.status(400).json({
           success: false,
-          message: "Email already exists",
+          message: "A guard with this email already exists.",
         });
       }
     }
 
     // Generate unique Guard ID
     const lastGuard = await Guard.findOne().sort({ createdAt: -1 });
-
     let guardId = "GRD-001";
-
-    if (lastGuard && lastGuard.guardId) {
+    if (lastGuard?.guardId) {
       const parts = lastGuard.guardId.split("-");
-
       if (parts.length === 2 && !isNaN(parts[1])) {
-        const lastNumber = parseInt(parts[1], 10);
-        const nextNumber = lastNumber + 1;
-        guardId = `GRD-${String(nextNumber).padStart(3, "0")}`;
+        guardId = `GRD-${String(parseInt(parts[1], 10) + 1).padStart(3, "0")}`;
       }
     }
 
@@ -71,20 +92,18 @@ exports.createGuard = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newGuard = new Guard({
-      firstName,
-      lastName,
-      fullName: fullName || "Unknown",
+      name: fullName,
       mobileNumber,
-      password: hashedPassword,
       alternativeNumber: alternativeNumber || null,
-      emailAddress: emailAddress || null,
+      email: resolvedEmail,
       city,
       guardId,
       shift: shift || "Day",
       joiningDate: joiningDate || new Date(),
-      idType,
-      idNumber,
+      idProofType: resolvedIdProofType,
+      idProofNumber: resolvedIdProofNum,
       status: status || "Active",
+      monthlySalary: monthlySalary || 0,
       idImage: req.file ? req.file.path : null,
     });
 
@@ -93,19 +112,17 @@ exports.createGuard = async (req, res) => {
     // Create login user
     await User.create({
       name: fullName,
-      email: emailAddress || `${mobileNumber}@guard.local`,
+      email: resolvedEmail || `${mobileNumber}@guard.local`,
       password: hashedPassword,
       role: "guard",
       profileId: savedGuard._id,
     });
 
-    // Send welcome email
-    if (emailAddress) {
-      try {
-        await sendGuardWelcomeEmail(emailAddress, fullName, password);
-      } catch (emailError) {
-        console.log("Email sending failed but guard created:", emailError);
-      }
+    // Send welcome email (non-blocking)
+    if (resolvedEmail) {
+      sendGuardWelcomeEmail(resolvedEmail, fullName, guardId, password).catch((err) =>
+        console.error("Guard welcome email failed (non-critical):", err)
+      );
     }
 
     res.status(201).json({
@@ -113,12 +130,25 @@ exports.createGuard = async (req, res) => {
       message: "Guard registered successfully",
       data: savedGuard,
     });
+
   } catch (error) {
     console.error("Error creating guard:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server Error",
-    });
+
+    // MongoDB duplicate key — user-friendly message
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0];
+      const messages = {
+        mobileNumber: "A guard with this mobile number already exists.",
+        email: "A guard with this email already exists.",
+        guardId: "Guard ID conflict. Please try again.",
+      };
+      return res.status(409).json({
+        success: false,
+        message: messages[field] || "A guard with these details already exists.",
+      });
+    }
+
+    res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
@@ -187,6 +217,7 @@ exports.updateGuard = async (req, res) => {
       idNumber,
       password,
       status,
+      monthlySalary,
     } = req.body;
 
     // Find guard
@@ -201,7 +232,7 @@ exports.updateGuard = async (req, res) => {
 
     // Check if mobile already exists (for other guards)
     if (mobileNumber && mobileNumber !== guard.mobileNumber) {
-      const existingMobile = await Guard.findOne({ 
+      const existingMobile = await Guard.findOne({
         mobileNumber,
         _id: { $ne: id }
       });
@@ -215,7 +246,7 @@ exports.updateGuard = async (req, res) => {
 
     // Check if email already exists (for other guards)
     if (emailAddress && emailAddress !== guard.emailAddress) {
-      const existingEmail = await Guard.findOne({ 
+      const existingEmail = await Guard.findOne({
         emailAddress,
         _id: { $ne: id }
       });
@@ -231,8 +262,8 @@ exports.updateGuard = async (req, res) => {
     const updateData = {
       firstName: firstName || guard.firstName,
       lastName: lastName || guard.lastName,
-      fullName: firstName && lastName 
-        ? `${firstName} ${lastName}` 
+      fullName: firstName && lastName
+        ? `${firstName} ${lastName}`
         : guard.fullName,
       mobileNumber: mobileNumber || guard.mobileNumber,
       alternativeNumber: alternativeNumber !== undefined ? alternativeNumber : guard.alternativeNumber,
@@ -243,12 +274,20 @@ exports.updateGuard = async (req, res) => {
       idType: idType || guard.idType,
       idNumber: idNumber || guard.idNumber,
       status: status || guard.status,
+      monthlySalary: monthlySalary !== undefined ? monthlySalary : guard.monthlySalary,
     };
 
     // Handle password update
     if (password) {
+      if (!isStrongPassword(password)) {
+        return res.status(400).json({
+          success: false,
+          message: STRONG_PASSWORD_MESSAGE,
+        });
+      }
+
       updateData.password = await bcrypt.hash(password, 10);
-      
+
       // Update user password as well
       await User.findOneAndUpdate(
         { profileId: id, role: "guard" },

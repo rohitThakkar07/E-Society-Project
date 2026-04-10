@@ -23,6 +23,18 @@ const getResidentLabel = (resident) => {
   return resident;
 };
 
+const getBookingUnit = (booking) => {
+  if (!booking) return "—";
+  if (booking.resident && typeof booking.resident === "object") {
+    const flat = booking.resident.flatNumber || booking.resident.flat || "";
+    if (flat) return flat;
+  }
+  if (booking.facility && typeof booking.facility === "object") {
+    return booking.facility.name || booking.facility.location || "—";
+  }
+  return "—";
+};
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -143,6 +155,7 @@ const BookingList = () => {
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Unit</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Resident</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Facility</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
@@ -172,6 +185,10 @@ const BookingList = () => {
                   <td className="px-5 py-4 text-gray-400 text-xs">{index + 1}</td>
 
                   {/* Resident — safely extract from populated object */}
+                  <td className="px-5 py-4 text-gray-700">
+                    {getBookingUnit(booking)}
+                  </td>
+
                   <td className="px-5 py-4">
                     <p className="font-medium text-gray-800">
                       {getResidentLabel(booking.resident)}

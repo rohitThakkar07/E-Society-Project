@@ -1,210 +1,377 @@
 const FacilityBooking = require("../../../db/models/facilityBookingModel");
 const Facility = require("../../../db/models/facilityModel");
+const {
+  validateBookingWindow,
+  computePrice,
+} = require("../../../../utils/facilityPricing");
 
-// ── Create Booking — saves a facility snapshot so data survives deletion ─────
-const createBooking = async (req, res) => {
+const BLOCKING = ["Pending", "Approved"];
+
+function isAdmin(req) {
+  return req.user?.role === "admin";
+}
+
+function startEndOfDay(dateInput) {
+  const d = new Date(dateInput);
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+  return { start, end };
+}
+
+async function hasOverlap(facilityId, start, end, excludeId = null) {
+  const q = {
+    facility: facilityId,
+    status: { $in: BLOCKING },
+    startDateTime: { $lt: end },
+    endDateTime: { $gt: start },
+  };
+  if (excludeId) q._id = { $ne: excludeId };
+  const found = await FacilityBooking.findOne(q).select("_id");
+  return Boolean(found);
+}
+
+/** POST /preview — price quote */
+exports.previewBooking = async (req, res) => {
   try {
-    const { facility, resident, bookingDate, startTime, endTime, purpose } = req.body;
-
-    if (!facility || !resident || !bookingDate || !startTime || !endTime) {
+    const { facilityId, startDateTime, endDateTime } = req.body;
+    if (!facilityId || !startDateTime || !endDateTime) {
       return res.status(400).json({
         success: false,
-        message: "facility, resident, bookingDate, startTime and endTime are all required.",
+        message: "facilityId, startDateTime and endDateTime are required",
       });
     }
-
-    // Verify facility still exists and is Available
-    const facilityDoc = await Facility.findById(facility);
-    if (!facilityDoc) {
-      return res.status(404).json({
-        success: false,
-        message: "Selected facility no longer exists.",
-      });
+    const facility = await Facility.findById(facilityId);
+    if (!facility) {
+      return res.status(404).json({ success: false, message: "Facility not found" });
     }
-    if (facilityDoc.status !== "Available") {
-      return res.status(400).json({
-        success: false,
-        message: `This facility is currently ${facilityDoc.status} and cannot be booked.`,
-      });
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const win = validateBookingWindow(facility, start, end);
+    if (!win.ok) {
+      return res.status(400).json({ success: false, message: win.message });
     }
-
-    // Conflict check
-    const dateStart = new Date(bookingDate); dateStart.setHours(0, 0, 0, 0);
-    const dateEnd   = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
-
-    const conflict = await FacilityBooking.findOne({
-      facility,
-      bookingDate: { $gte: dateStart, $lte: dateEnd },
-      status: { $nin: ["Cancelled", "Rejected"] },
-      $or: [
-        { startTime: { $lte: startTime }, endTime: { $gt: startTime } },
-        { startTime: { $lt: endTime },    endTime: { $gte: endTime }  },
-        { startTime: { $gte: startTime }, endTime: { $lte: endTime }  },
-      ],
+    const { totalAmount, pricingBreakdown } = computePrice(facility, start, end);
+    return res.json({
+      success: true,
+      data: {
+        totalAmount,
+        pricingBreakdown,
+        facility: {
+          name: facility.name,
+          bookingType: facility.bookingType,
+          pricePerHour: facility.pricePerHour,
+          pricePerDay: facility.pricePerDay,
+          openTime: facility.openTime,
+          closeTime: facility.closeTime,
+        },
+      },
     });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+};
 
-    if (conflict) {
+/** GET /check-availability?facilityId=&date=YYYY-MM-DD */
+exports.checkAvailability = async (req, res) => {
+  try {
+    const { facilityId, date } = req.query;
+    if (!facilityId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "facilityId and date (YYYY-MM-DD) are required",
+      });
+    }
+    const facility = await Facility.findById(facilityId);
+    if (!facility) {
+      return res.status(404).json({ success: false, message: "Facility not found" });
+    }
+    const { start, end } = startEndOfDay(date);
+    const booked = await FacilityBooking.find({
+      facility: facilityId,
+      status: { $in: BLOCKING },
+      startDateTime: { $lt: end },
+      endDateTime: { $gt: start },
+    }).select("startDateTime endDateTime status paymentStatus totalAmount");
+
+    res.json({
+      success: true,
+      data: booked,
+      facility: {
+        openTime: facility.openTime,
+        closeTime: facility.closeTime,
+        bookingType: facility.bookingType,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+/** GET /availability-range?facilityId=&from=&to= ISO */
+exports.availabilityRange = async (req, res) => {
+  try {
+    const { facilityId, from, to } = req.query;
+    if (!facilityId || !from || !to) {
+      return res.status(400).json({
+        success: false,
+        message: "facilityId, from and to (ISO datetime) are required",
+      });
+    }
+    const start = new Date(from);
+    const end = new Date(to);
+    const booked = await FacilityBooking.find({
+      facility: facilityId,
+      status: { $in: BLOCKING },
+      startDateTime: { $lt: end },
+      endDateTime: { $gt: start },
+    }).select("startDateTime endDateTime status");
+
+    res.json({ success: true, data: booked });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+/** GET /my — current resident's bookings */
+exports.getMyBookings = async (req, res) => {
+  try {
+    const rid = req.user?.profileId;
+    if (!rid) {
+      return res.status(403).json({ success: false, message: "Resident profile required" });
+    }
+    const bookings = await FacilityBooking.find({ resident: rid })
+      .populate("facility", "name status bookingType pricePerHour pricePerDay openTime closeTime")
+      .sort({ startDateTime: -1 });
+
+    res.json({ success: true, data: bookings });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+/** GET /list — admin only */
+exports.getAllBookings = async (req, res) => {
+  try {
+    if (!isAdmin(req)) {
+      return res.status(403).json({ success: false, message: "Admin only" });
+    }
+    const bookings = await FacilityBooking.find()
+      .populate("facility", "name status bookingType")
+      .populate({
+        path: "resident",
+        select: "firstName lastName flatNumber wing email mobileNumber",
+      })
+      .populate("approvedBy", "name email")
+      .sort({ startDateTime: -1 });
+
+    res.json({ success: true, data: bookings });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+/** GET /:id */
+exports.getBookingById = async (req, res) => {
+  try {
+    const booking = await FacilityBooking.findById(req.params.id)
+      .populate("facility")
+      .populate("resident", "firstName lastName flatNumber wing email mobileNumber")
+      .populate("approvedBy", "name email");
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    if (!isAdmin(req)) {
+      const rid = req.user?.profileId?.toString();
+      if (!rid || booking.resident?._id?.toString() !== rid) {
+        return res.status(403).json({ success: false, message: "Access denied" });
+      }
+    }
+
+    res.json({ success: true, data: booking });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+/** POST /create */
+exports.createBooking = async (req, res) => {
+  try {
+    const { facility: facilityId, startDateTime, endDateTime, purpose, resident: bodyResident } =
+      req.body;
+
+    if (!facilityId || !startDateTime || !endDateTime) {
+      return res.status(400).json({
+        success: false,
+        message: "facility, startDateTime and endDateTime are required",
+      });
+    }
+
+    const facility = await Facility.findById(facilityId);
+    if (!facility) {
+      return res.status(404).json({ success: false, message: "Facility not found" });
+    }
+    if (facility.status !== "Available") {
+      return res.status(400).json({
+        success: false,
+        message: `Facility is ${facility.status} and cannot be booked`,
+      });
+    }
+
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const win = validateBookingWindow(facility, start, end);
+    if (!win.ok) {
+      return res.status(400).json({ success: false, message: win.message });
+    }
+
+    const { totalAmount, pricingBreakdown } = computePrice(facility, start, end);
+    if (totalAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Computed amount is zero — set facility prices",
+      });
+    }
+
+    if (await hasOverlap(facilityId, start, end)) {
       return res.status(409).json({
         success: false,
-        message: `Already booked from ${conflict.startTime} to ${conflict.endTime} on this date.`,
+        message: "This time range overlaps an existing booking",
       });
     }
 
-    // Save a snapshot of the facility at booking time
-    // This means even if the facility is deleted later, the booking still has its details
+    let residentId = req.user?.profileId;
+    if (isAdmin(req) && bodyResident) {
+      residentId = bodyResident;
+    }
+    if (!residentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Resident is required",
+      });
+    }
+
     const booking = await FacilityBooking.create({
-      facility,
-      resident,
-      bookingDate,
-      startTime,
-      endTime,
-      purpose,
+      facility: facilityId,
+      resident: residentId,
+      bookedByUser: req.user?._id,
+      startDateTime: start,
+      endDateTime: end,
+      totalAmount,
+      pricingBreakdown,
+      purpose: purpose || "",
+      status: "Pending",
+      paymentStatus: "unpaid",
       facilitySnapshot: {
-        name:        facilityDoc.name,
-        location:    facilityDoc.location,
-        openingTime: facilityDoc.openingTime,
-        closingTime: facilityDoc.closingTime,
+        name: facility.name,
+        bookingType: facility.bookingType,
+        pricePerHour: facility.pricePerHour,
+        pricePerDay: facility.pricePerDay,
       },
     });
 
-    const populated = await booking.populate(["facility", "resident"]);
+    const populated = await FacilityBooking.findById(booking._id)
+      .populate("facility", "name status bookingType pricePerHour pricePerDay openTime closeTime")
+      .populate("resident", "firstName lastName flatNumber wing email");
 
     res.status(201).json({
       success: true,
-      message: "Facility booked successfully",
+      message: "Booking created — complete payment to confirm",
       data: populated,
     });
-
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };
 
-// ── Check Availability ────────────────────────────────────────────────────────
-const checkAvailability = async (req, res) => {
+/** PUT /update/:id */
+exports.updateBooking = async (req, res) => {
   try {
-    const { facilityId, bookingDate } = req.query;
-
-    if (!facilityId || !bookingDate) {
-      return res.status(400).json({
-        success: false,
-        message: "facilityId and bookingDate are required",
-      });
-    }
-
-    // Also check if facility still exists
-    const facility = await Facility.findById(facilityId);
-    if (!facility) {
-      return res.status(404).json({
-        success: false,
-        message: "This facility no longer exists.",
-      });
-    }
-
-    const dateStart = new Date(bookingDate); dateStart.setHours(0, 0, 0, 0);
-    const dateEnd   = new Date(bookingDate); dateEnd.setHours(23, 59, 59, 999);
-
-    const bookedSlots = await FacilityBooking.find({
-      facility: facilityId,
-      bookingDate: { $gte: dateStart, $lte: dateEnd },
-      status: { $nin: ["Cancelled", "Rejected"] },
-    }).select("startTime endTime status");
-
-    res.json({ success: true, data: bookedSlots });
-
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Get All Bookings ──────────────────────────────────────────────────────────
-const getAllBookings = async (req, res) => {
-  try {
-    // populate("facility") returns null for deleted facilities — handled in frontend
-    const bookings = await FacilityBooking.find()
-  .populate("facility", "name location status openingTime closingTime")
-  .populate({
-    path: "resident",
-    select: "name profileId",
-    populate: {
-      path: "profileId",
-      model: "Resident",
-      select: "firstName lastName flatNumber"
-    }
-  })
-  .sort({ createdAt: -1 });
-
-    res.json({ success: true, data: bookings });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Get Booking by ID ─────────────────────────────────────────────────────────
-const getBookingById = async (req, res) => {
-  try {
-    const booking = await FacilityBooking.findById(req.params.id)
-      .populate("facility", "name location openingTime closingTime status")
-      .populate("resident", "flatNumber name");
-
-    if (!booking)
+    const booking = await FacilityBooking.findById(req.params.id);
+    if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
+    }
 
-    res.json({ success: true, data: booking });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    const admin = isAdmin(req);
+    const rid = req.user?.profileId?.toString();
+    const owner = booking.resident?.toString() === rid;
+
+    if (req.body.status) {
+      const next = req.body.status;
+      if (["Approved", "Rejected"].includes(next)) {
+        if (!admin) {
+          return res.status(403).json({ success: false, message: "Only admin can approve/reject" });
+        }
+        if (next === "Approved" && booking.paymentStatus !== "paid") {
+          return res.status(400).json({
+            success: false,
+            message: "Resident must complete Razorpay payment before approval",
+          });
+        }
+        booking.status = next;
+        booking.approvedBy = req.user._id;
+      } else if (next === "Cancelled") {
+        if (!admin && !owner) {
+          return res.status(403).json({ success: false, message: "Access denied" });
+        }
+        if (!admin && booking.status !== "Pending") {
+          return res.status(400).json({
+            success: false,
+            message: "You can only cancel pending bookings",
+          });
+        }
+        booking.status = "Cancelled";
+      } else {
+        booking.status = next;
+      }
+    }
+
+    if (admin && req.body.purpose !== undefined) booking.purpose = req.body.purpose;
+
+    // Admin reschedule (optional)
+    if (admin && req.body.startDateTime && req.body.endDateTime) {
+      const facility = await Facility.findById(booking.facility);
+      const start = new Date(req.body.startDateTime);
+      const end = new Date(req.body.endDateTime);
+      const win = validateBookingWindow(facility, start, end);
+      if (!win.ok) {
+        return res.status(400).json({ success: false, message: win.message });
+      }
+      if (await hasOverlap(booking.facility, start, end, booking._id)) {
+        return res.status(409).json({ success: false, message: "Overlap with another booking" });
+      }
+      const { totalAmount, pricingBreakdown } = computePrice(facility, start, end);
+      booking.startDateTime = start;
+      booking.endDateTime = end;
+      booking.totalAmount = totalAmount;
+      booking.pricingBreakdown = pricingBreakdown;
+    }
+
+    await booking.save();
+    const out = await FacilityBooking.findById(booking._id)
+      .populate("facility", "name status bookingType")
+      .populate("resident", "firstName lastName flatNumber wing email")
+      .populate("approvedBy", "name email");
+
+    res.json({ success: true, message: "Booking updated", data: out });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };
 
-// ── Update Booking ────────────────────────────────────────────────────────────
-const updateBooking = async (req, res) => {
+/** DELETE /delete/:id */
+exports.deleteBooking = async (req, res) => {
   try {
-    const allowedUpdates = {
-      bookingDate: req.body.bookingDate,
-      startTime:   req.body.startTime,
-      endTime:     req.body.endTime,
-      purpose:     req.body.purpose,
-      status:      req.body.status,
-      approvedBy:  req.body.approvedBy,
-    };
-    Object.keys(allowedUpdates).forEach(
-      (k) => allowedUpdates[k] === undefined && delete allowedUpdates[k]
-    );
-
-    const booking = await FacilityBooking.findByIdAndUpdate(
-      req.params.id,
-      allowedUpdates,
-      { new: true, runValidators: true }
-    )
-      .populate("facility", "name location status")
-      .populate("resident", "flatNumber name");
-
-    if (!booking)
-      return res.status(404).json({ success: false, message: "Booking not found" });
-
-    res.json({ success: true, message: "Booking updated", data: booking });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ── Delete Booking ────────────────────────────────────────────────────────────
-const deleteBooking = async (req, res) => {
-  try {
+    if (!isAdmin(req)) {
+      return res.status(403).json({ success: false, message: "Admin only" });
+    }
     const booking = await FacilityBooking.findByIdAndDelete(req.params.id);
-    if (!booking)
+    if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
+    }
     res.json({ success: true, message: "Booking deleted" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
-};
-
-module.exports = {
-  createBooking,
-  checkAvailability,
-  getAllBookings,
-  getBookingById,
-  updateBooking,
-  deleteBooking,
 };

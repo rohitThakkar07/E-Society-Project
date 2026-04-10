@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 const AdminLayout    = lazy(() => import("../../Admin/common/AdminLayout"));
 const AdminDashboard = lazy(() => import("../../Admin/AdminDashboard"));
@@ -17,23 +18,16 @@ import flatRoutes       from "./flatRoutes";
 
 // ── NEW routes (copy files from the zip into this same routes folder) ────────
 import noticeRoutes     from "./noticeRoutes";
-import staffRoutes      from "./staffRoutes";
-import alertRoutes      from "./alertRoutes";
 import pollRoutes       from "./pollRoutes";
+import eventRoutes      from "./eventRoutes";
 
 import AuthContext from "../../Admin/context/AuthContext";
-
-const AdminLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-  </div>
-);
 
 const AdminRouter = [
   {
     path: "/admin",
     element: (
-      <Suspense fallback={<AdminLoader />}>
+      <Suspense fallback={<PageLoader message="Loading admin…" />}>
         <AuthContext>
           <AdminLayout />
         </AuthContext>
@@ -43,7 +37,7 @@ const AdminRouter = [
       {
         index: true,
         element: (
-          <Suspense fallback={<AdminLoader />}>
+          <Suspense fallback={<PageLoader message="Loading dashboard…" />}>
             <AuthContext>
               <AdminDashboard />
             </AuthContext>
@@ -64,9 +58,8 @@ const AdminRouter = [
       ...flatRoutes,
 
       ...noticeRoutes,
-      ...staffRoutes,
-      ...alertRoutes,
       ...pollRoutes,
+      ...eventRoutes,
     ],
   },
 ];

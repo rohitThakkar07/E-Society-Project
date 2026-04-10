@@ -1,245 +1,147 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { createMaintenance } from "../../../../store/slices/maintainenceSlice";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { createMaintenance } from "../../../../store/slices/maintenanceSlice";
+import { fetchResidents } from "../../../../store/slices/residentSlice";
 
-const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
-];
-
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const currentYear = new Date().getFullYear();
 const YEARS = [currentYear - 1, currentYear, currentYear + 1];
 
+const TABS = [
+  { label: "Overview", path: "/admin/maintenance/dashboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+  { label: "Records", path: "/admin/maintenance/list", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
+  { label: "Add Bill", path: "/admin/maintenance/add", icon: "M12 4v16m8-8H4" },
+  { label: "Generate", path: "/admin/maintenance/generate", icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" },
+];
+
 const AddMaintenance = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const dispatch  = useDispatch();
+  const { residents = [] } = useSelector((state) => state.resident);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [residents, setResidents] = useState([]);
-  const [submitting, setSubmitting] = useState(false); // ✅ local state
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      year: currentYear,
-      month: MONTHS[new Date().getMonth()], // ✅ auto month
-    },
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: { year: currentYear, month: MONTHS[new Date().getMonth()] },
   });
 
-  // 🔹 Fetch residents
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const { default: API } = await import("../../../../service/api");
-        const res = await API.get("/resident/list");
-        setResidents(res.data.data || []);
-      } catch {
-        setResidents([]);
-      }
-    };
-    load();
-  }, []);
+  useEffect(() => { dispatch(fetchResidents()); }, [dispatch]);
 
-  // 🔹 Submit
   const onSubmit = async (data) => {
-    if (submitting) return; // prevent double click
-
-    if (!data.resident || !data.month || !data.year) return;
-
+    if (submitting) return;
+    const selectedResident = residents.find((r) => r._id === data.resident);
+    const flatId = selectedResident?.flat?._id || selectedResident?.flat;
+    if (!flatId) { alert("Selected resident does not have an assigned flat."); return; }
     setSubmitting(true);
-
-    const res = await dispatch(
-      createMaintenance({
-        ...data,
-        amount: Number(data.amount),
-        lateFee: Number(data.lateFee || 0),
-        year: Number(data.year),
-      })
-    );
-
+    const res = await dispatch(createMaintenance({ ...data, flat: flatId, amount: Number(data.amount), lateFee: Number(data.lateFee || 0), year: Number(data.year) }));
     setSubmitting(false);
-
-    if (res.meta.requestStatus === "fulfilled") {
-      reset();
-      navigate("/admin/maintenance/list");
-    }
+    if (res.type.endsWith("fulfilled")) navigate("/admin/maintenance/list");
   };
 
-  const inputClass = (err) =>
-    `w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition focus:ring-2 focus:ring-blue-500 ${
-      err ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"
-    }`;
-
-  const labelClass =
-    "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
-
-  const ErrMsg = ({ e }) =>
-    e ? <p className="mt-1 text-xs text-red-500">{e.message}</p> : null;
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex items-start justify-center">
-      <div className="w-full max-w-2xl">
+    <div>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance</h1>
+        <p className="text-sm text-slate-500 font-medium mt-0.5">Track society maintenance bills and collections.</p>
+      </div>
 
-        {/* HEADER */}
-        <div className="mb-8">
+      {/* Sub Navigation */}
+      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+        {TABS.map((tab) => (
           <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 mb-4"
+            key={tab.path}
+            onClick={() => navigate(tab.path)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}
           >
-            ← Back
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
+            </svg>
+            {tab.label}
           </button>
+        ))}
+      </div>
 
-          <h1 className="text-xl font-bold text-gray-900">
-            Add Maintenance
-          </h1>
-          <p className="text-sm text-gray-400">
-            Create a monthly maintenance charge for a resident
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-blue-600 to-blue-400" />
-
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="p-6 md:p-8 space-y-6"
-          >
-
-            {/* Resident */}
+      {/* Form Card */}
+      <div className="max-w-2xl">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Card Header */}
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
             <div>
-              <label className={labelClass}>Resident *</label>
-              <select
-                {...register("resident", {
-                  required: "Please select a resident",
-                })}
-                className={inputClass(errors.resident)}
-              >
+              <p className="text-sm font-bold text-slate-800">Add Maintenance Bill</p>
+              <p className="text-[11px] text-slate-400">All fields marked * are required</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+            {/* Resident */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Resident *</label>
+              <select {...register("resident", { required: "Resident is required" })} className={`admin-input ${errors.resident ? "admin-input-error" : ""}`}>
                 <option value="">Select resident</option>
                 {residents.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.flatNumber} — {r.firstName} {r.lastName || ""}
-                  </option>
+                  <option key={r._id} value={r._id}>{r.wing}-{r.flatNumber} | {r.firstName} {r.lastName}</option>
                 ))}
               </select>
-              <ErrMsg e={errors.resident} />
+              {errors.resident && <p className="text-xs text-red-500 font-medium">{errors.resident.message}</p>}
             </div>
 
-            {/* Month + Year */}
+            {/* Month & Year */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Month *</label>
-                <select
-                  {...register("month", {
-                    required: "Month is required",
-                  })}
-                  className={inputClass(errors.month)}
-                >
-                  {MONTHS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Month</label>
+                <select {...register("month")} className="admin-input">
+                  {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
-                <ErrMsg e={errors.month} />
               </div>
-
-              <div>
-                <label className={labelClass}>Year *</label>
-                <select
-                  {...register("year", {
-                    required: "Year is required",
-                  })}
-                  className={inputClass(errors.year)}
-                >
-                  {YEARS.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Year</label>
+                <select {...register("year")} className="admin-input">
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
-                <ErrMsg e={errors.year} />
               </div>
             </div>
 
-            {/* Amount + Late Fee */}
+            {/* Amount & Late Fee */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Amount (₹) *</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 2000"
-                  {...register("amount", {
-                    required: "Amount is required",
-                    min: { value: 1, message: "Must be > 0" },
-                  })}
-                  className={inputClass(errors.amount)}
-                />
-                <ErrMsg e={errors.amount} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Amount (₹) *</label>
+                <input type="number" placeholder="e.g. 2000" {...register("amount", { required: true })} className={`admin-input ${errors.amount ? "admin-input-error" : ""}`} />
               </div>
-
-              <div>
-                <label className={labelClass}>Late Fee (₹)</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 100"
-                  {...register("lateFee", {
-                    min: { value: 0, message: "Cannot be negative" },
-                  })}
-                  className={inputClass(errors.lateFee)}
-                />
-                <ErrMsg e={errors.lateFee} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late Fee (₹)</label>
+                <input type="number" placeholder="0" {...register("lateFee")} className="admin-input" />
               </div>
             </div>
 
             {/* Due Date */}
-            <div>
-              <label className={labelClass}>Due Date *</label>
-              <input
-                type="date"
-                {...register("dueDate", {
-                  required: "Due date is required",
-                })}
-                className={inputClass(errors.dueDate)}
-              />
-              <ErrMsg e={errors.dueDate} />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className={labelClass}>Description</label>
-              <textarea
-                rows={3}
-                placeholder="Optional notes..."
-                {...register("description")}
-                className={`${inputClass(false)} resize-none`}
-              />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Due Date *</label>
+              <input type="date" {...register("dueDate", { required: true })} className={`admin-input ${errors.dueDate ? "admin-input-error" : ""}`} />
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
-              >
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="button" onClick={() => navigate(-1)}
+                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
                 Cancel
               </button>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg"
-              >
-                Add Maintenance
+              <button type="submit" disabled={submitting}
+                className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2">
+                {submitting ? (
+                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Saving...</>
+                ) : (
+                  <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Add Bill</>
+                )}
               </button>
             </div>
-
           </form>
         </div>
       </div>

@@ -1,20 +1,19 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-// Note: Ensure these components exist in your src/components/layout folder
-import Header from "../../User/layout/Header"; 
-import Footer from "../../User/layout/Footer";
+import Header from "./Header";
+import Footer from "./Footer";
+import { ThemeProvider } from "../context/ThemeContext";
 
-const UserLayout = () => {
-  return (
-    <div className="user-layout-container">
+const UserLayout = () => (
+  <ThemeProvider>
+    <div className="user-portal min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)] transition-[background-color,color] duration-500 ease-out">
       <Header />
-      <main className="content-area">
-        {/* Outlet renders the child components from HomeRoutes.jsx */}
+      <main className="flex-1 w-full min-w-0 page-in">
         <Outlet />
       </main>
       <Footer />
     </div>
-  );
-};
+  </ThemeProvider>
+);
 
 export default UserLayout;

@@ -12,171 +12,203 @@ const AddFacility = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { id } = useParams();
-
   const isEditMode = Boolean(id);
 
-  const { singleFacility, loading } = useSelector(
-    (state) => state.facility
-  );
-
+  const { singleFacility, loading } = useSelector((state) => state.facility);
+  
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      bookingType: "hourly",
+      pricePerHour: 0,
+      pricePerDay: 0,
+      openTime: "06:00",
+      closeTime: "22:00",
+      status: "Available",
+    },
+  });
 
-  // 🔥 Fetch facility (edit)
+  // 1. Fetch data if in Edit Mode
   useEffect(() => {
     if (isEditMode) {
       dispatch(fetchFacilityById(id));
     }
   }, [id, isEditMode, dispatch]);
 
-  // 🔥 Populate form
+  // 2. Sync form with Redux state
   useEffect(() => {
     if (singleFacility && isEditMode) {
       reset({
         name: singleFacility.name || "",
         description: singleFacility.description || "",
-        location: singleFacility.location || "",
-        openingTime: singleFacility.openingTime || "",
-        closingTime: singleFacility.closingTime || "",
         status: singleFacility.status || "Available",
+        bookingType: singleFacility.bookingType || "hourly",
+        pricePerHour: singleFacility.pricePerHour ?? 0,
+        pricePerDay: singleFacility.pricePerDay ?? 0,
+        openTime: singleFacility.openTime || "06:00",
+        closeTime: singleFacility.closeTime || "22:00",
       });
     }
   }, [singleFacility, isEditMode, reset]);
 
-  // 🔥 Submit
+  // 3. Form Submission
   const onSubmit = async (data) => {
-    if (isEditMode) {
-      const res = await dispatch(updateFacility({ id, data }));
-      if (res.type.endsWith("fulfilled")) {
-        navigate("/admin/facility/list");
-      }
-    } else {
-      const res = await dispatch(createFacility(data));
-      if (res.type.endsWith("fulfilled")) {
-        reset();
-        navigate("/admin/facility/list");
-      }
+    const action = isEditMode
+      ? updateFacility({ id, data })
+      : createFacility(data);
+
+    const res = await dispatch(action);
+    
+    if (res.type.endsWith("fulfilled")) {
+      navigate("/admin/facility/list");
     }
   };
 
+  // 4. Loading Guard for better UX
+  if (isEditMode && loading && !singleFacility) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 font-medium animate-pulse">Loading Facility Data...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
-      <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8">
+    <div className="container-fluid bg-light min-vh-100 py-5">
+      <div className="row justify-content-center">
+        <div className="col-lg-6 col-xl-5">
+          <div className="card shadow">
+            <div className="card-header bg-primary text-white">
+              <h2 className="card-title mb-0">
+                {isEditMode ? "Edit Facility" : "Add New Facility"}
+              </h2>
+              <p className="card-subtitle mb-0 text-white-50">Configure resources available for society residents</p>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit(onSubmit)}>
+          
+                <div className="mb-3">
+                  <label className="form-label">Facility Name *</label>
+                  <input
+                    {...register("name", { required: "Facility name is required" })}
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                    placeholder="e.g. Gym, Community Hall"
+                  />
+                  {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
+                </div>
 
-        {/* HEADER */}
-        <div className="mb-6 border-b pb-4">
-          <h2 className="text-2xl font-bold">
-            {isEditMode ? "Edit Facility" : "Add Facility"}
-          </h2>
-          <p className="text-gray-500">
-            Manage facility details
-          </p>
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    {...register("description")}
+                    rows={4}
+                    className="form-control"
+                    placeholder="Capacity, equipment details, or usage rules..."
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Current Status</label>
+                  <select
+                    {...register("status")}
+                    className="form-select"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+
+                <hr className="my-4" />
+                <h6 className="text-muted mb-3">Booking &amp; pricing</h6>
+
+                <div className="mb-3">
+                  <label className="form-label">Booking type *</label>
+                  <select {...register("bookingType")} className="form-select">
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="both">Both (days + extra hours)</option>
+                  </select>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Price / hour (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      {...register("pricePerHour", { valueAsNumber: true })}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Price / day (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      {...register("pricePerDay", { valueAsNumber: true })}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Opens (24h HH:mm)</label>
+                    <input
+                      type="text"
+                      placeholder="06:00"
+                      {...register("openTime")}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Closes (24h HH:mm)</label>
+                    <input
+                      type="text"
+                      placeholder="22:00"
+                      {...register("closeTime")}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex justify-content-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn btn-primary"
+                  >
+                    {loading ? (
+                      <span className="d-flex align-items-center justify-content-center gap-2">
+                        <div className="spinner-border spinner-border-sm" role="status"></div>
+                        Saving...
+                      </span>
+                    ) : isEditMode ? (
+                      "Update Facility"
+                    ) : (
+                      "Create Facility"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
-          {/* NAME */}
-          <div>
-            <label>Facility Name *</label>
-            <input
-              {...register("name", { required: "Required" })}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="Gym / Hall / Pool"
-            />
-            {errors.name && (
-              <span className="text-red-500 text-xs">
-                {errors.name.message}
-              </span>
-            )}
-          </div>
-
-          {/* DESCRIPTION */}
-          <div>
-            <label>Description</label>
-            <textarea
-              {...register("description")}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="Facility details..."
-            />
-          </div>
-
-          {/* LOCATION */}
-          <div>
-            <label>Location</label>
-            <input
-              {...register("location")}
-              className="w-full border px-4 py-2 mt-1 rounded"
-              placeholder="e.g. Block A Ground Floor"
-            />
-          </div>
-
-          {/* TIME */}
-          <div className="grid md:grid-cols-2 gap-6">
-
-            <div>
-              <label>Opening Time</label>
-              <input
-                type="time"
-                {...register("openingTime")}
-                className="w-full border px-4 py-2 mt-1 rounded"
-              />
-            </div>
-
-            <div>
-              <label>Closing Time</label>
-              <input
-                type="time"
-                {...register("closingTime")}
-                className="w-full border px-4 py-2 mt-1 rounded"
-              />
-            </div>
-
-          </div>
-
-          {/* STATUS */}
-          <div>
-            <label>Status</label>
-            <select
-              {...register("status")}
-              className="w-full border px-4 py-2 mt-1 rounded"
-            >
-              <option value="Available">Available</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-
-          {/* ACTIONS */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-5 py-2 bg-gray-200 rounded"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 bg-blue-600 text-white rounded"
-            >
-              {loading
-                ? "Saving..."
-                : isEditMode
-                ? "Update Facility"
-                : "Save Facility"}
-            </button>
-
-          </div>
-
-        </form>
-
       </div>
     </div>
   );

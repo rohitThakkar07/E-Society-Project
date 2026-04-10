@@ -19,6 +19,15 @@ export const fetchFlatById = createAsyncThunk("flat/fetchFlatById", async (id) =
   return res.data.data;
 });
 
+export const fetchResidentFlat = createAsyncThunk("flat/fetchResidentFlat", async (userId) => {
+  try {
+    const res = await API.get(`/flat/resident/${userId}`);
+    return res.data.data;
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Something want wrong");
+  }
+});
+
 export const createFlat = createAsyncThunk("flat/createFlat", async (data, { rejectWithValue }) => {
   try {
     const res = await API.post("/flat/create", data);
@@ -54,13 +63,17 @@ const flatSlice = createSlice({
   initialState,
   reducers: { clearSingleFlat: (s) => { s.singleFlat = null; } },
   extraReducers: (builder) => {
-    builder.addCase(fetchFlatSummary.pending,   (s) => { s.summaryLoading = true; });
+    builder.addCase(fetchResidentFlat.fulfilled, (s, a) => {
+      s.loading = false;
+      s.singleFlat = a.payload;
+    });
+    builder.addCase(fetchFlatSummary.pending, (s) => { s.summaryLoading = true; });
     builder.addCase(fetchFlatSummary.fulfilled, (s, a) => { s.summaryLoading = false; s.summary = a.payload; });
-    builder.addCase(fetchFlatSummary.rejected,  (s) => { s.summaryLoading = false; });
-    builder.addCase(fetchFlats.fulfilled,     (s, a) => { s.loading = false; s.list = a.payload; });
-    builder.addCase(fetchFlatById.fulfilled,  (s, a) => { s.loading = false; s.singleFlat = a.payload; });
-    builder.addCase(createFlat.fulfilled,     (s, a) => { s.loading = false; s.list.unshift(a.payload); });
-    builder.addCase(updateFlat.fulfilled,     (s, a) => {
+    builder.addCase(fetchFlatSummary.rejected, (s) => { s.summaryLoading = false; });
+    builder.addCase(fetchFlats.fulfilled, (s, a) => { s.loading = false; s.list = a.payload; });
+    builder.addCase(fetchFlatById.fulfilled, (s, a) => { s.loading = false; s.singleFlat = a.payload; });
+    builder.addCase(createFlat.fulfilled, (s, a) => { s.loading = false; s.list.unshift(a.payload); });
+    builder.addCase(updateFlat.fulfilled, (s, a) => {
       s.loading = false;
       const i = s.list.findIndex(x => x._id === a.payload._id);
       if (i !== -1) s.list[i] = a.payload;

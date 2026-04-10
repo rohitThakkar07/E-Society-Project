@@ -1,221 +1,380 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle, Search, ChevronDown } from "lucide-react";
-import { fetchComplaints, createComplaint, updateComplaintStatus } from "../../store/slices/complaintSlice";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  Wrench,
+  Plus,
+  X,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Search,
+  ChevronRight,
+  MessageSquare,
+  Sparkles,
+  ArrowUpRight,
+  Filter,
+  Image as ImageIcon,
+  Activity,
+} from "lucide-react";
+import { fetchComplaints } from "../../store/slices/complaintSlice";
+import { ListSkeleton } from "../../components/PageLoader";
+
+const filePublicOrigin = () => {
+  const u = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return u.replace(/\/api\/?$/, "");
+};
 
 const statusConfig = {
-  Pending:    { color: "bg-amber-100 text-amber-700",   icon: <Clock size={12} /> },
-  "In Progress": { color: "bg-blue-100 text-blue-700",  icon: <AlertCircle size={12} /> },
-  Resolved:   { color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle size={12} /> },
+  Pending: { color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: <Clock size={14} />, label: "Pending" },
+  "In Progress": { color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: <AlertCircle size={14} />, label: "In Progress" },
+  Resolved: { color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", icon: <CheckCircle size={14} />, label: "Resolved" },
+  Rejected: { color: "bg-rose-500/10 text-rose-500 border-rose-500/20", icon: <X size={14} />, label: "Rejected" },
 };
 
 const categoryColors = {
-  Plumbing:    "bg-blue-50 text-blue-600",
-  Electrical:  "bg-amber-50 text-amber-600",
-  Cleaning:    "bg-green-50 text-green-600",
-  Security:    "bg-red-50 text-red-600",
-  Lift:        "bg-violet-50 text-violet-600",
-  Other:       "bg-slate-100 text-slate-600",
+  Water: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  Electricity: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  Security: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  Maintenance: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  Other: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
 const RaiseComplaint = () => {
   const dispatch = useDispatch();
-  const { complaints, loading } = useSelector((s) => s.complaint);
-  const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const navigate = useNavigate();
 
-  const [showForm, setShowForm] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const { complaints, loading: complaintLoading } = useSelector((s) => s.complaint || {});
+
+  const user = JSON.parse(localStorage.getItem("userData") || "{}");
+  const residentId = user?.profileId || user?.resident?._id || user?.residentId || user?._id || user?.id || "";
+
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
 
-  useEffect(() => { dispatch(fetchComplaints()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchComplaints());
+  }, [dispatch]);
 
-  const filtered = (complaints || []).filter(c => {
-    const matchStatus = filter === "All" || c.status === filter;
-    const matchSearch = c.title?.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
-  });
+  // Original Logic for ID detection
+  const userComplaints = useMemo(() => {
+    return (complaints || []).filter((c) => {
+      const complaintResidentId =
+        c.resident?._id ||
+        c.resident?.profileId ||
+        c.resident?.id ||
+        c.residentId ||
+        c.resident;
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    await dispatch(createComplaint(form));
-    setShowForm(false);
-    setForm({ title: "", description: "", category: "Other", wing: user?.wing || "", flatNumber: user?.flatNumber || "" });
+      return String(complaintResidentId || "") === String(residentId || "");
+    });
+  }, [complaints, residentId]);
+
+  const filtered = useMemo(() => {
+    return userComplaints.filter((c) => {
+      const matchStatus = filter === "All" || c.status === filter;
+      const query = search.toLowerCase();
+      const matchSearch =
+        c.title?.toLowerCase().includes(query) ||
+        c.description?.toLowerCase().includes(query) ||
+        c.category?.toLowerCase().includes(query);
+      return matchStatus && matchSearch;
+    });
+  }, [userComplaints, filter, search]);
+
+  const stats = useMemo(() => [
+    { label: "Total", value: userComplaints?.length || 0, color: "text-indigo-500", bg: "bg-indigo-500/5", glow: "rgba(99,102,241,0.2)" },
+    { label: "Pending", value: userComplaints?.filter((c) => c.status === "Pending").length || 0, color: "text-amber-500", bg: "bg-amber-500/5", glow: "rgba(245,158,11,0.2)" },
+    { label: "In Progress", value: userComplaints?.filter((c) => c.status === "In Progress").length || 0, color: "text-blue-500", bg: "bg-blue-500/5", glow: "rgba(59,130,246,0.2)" },
+    { label: "Resolved", value: userComplaints?.filter((c) => c.status === "Resolved").length || 0, color: "text-emerald-500", bg: "bg-emerald-500/5", glow: "rgba(16,185,129,0.2)" },
+  ], [userComplaints]);
+
+  const listAnim = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
   };
-
-  const stats = [
-    { label: "Total", value: complaints?.length || 0, color: "text-slate-700", bg: "bg-slate-50" },
-    { label: "Pending", value: complaints?.filter(c => c.status === "Pending").length || 0, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "In Progress", value: complaints?.filter(c => c.status === "In Progress").length || 0, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Resolved", value: complaints?.filter(c => c.status === "Resolved").length || 0, color: "text-emerald-600", bg: "bg-emerald-50" },
-  ];
+  const itemAnim = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
+  
+  const activeStatus = statusConfig[selectedComplaint?.status];
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-slate-50 p-6">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
+    <div
+      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-all duration-500 sm:p-8 pt-28"
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+      `}</style>
 
-      <div className="max-w-5xl mx-auto">
-
-        {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Wrench size={20} className="text-orange-500" />
-              <h1 className="text-2xl font-bold text-slate-800">Help Desk</h1>
-            </div>
-            <p className="text-sm text-slate-400">Track and manage your complaints</p>
-          </div>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-700 transition">
-            <Plus size={16} /> Raise Complaint
-          </button>
-        </div>
-
-        {/* STATS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {stats.map(s => (
-            <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* SEARCH + FILTER */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6 flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search complaints..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
-          </div>
-          <div className="flex gap-2">
-            {["All", "Pending", "In Progress", "Resolved"].map(s => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${filter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* COMPLAINTS LIST */}
-        {loading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}</div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map(c => (
-              <div key={c._id} onClick={() => setSelected(c)}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-slate-200 transition">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[c.category] || categoryColors.Other}`}>{c.category}</span>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[c.status]?.color || statusConfig.Pending.color}`}>
-                        {statusConfig[c.status]?.icon} {c.status}
-                      </span>
-                      {c.wing && <span className="text-xs text-slate-400">Wing {c.wing} • Flat {c.flatNumber}</span>}
-                    </div>
-                    <h3 className="font-semibold text-slate-800 mb-1">{c.title}</h3>
-                    <p className="text-sm text-slate-400 line-clamp-1">{c.description}</p>
+      <div className="relative z-[1] mx-auto max-w-6xl m-12">
+        
+        {/* --- MAIN HERO HEADER --- */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-1 shadow-2xl transition-all hover:shadow-orange-500/5">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-orange-500/10 blur-[100px] animate-pulse" />
+            
+            <div className="grid gap-8 p-8 md:grid-cols-[1.3fr_0.7fr]">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500">
+                  <Sparkles size={14} className="animate-pulse" />
+                  Resident Support Desk
+                </div>
+                <div className="flex items-center gap-5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-orange-500 text-white shadow-xl shadow-orange-500/30">
+                    <Wrench size={32} />
                   </div>
-                  <p className="text-xs text-slate-300 shrink-0">{new Date(c.createdAt).toLocaleDateString("en-IN")}</p>
+                  <div>
+                    <h1 className="text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl">Help Desk</h1>
+                    <p className="mt-2 text-sm font-medium text-[var(--text-muted)] opacity-80">Report issues, attach proof, and track each update in real-time.</p>
+                  </div>
                 </div>
               </div>
+
+              <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] bg-[var(--bg)] border border-[var(--border)] p-6 shadow-inner">
+                <div>
+                  <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500">
+                    <Activity size={14} /> Quick Action
+                  </p>
+                  <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--text-muted)]">
+                    Fast-track your issues by providing category and clear photos.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/raise-complaint/new")}
+                  className="group flex items-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-600 hover:-translate-y-1 shadow-lg shadow-orange-500/25 active:scale-95 w-full justify-center sm:w-auto"
+                >
+                  <Plus size={18} /> New Ticket
+                  <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* --- STATS GRID --- */}
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={listAnim}
+          className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4"
+        >
+          {stats.map((s) => (
+            <motion.button
+              key={s.label}
+              variants={itemAnim}
+              whileHover={{ y: -5 }}
+              onClick={() => setFilter(s.label === "Total" ? "All" : s.label)}
+              className={`${s.bg} group relative overflow-hidden rounded-[2rem] border border-[var(--border)] p-6 text-left transition-all hover:border-indigo-500/30`}
+              style={{ boxShadow: `0 15px 30px -15px ${s.glow}` }}
+            >
+              <p className={`text-4xl font-black ${s.color}`}>{s.value}</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-60">{s.label}</p>
+              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                <ChevronRight size={20} className={s.color} />
+              </div>
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* --- FILTER & SEARCH BAR --- */}
+        <div className="mb-8 rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1 group">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-orange-500 transition-colors" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search ticket title, description, category..."
+                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3.5 pl-12 pr-5 text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500/50 transition-all shadow-inner"
+              />
+            </div>
+            
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {["All", "Pending", "In Progress", "Resolved"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className={`rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-90 ${
+                    filter === s
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "bg-[var(--bg)] text-[var(--text-muted)] border border-[var(--border)] hover:border-orange-500/40"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-5">
+            <div className="flex items-center gap-2 rounded-full bg-[var(--bg)] px-4 py-1.5 border border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+               <Filter size={12} /> Results: {filtered.length}
+            </div>
+            {filter !== "All" && (
+              <span className="rounded-full bg-orange-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500 border border-orange-500/20">
+                Filter: {filter}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* --- COMPLAINTS LIST --- */}
+        {complaintLoading ? (
+          <ListSkeleton rows={4} rowClassName="h-40 rounded-[2.5rem]" />
+        ) : filtered.length === 0 ? (
+          <div className="rounded-[3rem] border-2 border-dashed border-[var(--border)] bg-[var(--card)] py-28 text-center transition-all">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-[var(--bg)]">
+              <Wrench size={48} className="text-[var(--text-muted)] opacity-20" />
+            </div>
+            <p className="text-xl font-black uppercase tracking-widest text-[var(--text-muted)] opacity-50">No tickets found</p>
+            <button onClick={() => {setFilter("All"); setSearch("");}} className="mt-4 text-xs font-bold text-orange-500 underline underline-offset-4">Reset all filters</button>
+          </div>
+        ) : (
+          <motion.div initial="hidden" animate="show" variants={listAnim} className="grid gap-6">
+            {filtered.map((c, idx) => (
+              <motion.div
+                key={c._id}
+                variants={itemAnim}
+                onClick={() => setSelectedComplaint(c)}
+                className="group cursor-pointer relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:border-indigo-500/30"
+              >
+                <div className="flex flex-col md:flex-row justify-between gap-6">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <h3 className="text-xl font-black text-[var(--text)] group-hover:text-orange-500 transition-colors">{c.title}</h3>
+                      <div className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${statusConfig[c.status]?.color}`}>
+                        {c.status === "Pending" && <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />}
+                        {statusConfig[c.status]?.label}
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium leading-relaxed text-[var(--text-muted)] opacity-80 line-clamp-2">
+                      {c.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-4 pt-2">
+                       <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${categoryColors[c.category] || "border-[var(--border)]"}`}>
+                         {c.category}
+                       </span>
+                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                         <Clock size={14} className="text-orange-500" /> {new Date(c.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
+                       </div>
+                       {c.attachment && (
+                         <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 border border-emerald-500/20">
+                            <ImageIcon size={12} /> Attached
+                         </div>
+                       )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end md:border-l border-[var(--border)] md:pl-8">
+                     <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-[var(--bg)] border border-[var(--border)] group-hover:bg-orange-500 group-hover:text-white group-hover:border-orange-500 transition-all duration-300">
+                        <ChevronRight size={28} />
+                     </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
-            {!filtered.length && (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 text-slate-400">
-                <Wrench size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-medium">No complaints found</p>
-              </div>
-            )}
-          </div>
+          </motion.div>
         )}
-      </div>
 
-      {/* DETAIL MODAL */}
-      {selected && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${categoryColors[selected.category] || categoryColors.Other}`}>{selected.category}</span>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${statusConfig[selected.status]?.color}`}>
-                  {statusConfig[selected.status]?.icon} {selected.status}
-                </span>
-              </div>
-              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">{selected.title}</h2>
-            <p className="text-slate-500 text-sm leading-relaxed mb-4">{selected.description}</p>
-            {(selected.wing || selected.flatNumber) && (
-              <p className="text-xs text-slate-400 mb-4">Wing {selected.wing} • Flat {selected.flatNumber}</p>
-            )}
-            <p className="text-xs text-slate-300 mb-5">{new Date(selected.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
-            {isAdmin && (
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">Update Status</label>
-                <div className="flex gap-2 flex-wrap">
-                  {["Pending", "In Progress", "Resolved"].map(s => (
-                    <button key={s} onClick={() => { dispatch(updateComplaintStatus({ id: selected._id, status: s })); setSelected(null); }}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold border transition ${selected.status === s ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
-                      {s}
+        {/* --- COMPLAINT DETAIL MODAL --- */}
+        <AnimatePresence>
+          {selectedComplaint && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-md bg-black/60">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--card)] shadow-2xl"
+              >
+                <div className="flex h-full flex-col">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-[var(--border)] bg-gradient-to-r from-[var(--bg)] to-[var(--card)] px-8 py-6">
+                    <div className="space-y-1">
+                      <p className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500">
+                        <MessageSquare size={14} /> Ticket ID: #{selectedComplaint._id.slice(-6)}
+                      </p>
+                      <h2 className="text-3xl font-black tracking-tight text-[var(--text)]">{selectedComplaint.title}</h2>
+                    </div>
+                    <button
+                      onClick={() => setSelectedComplaint(null)}
+                      className="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-[var(--text-muted)] transition-all hover:bg-rose-500 hover:text-white"
+                    >
+                      <X size={24} />
                     </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  </div>
 
-      {/* CREATE MODAL */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-slate-800">Raise Complaint</h2>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+                  {/* Modal Body */}
+                  <div className="overflow-y-auto p-8 scrollbar-hide">
+                    <div className="grid gap-6 md:grid-cols-3 mb-8">
+                       <div className={`rounded-3xl border p-5 ${activeStatus?.color}`}>
+                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Status</p>
+                         <div className="mt-3 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                           {activeStatus?.icon} {selectedComplaint.status}
+                         </div>
+                       </div>
+                       <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
+                         <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Category</p>
+                         <p className="mt-3 text-sm font-black uppercase tracking-widest">{selectedComplaint.category}</p>
+                       </div>
+                       <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
+                         <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Last Updated</p>
+                         <p className="mt-3 text-sm font-black uppercase tracking-widest">
+                           {new Date(selectedComplaint.updatedAt || selectedComplaint.createdAt).toLocaleDateString()}
+                         </p>
+                       </div>
+                    </div>
+
+                    <div className="space-y-8">
+                       <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--bg)] p-8">
+                          <h4 className="mb-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Subject Description</h4>
+                          <p className="text-base font-medium leading-8 text-[var(--text-muted)] whitespace-pre-wrap">{selectedComplaint.description}</p>
+                       </div>
+
+                       {selectedComplaint.attachment && (
+                         <div className="space-y-4">
+                           <h4 className="ml-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Attachment Proof</h4>
+                           <div className="overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-black/10">
+                              <img
+                                src={selectedComplaint.attachment?.startsWith("http") ? selectedComplaint.attachment : `${filePublicOrigin()}${selectedComplaint.attachment}`}
+                                alt="Complaint proof"
+                                className="max-h-[500px] w-full object-contain"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                           </div>
+                         </div>
+                       )}
+
+                       <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg)] p-6">
+                         <div className="flex flex-col gap-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between">
+                            <p>Ticket Opened: {new Date(selectedComplaint.createdAt).toLocaleString()}</p>
+                            {selectedComplaint.status === "Resolved" && (
+                              <p className="text-emerald-500">Resolution Date: {new Date(selectedComplaint.resolvedAt).toLocaleString()}</p>
+                            )}
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="border-t border-[var(--border)] bg-[var(--bg)] px-8 py-6 flex justify-end">
+                    <button
+                      onClick={() => setSelectedComplaint(null)}
+                      className="rounded-2xl bg-indigo-600 px-10 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    >
+                      Close Overview
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Title</label>
-                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="Brief issue title" className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Category</label>
-                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                  className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  {Object.keys(categoryColors).map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Wing</label>
-                  <input value={form.wing} onChange={e => setForm({ ...form, wing: e.target.value })}
-                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Flat No.</label>
-                  <input value={form.flatNumber} onChange={e => setForm({ ...form, flatNumber: e.target.value })}
-                    className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</label>
-                <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Describe the issue in detail..." className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-              </div>
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 transition">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition">Submit</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

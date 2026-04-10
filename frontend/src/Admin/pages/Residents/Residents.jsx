@@ -1,187 +1,227 @@
-// pages/ResidentList.jsx (Using Redux - Clean Version)
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  fetchResidents,
-  deleteResident,
-  } from "../../../store/slices/residentSlice";
+import { 
+  Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, TablePagination,
+  IconButton, Tooltip, Avatar, Chip, InputBase, Switch
+} from "@mui/material";
+import { 
+  FiEdit, FiTrash2, FiSearch, FiPlus, 
+  FiUser, FiHome, FiPhone, FiMail 
+} from "react-icons/fi";
+import { fetchResidents, deleteResident, updateResidentStatus } from "../../../store/slices/residentSlice";
+
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
 
 const ResidentList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // State for search and pagination
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Redux state
-  const { residents, loading, error, success } = useSelector(
-    (state) => state.resident
-  );
+  const { residents = [], loading } = useSelector((state) => state.resident);
 
-  // Fetch residents on component mount
   useEffect(() => {
     dispatch(fetchResidents());
   }, [dispatch]);
 
+  // Filtering Logic
+  const filteredResidents = useMemo(() =>
+    residents.filter((r) =>
+      `${r.firstName} ${r.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.flatNumber?.includes(searchTerm) ||
+      r.mobileNumber?.includes(searchTerm)
+    ), [residents, searchTerm]);
 
-  // Handle delete
-  const handleDelete = async (id) => {
+  // Pagination Handlers
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this resident?")) {
-      dispatch(deleteResident(id)); // ✅ Toast in slice
+      dispatch(deleteResident(id));
     }
   };
 
-  // Filter residents based on search
-  const filteredResidents = residents.filter((resident) =>
-    resident.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resident.mobileNumber.includes(searchTerm)
-  );
-
-  if (loading && residents.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading residents...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-800">Residents</h1>
-            <p className="text-gray-500 mt-1">
-              Manage all residents in the society
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/admin/residents/add")}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
-          >
-            + Add Resident
-          </button>
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+      
+      {/* HEADER SECTION */}
+      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Resident </h1>
+          <p className="text-sm text-slate-500 font-medium">Manage society members and occupancy details.</p>
         </div>
-
-        {/* Search */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search by name or mobile number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-        </div>
-
-        {/* Residents Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {filteredResidents.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <p className="text-lg">No residents found</p>
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Mobile
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Flat
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredResidents.map((resident) => (
-                  <tr
-                    key={resident._id}
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {resident.firstName} {resident.lastName}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {resident.mobileNumber}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {resident.email || "-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {resident.wing}-{resident.flatNumber}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          resident.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {resident.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm space-x-2">
-                      <button
-                        onClick={() => navigate(`/admin/residents/edit/${resident._id}`)}
-                        className="text-indigo-600 hover:text-indigo-800 font-semibold"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(resident._id)}
-                        disabled={loading}
-                        className="text-red-600 hover:text-red-800 font-semibold disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-gray-600 text-sm font-semibold">Total Residents</h3>
-            <p className="text-3xl font-bold text-indigo-600 mt-2">
-              {residents.length}
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-gray-600 text-sm font-semibold">Active</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">
-              {residents.filter((r) => r.status === "Active").length}
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-gray-600 text-sm font-semibold">Inactive</h3>
-            <p className="text-3xl font-bold text-red-600 mt-2">
-              {residents.filter((r) => r.status === "Inactive").length}
-            </p>
-          </div>
-        </div>
+        <button 
+          onClick={() => navigate("/admin/residents/add")} 
+          className="admin-btn-primary"
+        >
+          <FiPlus size={18} /> Add Resident
+        </button>
       </div>
+
+      {/* SEARCH BAR */}
+      <div className="mb-6 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 px-4 max-w-md">
+        <FiSearch className="text-slate-400" />
+        <InputBase
+          placeholder="Search residents..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full font-medium text-sm"
+        />
+      </div>
+
+      {/* MUI TABLE CONTAINER */}
+      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden">
+        <Table sx={{ minWidth: 700 }}>
+          <TableHead className="bg-slate-50">
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Resident Details</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Unit</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          
+          <TableBody>
+            {!loading ? filteredResidents
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((r) => (
+              <TableRow key={r._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                
+                {/* Resident Identity */}
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar 
+                      src={r.profileImage ? `${BASE_URL}/${r.profileImage.replace(/\\/g, "/")}` : ""}
+                      sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 36, height: 36 }}
+                    >
+                      <FiUser size={16} />
+                    </Avatar>
+                    <div>
+                      <div className="font-bold text-slate-900">{r.firstName} {r.lastName}</div>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
+                        <FiMail size={10} /> {r.email || "No email"}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Flat Details */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                      <FiHome size={14} />
+                    </div>
+                    <span className="font-black text-indigo-600 text-sm">{r.flatNumber || (r.flat && r.flat.flatNumber) || "N/A"}</span>
+                  </div>
+                </TableCell>
+
+                {/* Resident Type */}
+                <TableCell>
+                  <Chip 
+                    label={r.residentType} 
+                    size="small"
+                    sx={{ 
+                      fontWeight: 800, 
+                      fontSize: '10px',
+                      textTransform: 'uppercase',
+                      bgcolor: r.residentType === 'Owner' ? '#eff6ff' : '#faf5ff',
+                      color: r.residentType === 'Owner' ? '#2563eb' : '#9333ea',
+                      border: '1px solid currentColor',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                </TableCell>
+
+                {/* Contact */}
+                <TableCell>
+                  <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
+                    <FiPhone className="text-slate-300" size={14} />
+                    {r.mobileNumber}
+                  </div>
+                </TableCell>
+
+                {/* Status */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${r.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                    <span className={`text-[11px] font-black uppercase tracking-tighter ${r.status === 'Active' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {r.status}
+                    </span>
+                    <Switch
+                      checked={r.status === 'Active'}
+                      onChange={() => dispatch(updateResidentStatus({ id: r._id, status: r.status === 'Active' ? 'Inactive' : 'Active' }))}
+                      color="success"
+                      size="small"
+                      inputProps={{ 'aria-label': 'Toggle resident active status' }}
+                    />
+                  </div>
+                </TableCell>
+
+                {/* Actions */}
+                <TableCell align="center">
+                  <div className="flex justify-center gap-1">
+                    <Tooltip title="Edit Profile">
+                      <IconButton onClick={() => navigate(`/admin/residents/edit/${r._id}`)} size="small" sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}>
+                        <FiEdit size={14} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Remove Resident">
+                      <IconButton onClick={() => handleDelete(r._id)} size="small" sx={{ color: '#ef4444', bgcolor: '#fef2f2', borderRadius: '10px', '&:hover': { bgcolor: '#fee2e2' } }}>
+                        <FiTrash2 size={14} />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                </TableCell>
+
+              </TableRow>
+            )) : (
+              // Loading Skeleton State
+              [...Array(rowsPerPage)].map((_, i) => (
+                <TableRow key={i}><TableCell colSpan={6} sx={{ py: 4, textAlign: 'center', color: '#cbd5e1' }}>Loading data...</TableCell></TableRow>
+              ))
+            )}
+            
+            {!loading && filteredResidents.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} sx={{ py: 10, textAlign: 'center', fontWeight: 600, color: '#94a3b8' }}>
+                  No residents found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+
+        {/* PAGINATION */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredResidents.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid #f1f5f9',
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontWeight: 700,
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              color: '#64748b'
+            }
+          }}
+        />
+      </TableContainer>
     </div>
   );
 };

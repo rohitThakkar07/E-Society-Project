@@ -3,8 +3,21 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
-
+const mongoose = require("mongoose");
 const connectDB = require("./app/db/config/db");
+const fs = require("fs");
+
+// Ensure upload directories exist
+const uploadDirs = ["uploads", "uploads/guards", "uploads/residents", "uploads/complaints"];
+uploadDirs.forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created directory: ${dir}`);
+  }
+});
+
+const { startScheduler } = require("./service/Maintenancescheduler");
+mongoose.connection.once("open", () => startScheduler());
 
 // ROUTES
 const authRoutes = require("./app/routes_controller/Auth");
@@ -19,9 +32,8 @@ const expenseRoutes = require("./app/routes_controller/Expanse");
 const maintenanceRoutes = require("./app/routes_controller/Maintenance");
 const noticeRoutes = require("./app/routes_controller/Notice");
 const eventRoutes = require('./app/routes_controller/Events');
-const staffRoutes = require("./app/routes_controller/Staff");
-const alertRoutes = require("./app/routes_controller/Alert");
 const pollRoutes = require("./app/routes_controller/Poll");
+const paymentRoutes = require("./app/routes_controller/Payment");
 
 // MIDDLEWARE
 const errorHandler = require("./app/middlewares/errorMiddleware");
@@ -38,7 +50,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ SERVE UPLOADED FILES
+// SERVE UPLOADED FILES
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ============ ROUTES ============ */
@@ -51,19 +63,18 @@ app.use("/api/guard", authMiddleware, guardRoutes);
 app.use("/api/flat", authMiddleware, flatRoutes);
 app.use("/api/visitor", authMiddleware, visitorRoutes);
 app.use("/api/expense", authMiddleware, expenseRoutes);
-app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
 app.use("/api/event", authMiddleware, eventRoutes);
-app.use("/api/staff", authMiddleware, staffRoutes);
 app.use("/api/notice", authMiddleware, noticeRoutes);
-app.use("/api/alert", authMiddleware, alertRoutes);
 app.use("/api/poll", authMiddleware, pollRoutes);
+app.use("/api/payment", authMiddleware, paymentRoutes);
+app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
 
 /* ============ ERROR HANDLER ============ */
 app.use(errorHandler);
 
 /* ============ SERVER ============ */
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
 
 module.exports = app;

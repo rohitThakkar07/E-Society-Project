@@ -1,5 +1,6 @@
 const Flat = require("../../../db/models/flatModal");
-
+const User = require("../../../db/models/userModel");
+const Resident = require("../../../db/models/residentsModel");
 const createFlat = async (req, res) => {
   try {
     const { flatNumber, floor, type } = req.body;
@@ -38,6 +39,24 @@ const getFlatById = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+const getResidentFlat = async (req, res) => {
+  try {
+    // userId comes in → look up user → get profileId → find resident
+    const user = await User.findById(req.params.userId).select("profileId role");
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (user.role !== "resident") return res.status(403).json({ success: false, message: "Not a resident" });
+
+    const resident = await Resident.findById(user.profileId).populate("flat");
+
+    if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });
+    if (!resident.flat) return res.status(404).json({ success: false, message: "No flat assigned" });
+
+    res.json({ success: true, data: resident.flat });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 const updateFlat = async (req, res) => {
   try {
@@ -66,12 +85,12 @@ const getDashboardSummary = async (req, res) => {
     res.json({
       success: true,
       data: {
-        total:            all.length,
-        occupied:         all.filter(f => f.status === "Occupied").length,
-        vacant:           all.filter(f => f.status === "Vacant").length,
+        total: all.length,
+        occupied: all.filter(f => f.status === "Occupied").length,
+        vacant: all.filter(f => f.status === "Vacant").length,
         underMaintenance: all.filter(f => f.status === "Under Maintenance").length,
-        ownerOccupied:    all.filter(f => f.occupancyType === "Owner").length,
-        tenantOccupied:   all.filter(f => f.occupancyType === "Tenant").length,
+        ownerOccupied: all.filter(f => f.occupancyType === "Owner").length,
+        tenantOccupied: all.filter(f => f.occupancyType === "Tenant").length,
       },
     });
   } catch (err) {
@@ -79,165 +98,4 @@ const getDashboardSummary = async (req, res) => {
   }
 };
 
-module.exports = { createFlat, getAllFlats, getFlatById, updateFlat, deleteFlat, getDashboardSummary };
-
-
-// const Flat = require("../../../db/models/flatModal");
-// const { validationResult } = require("express-validator");
-
-// /* ================= CREATE FLAT ================= */
-
-// exports.createFlat = async (req, res) => {
-//     console.log(req.body)
-//   try {
-
-//     const errors = validationResult(req);
-
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({
-//         success: false,
-//         message: errors.array()[0].msg
-//       });
-//     }
-
-//     const flat = await Flat.create(req.body);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Flat created successfully",
-//       data: flat
-//     });
-
-//   } catch (error) {
-
-//     if (error.code === 11000) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Flat already exists in this wing"
-//       });
-//     }
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to create flat"
-//     });
-//   }
-// };
-
-
-// /* ================= GET ALL FLATS ================= */
-
-// exports.getAllFlats = async (req, res) => {
-//   try {
-
-//     const flats = await Flat.find().sort({ createdAt: -1 });
-
-//     res.json({
-//       success: true,
-//       data: flats
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to fetch flats"
-//     });
-
-//   }
-// };
-
-
-// /* ================= GET FLAT BY ID ================= */
-
-// exports.getFlatById = async (req, res) => {
-//   try {
-
-//     const flat = await Flat.findById(req.params.id);
-
-//     if (!flat) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Flat not found"
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       data: flat
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to fetch flat"
-//     });
-
-//   }
-// };
-
-
-// /* ================= UPDATE FLAT ================= */
-
-// exports.updateFlat = async (req, res) => {
-//   try {
-
-//     const flat = await Flat.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true }
-//     );
-
-//     if (!flat) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Flat not found"
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       message: "Flat updated successfully",
-//       data: flat
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to update flat"
-//     });
-
-//   }
-// };
-
-
-// /* ================= DELETE FLAT ================= */
-
-// exports.deleteFlat = async (req, res) => {
-//   try {
-
-//     const flat = await Flat.findByIdAndDelete(req.params.id);
-
-//     if (!flat) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Flat not found"
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       message: "Flat deleted successfully"
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Unable to delete flat"
-//     });
-
-//   }
-// };
+module.exports = { createFlat, getAllFlats, getFlatById, getResidentFlat, updateFlat, deleteFlat, getDashboardSummary };

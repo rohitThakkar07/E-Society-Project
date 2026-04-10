@@ -1,103 +1,170 @@
 const Complaint = require("../../../db/models/complaintModel");
 
+// ─────────────────────────────────────────────
 // Create Complaint
+// ─────────────────────────────────────────────
 const createComplaint = async (req, res) => {
   try {
+    const { title, description, category, priority, resident } = req.body;
 
-    const complaint = await Complaint.create(req.body);
+    if (!resident) {
+      return res.status(400).json({
+        success: false,
+        message: "Resident ID is required"
+      });
+    }
+
+    // FIX: store a relative URL path instead of the full OS file path
+    // Previously: attachment = req.file.path  → "/home/.../uploads/complaints/file.jpg" (unusable by client)
+    // Now:        attachment = "/uploads/complaints/filename" (usable as an API URL)
+    let attachment = null;
+    if (req.file) {
+      attachment = `/uploads/complaints/${req.file.filename}`;
+    }
+
+    const complaint = await Complaint.create({
+      title,
+      description,
+      category,
+      priority,
+      resident,
+      attachment
+    });
 
     res.status(201).json({
       success: true,
       message: "Complaint created successfully",
       data: complaint
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Handle Mongoose validation errors with a clear message
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: messages.join(", ") });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
+// ─────────────────────────────────────────────
 // Get All Complaints
+// ─────────────────────────────────────────────
 const getAllComplaints = async (req, res) => {
   try {
-
     const complaints = await Complaint.find()
       .populate("resident")
       .sort({ createdAt: -1 });
 
     res.json({
       success: true,
+      count: complaints.length,
       data: complaints
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
+// ─────────────────────────────────────────────
 // Get Complaint By ID
+// ─────────────────────────────────────────────
 const getComplaintById = async (req, res) => {
   try {
+    const complaint = await Complaint.findById(req.params.id).populate("resident");
 
-    const complaint = await Complaint.findById(req.params.id)
-      .populate("resident");
+    // FIX: was returning 200 with null data for unknown IDs
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "Complaint not found"
+      });
+    }
 
-    res.json({
-      success: true,
-      data: complaint
-    });
-
+    res.json({ success: true, data: complaint });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Catches CastError when req.params.id is not a valid ObjectId
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid complaint ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
+// ─────────────────────────────────────────────
 // Update Complaint
+// ─────────────────────────────────────────────
 const updateComplaint = async (req, res) => {
   try {
+    // FIX: whitelist allowed fields — previously req.body was passed directly,
+    // allowing overwrite of resident, _id, status, timestamps, etc.
+    const { title, description, category, priority } = req.body;
+    const allowedUpdates = { title, description, category, priority };
+
+    // Remove undefined keys so partial updates work correctly
+    Object.keys(allowedUpdates).forEach(
+      (key) => allowedUpdates[key] === undefined && delete allowedUpdates[key]
+    );
 
     const complaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      allowedUpdates,
+      { new: true, runValidators: true }
     );
+
+    // FIX: added 404 check — previously no check was done
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: "Complaint not found" });
+    }
 
     res.json({
       success: true,
       message: "Complaint updated successfully",
       data: complaint
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: messages.join(", ") });
+    }
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid complaint ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
+// ─────────────────────────────────────────────
 // Delete Complaint
+// ─────────────────────────────────────────────
 const deleteComplaint = async (req, res) => {
   try {
+    const complaint = await Complaint.findByIdAndDelete(req.params.id);
 
-    await Complaint.findByIdAndDelete(req.params.id);
+    // FIX: was returning success:true even when the document didn't exist
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: "Complaint not found" });
+    }
 
-    res.json({
-      success: true,
-      message: "Complaint deleted"
-    });
-
+    res.json({ success: true, message: "Complaint deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid complaint ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// ─────────────────────────────────────────────
+// Update Complaint Status
+// ─────────────────────────────────────────────
 const updateComplaintStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    // 1. Basic validation of allowed statuses
+    if (!status) {
+      return res.status(400).json({ success: false, message: "Status is required" });
+    }
+
     const allowedStatuses = ["Pending", "In Progress", "Resolved", "Rejected"];
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
@@ -106,18 +173,22 @@ const updateComplaintStatus = async (req, res) => {
       });
     }
 
-    // 2. Update only the status field
+    const updateData = { status };
+
+    // FIX: automatically set resolvedAt when status changes to "Resolved"
+    // Previously resolvedAt was never set even though the schema had the field
+    if (status === "Resolved") {
+      updateData.resolvedAt = new Date();
+    }
+
     const complaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { status },
+      updateData,
       { new: true, runValidators: true }
     );
 
     if (!complaint) {
-      return res.status(404).json({
-        success: false,
-        message: "Complaint not found"
-      });
+      return res.status(404).json({ success: false, message: "Complaint not found" });
     }
 
     res.status(200).json({
@@ -126,10 +197,10 @@ const updateComplaintStatus = async (req, res) => {
       data: complaint
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid complaint ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -139,5 +210,5 @@ module.exports = {
   getComplaintById,
   updateComplaint,
   deleteComplaint,
-  updateComplaintStatus,
+  updateComplaintStatus
 };

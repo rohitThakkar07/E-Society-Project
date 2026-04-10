@@ -1,4 +1,6 @@
-import EventsCalendar from "../../User/pages/EventsCalander";
+import { lazy } from "react";
+
+const EventsCalendar = lazy(() => import("../../User/pages/EventsCalander"));
 
 // Header nav: Community → "Events Calendar" → "/events"
 const EventRoutes = [

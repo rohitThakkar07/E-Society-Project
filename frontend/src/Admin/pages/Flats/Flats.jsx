@@ -1,191 +1,210 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEdit, FiTrash2, FiSearch } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux"; // ✅ Added Redux hooks
+import { 
+  Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, TablePagination,
+  IconButton, Tooltip, Chip, InputBase, Avatar
+} from "@mui/material";
+import { FiEdit, FiTrash2, FiSearch, FiPlus, FiGrid, FiLayers } from "react-icons/fi";
+
+// ✅ Import your thunks from the flatSlice
+import { fetchFlats, deleteFlat } from "../../../store/slices/flatSlice"; 
 
 const Flats = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [flats, setFlats] = useState([]);
+  // ✅ Connect to Redux Store
+  const { list: flats = [], loading } = useSelector((state) => state.flat || {});
+
+  // State for UI interaction
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // ✅ Fetch real data on mount
   useEffect(() => {
-    setTimeout(() => {
-      setFlats([
-        {
-          _id: "1",
-          wing: "A",
-          flatNumber: "101",
-          floorNumber: 1,
-          flatType: "2BHK",
-          residentCount: 3,
-          status: "Occupied",
-        },
-        {
-          _id: "2",
-          wing: "B",
-          flatNumber: "203",
-          floorNumber: 2,
-          flatType: "3BHK",
-          residentCount: 2,
-          status: "Vacant",
-        },
-      ]);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    dispatch(fetchFlats());
+  }, [dispatch]);
 
+  // Handlers
   const handleDelete = (id) => {
-    setFlats(flats.filter((flat) => flat._id !== id));
+    if (window.confirm("Are you sure you want to remove this flat?")) {
+      dispatch(deleteFlat(id));
+    }
   };
 
-  // Filter flats based on search
-  const filteredFlats = flats.filter((flat) =>
-    `${flat.wing}-${flat.flatNumber}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // ✅ Optimized Filter Logic for real data
+  const filteredFlats = useMemo(() => 
+    flats.filter((flat) =>
+      `${flat.wing}-${flat.flatNumber}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flat.flatType?.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [flats, searchTerm]);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+      
+      {/* HEADER */}
+      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Flats List
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage society flats, wings, and occupancy status.
-          </p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+             Flats Inventory
+          </h1>
+          <p className="text-sm text-slate-500 font-medium">Manage wings, floor distribution, and occupancy.</p>
         </div>
-
         <button
           onClick={() => navigate("add")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
+          className="bg-blue-600 text-white px-6 py-3 rounded-2xl hover:bg-blue-700 font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95"
         >
-          + Add Flat
+          <FiPlus size={18} /> Add New Flat
         </button>
       </div>
 
-      {/* Search Box */}
-      <div className="mb-4 relative max-w-sm">
-        <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
-        <input
-          type="text"
-          placeholder="Search by Flat Number..."
+      {/* SEARCH BAR */}
+      <div className="mb-6 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 px-4 max-w-md">
+        <FiSearch className="text-slate-400" />
+        <InputBase
+          placeholder="Search by Flat (e.g. A-101)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full font-medium text-sm"
         />
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full text-left border-collapse whitespace-nowrap">
-          <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
-              <th className="px-5 py-4 font-semibold">Flat Info</th>
-              <th className="px-5 py-4 font-semibold">Wing</th>
-              <th className="px-5 py-4 font-semibold">Floor</th>
-              <th className="px-5 py-4 font-semibold">Flat Type</th>
-              <th className="px-5 py-4 font-semibold">Residents</th>
-              <th className="px-5 py-4 font-semibold">Status</th>
-              <th className="px-5 py-4 font-semibold text-center">Actions</th>
-            </tr>
-          </thead>
+      {/* MUI TABLE */}
+      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden">
+        <Table sx={{ minWidth: 700 }}>
+          <TableHead className="bg-slate-50">
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Flat Info</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Wing</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Floor</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Residents</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
 
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {isLoading ? (
-              <tr>
-                <td colSpan="7" className="text-center py-10 text-gray-500">
-                  <div className="flex justify-center items-center gap-2">
-                    <span className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
-                    Loading flats...
-                  </div>
-                </td>
-              </tr>
-            ) : filteredFlats.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="text-center py-12 bg-gray-50/50">
-                  <div className="flex flex-col items-center">
-                    <span className="text-lg font-medium text-gray-700 mb-1">
-                      No Flats Found
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      Try another search or add a flat.
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              filteredFlats.map((flat) => (
-                <tr
-                  key={flat._id}
-                  className="hover:bg-blue-50/30 transition-colors duration-200 align-middle"
-                >
-                  <td className="px-5 py-4">
-                    <div className="font-semibold text-gray-900">
-                      {flat.wing}-{flat.flatNumber}
+          <TableBody>
+            {!loading ? filteredFlats
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((flat) => (
+              <TableRow key={flat._id} hover>
+                
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar sx={{ bgcolor: '#eef2ff', color: '#4f46e5', width: 40, height: 40, borderRadius: '12px' }}>
+                      <FiGrid size={20} />
+                    </Avatar>
+                    <div>
+                      <div className="font-black text-slate-900 text-base">{flat.wing}-{flat.flatNumber}</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">ID: {flat._id?.slice(-6)}</div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Floor {flat.floorNumber}
-                    </div>
-                  </td>
+                  </div>
+                </TableCell>
 
-                  <td className="px-5 py-4 font-medium text-gray-700">
-                    {flat.wing}
-                  </td>
+                <TableCell sx={{ fontWeight: 700, color: '#1e293b' }}>{flat.wing}</TableCell>
+                
+                <TableCell>
+                   <div className="flex items-center gap-1.5 text-slate-600 font-semibold">
+                      <FiLayers className="text-slate-300" /> {flat.floorNumber}
+                   </div>
+                </TableCell>
 
-                  <td className="px-5 py-4 text-gray-600">
-                    {flat.floorNumber}
-                  </td>
+                <TableCell>
+                  <Chip 
+                    label={flat.flatType} 
+                    size="small"
+                    sx={{ fontWeight: 800, fontSize: '10px', bgcolor: '#f5f3ff', color: '#7c3aed', borderRadius: '6px' }}
+                  />
+                </TableCell>
 
-                  <td className="px-5 py-4">
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-                      {flat.flatType}
-                    </span>
-                  </td>
+                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>
+                   {flat.residentCount || 0} <span className="text-[10px] text-slate-400 ml-1">PPL</span>
+                </TableCell>
 
-                  <td className="px-5 py-4 text-gray-700 font-medium">
-                    {flat.residentCount}
-                  </td>
+                <TableCell>
+                  <Chip 
+                    label={flat.status || "Vacant"}
+                    size="small"
+                    sx={{ 
+                      fontWeight: 900, 
+                      fontSize: '9px',
+                      textTransform: 'uppercase',
+                      bgcolor: flat.status === 'Occupied' ? '#ecfdf5' : '#fffbeb',
+                      color: flat.status === 'Occupied' ? '#059669' : '#d97706',
+                    }}
+                  />
+                </TableCell>
 
-                  <td className="px-5 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        flat.status === "Occupied"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {flat.status}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex gap-3 justify-center">
-                      <button
-                        onClick={() => navigate(`/admin/flats/edit/${flat._id}`)}
-                        className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg"
+                <TableCell align="center">
+                  <div className="flex justify-center gap-2">
+                    <Tooltip title="Edit Flat">
+                      <IconButton 
+                        onClick={() => navigate(`/admin/flats/edit/${flat._id}`)} 
+                        sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}
                       >
                         <FiEdit size={16} />
-                      </button>
-
-                      <button
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Flat">
+                      <IconButton 
                         onClick={() => handleDelete(flat._id)}
-                        className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-800 rounded-lg"
+                        sx={{ color: '#ef4444', bgcolor: '#fef2f2', borderRadius: '10px', '&:hover': { bgcolor: '#fee2e2' } }}
                       >
                         <FiTrash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                </TableCell>
+
+              </TableRow>
+            )) : (
+              // Loading State Rows
+              [...Array(rowsPerPage)].map((_, i) => (
+                <TableRow key={i}><TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>Loading flats data...</TableCell></TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+
+            {!loading && filteredFlats.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} sx={{ py: 12, textAlign: 'center' }}>
+                   <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No matching units found</p>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+
+        {/* PAGINATION */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredFlats.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid #f1f5f9',
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontWeight: 800,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: '#94a3b8'
+            }
+          }}
+        />
+      </TableContainer>
     </div>
   );
 };

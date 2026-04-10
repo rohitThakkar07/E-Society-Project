@@ -2,110 +2,128 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import API from "../../service/api";
 
-// GET ALL
 export const fetchBookings = createAsyncThunk(
-  "booking/fetchBookings",
-  async () => {
-    const res = await API.get("/facility-booking/list");
-    return res.data.data;
+  "booking/fetchAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await API.get("/facility-booking/list");
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to load bookings");
+    }
   }
 );
 
-// GET ONE
+export const fetchMyBookings = createAsyncThunk(
+  "booking/fetchMine",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await API.get("/facility-booking/my");
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to load your bookings");
+    }
+  }
+);
+
 export const fetchBookingById = createAsyncThunk(
-  "booking/fetchBookingById",
-  async (id) => {
-    if (!id) throw new Error("Booking ID is required");
-    const res = await API.get(`/facility-booking/${id}`);
-    return res.data.data;
+  "booking/fetchById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await API.get(`/facility-booking/${id}`);
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message);
+    }
   }
 );
 
-// CHECK AVAILABILITY — returns booked slots for a facility+date
+export const previewBooking = createAsyncThunk(
+  "booking/preview",
+  async ({ facilityId, startDateTime, endDateTime }, { rejectWithValue }) => {
+    try {
+      const res = await API.post("/facility-booking/preview", {
+        facilityId,
+        startDateTime,
+        endDateTime,
+      });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Preview failed");
+    }
+  }
+);
+
 export const checkAvailability = createAsyncThunk(
   "booking/checkAvailability",
-  async ({ facilityId, bookingDate }) => {
+  async ({ facilityId, date }) => {
     const res = await API.get(
-      `/facility-booking/check-availability?facilityId=${facilityId}&bookingDate=${bookingDate}`
+      `/facility-booking/check-availability?facilityId=${facilityId}&date=${encodeURIComponent(date)}`
     );
-    return res.data.data;
+    return { slots: res.data.data, facilityMeta: res.data.facility };
   }
 );
 
-// CREATE
 export const createBooking = createAsyncThunk(
-  "booking/createBooking",
+  "booking/create",
   async (data, { rejectWithValue }) => {
     try {
       const res = await API.post("/facility-booking/create", data);
-      toast.success("Booking created!");
+      toast.success(res.data.message || "Booking created");
       return res.data.data;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Booking failed");
-      return rejectWithValue(err.response?.data?.message);
+      const msg = err.response?.data?.message || "Booking failed";
+      toast.error(msg);
+      return rejectWithValue(msg);
     }
   }
 );
 
-// UPDATE
 export const updateBooking = createAsyncThunk(
-  "booking/updateBooking",
+  "booking/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const res = await API.put(`/facility-booking/update/${id}`, data);
-      toast.success("Booking updated!");
+      toast.success(res.data.message || "Updated");
       return res.data.data;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
-      return rejectWithValue(err.response?.data?.message);
+      const msg = err.response?.data?.message || "Update failed";
+      toast.error(msg);
+      return rejectWithValue(msg);
     }
   }
 );
 
-// DELETE
-export const deleteBooking = createAsyncThunk(
-  "booking/deleteBooking",
-  async (id) => {
-    await API.delete(`/facility-booking/delete/${id}`);
-    toast.success("Booking deleted!");
-    return id;
-  }
-);
+export const deleteBooking = createAsyncThunk("booking/delete", async (id) => {
+  await API.delete(`/facility-booking/delete/${id}`);
+  toast.success("Booking deleted");
+  return id;
+});
 
-// ✅ cancelBooking — imported in BookFacility.jsx
 export const cancelBooking = createAsyncThunk(
-  "facilityBooking/cancel",
+  "booking/cancel",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await API.put(`/facilitybooking/cancel/${id}`);
-      toast.success("Booking cancelled!");
+      const res = await API.put(`/facility-booking/update/${id}`, { status: "Cancelled" });
+      toast.success("Booking cancelled");
       return res.data.data;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to cancel");
-      return rejectWithValue(err.response?.data?.message);
+      const msg = err.response?.data?.message || "Failed to cancel";
+      toast.error(msg);
+      return rejectWithValue(msg);
     }
   }
 );
- 
-// export const updateBookingStatus = createAsyncThunk(
-//   "facilityBooking/updateStatus",
-//   async ({ id, status }, { rejectWithValue }) => {
-//     try {
-//       const res = await API.put(`/facilitybooking/update/${id}`, { status });
-//       toast.success(`Booking ${status}!`);
-//       return res.data.data;
-//     } catch (err) {
-//       toast.error(err.response?.data?.message || "Failed");
-//       return rejectWithValue(err.response?.data?.message);
-//     }
-//   }
-// );
- 
+
 const initialState = {
   bookings: [],
+  myBookings: [],
   singleBooking: null,
   bookedSlots: [],
+  availabilityFacilityMeta: null,
+  preview: null,
   availabilityLoading: false,
+  previewLoading: false,
   loading: false,
   error: null,
 };
@@ -116,84 +134,102 @@ const bookingSlice = createSlice({
   reducers: {
     clearBookedSlots: (state) => {
       state.bookedSlots = [];
+      state.availabilityFacilityMeta = null;
+    },
+    clearPreview: (state) => {
+      state.preview = null;
     },
   },
   extraReducers: (builder) => {
-
-    builder.addCase(fetchBookings.fulfilled, (state, action) => {
-      state.loading = false;
-      state.bookings = action.payload;
-    });
-
-    builder.addCase(fetchBookingById.fulfilled, (state, action) => {
-      state.loading = false;
-      state.singleBooking = action.payload;
-    });
-
-    builder.addCase(checkAvailability.pending, (state) => {
-      state.availabilityLoading = true;
-      state.bookedSlots = [];
-    });
-    builder.addCase(checkAvailability.fulfilled, (state, action) => {
-      state.availabilityLoading = false;
-      state.bookedSlots = action.payload;
-    });
-    builder.addCase(checkAvailability.rejected, (state) => {
-      state.availabilityLoading = false;
-    });
-
-    builder.addCase(createBooking.fulfilled, (state, action) => {
-      state.loading = false;
-      state.bookings.unshift(action.payload);
-    });
-    builder.addCase(createBooking.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload;
-    });
-
-    builder.addCase(updateBooking.fulfilled, (state, action) => {
-      state.loading = false;
-      const index = state.bookings.findIndex(
-        (b) => b._id === action.payload._id
-      );
-      if (index !== -1) state.bookings[index] = action.payload;
-      state.singleBooking = action.payload;
-    });
-    builder.addCase(updateBooking.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload;
-    });
-
-    builder.addCase(deleteBooking.fulfilled, (state, action) => {
-      state.loading = false;
-      state.bookings = state.bookings.filter(
-        (b) => b._id !== action.payload
-      );
-    });
-
-    // Scoped pending/rejected — skip checkAvailability (has its own cases)
-    builder.addMatcher(
-      (action) =>
-        action.type.startsWith("booking/") &&
-        action.type.endsWith("/pending") &&
-        !action.type.includes("checkAvailability"),
-      (state) => {
-        state.loading = true;
-        state.error = null;
-      }
-    );
-
-    builder.addMatcher(
-      (action) =>
-        action.type.startsWith("booking/") &&
-        action.type.endsWith("/rejected") &&
-        !action.type.includes("checkAvailability"),
-      (state) => {
+    builder
+      .addCase(fetchBookings.fulfilled, (state, action) => {
         state.loading = false;
-      }
-    );
+        state.bookings = action.payload || [];
+      })
+      .addCase(fetchBookings.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(fetchMyBookings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myBookings = action.payload || [];
+      })
+      .addCase(fetchBookingById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleBooking = action.payload;
+      })
+      .addCase(previewBooking.pending, (state) => {
+        state.previewLoading = true;
+        state.preview = null;
+      })
+      .addCase(previewBooking.fulfilled, (state, action) => {
+        state.previewLoading = false;
+        state.preview = action.payload;
+      })
+      .addCase(previewBooking.rejected, (state) => {
+        state.previewLoading = false;
+        state.preview = null;
+      })
+      .addCase(checkAvailability.pending, (state) => {
+        state.availabilityLoading = true;
+        state.bookedSlots = [];
+      })
+      .addCase(checkAvailability.fulfilled, (state, action) => {
+        state.availabilityLoading = false;
+        state.bookedSlots = action.payload.slots || [];
+        state.availabilityFacilityMeta = action.payload.facilityMeta || null;
+      })
+      .addCase(checkAvailability.rejected, (state) => {
+        state.availabilityLoading = false;
+      })
+      .addCase(createBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.myBookings.unshift(action.payload);
+          state.bookings.unshift(action.payload);
+        }
+      })
+      .addCase(cancelBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        const u = (b) => (b._id === action.payload._id ? action.payload : b);
+        state.bookings = state.bookings.map(u);
+        state.myBookings = state.myBookings.map(u);
+      })
+      .addCase(updateBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        const u = (b) => (b._id === action.payload._id ? action.payload : b);
+        state.bookings = state.bookings.map(u);
+        state.myBookings = state.myBookings.map(u);
+        state.singleBooking = action.payload;
+      })
+      .addCase(deleteBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.bookings = state.bookings.filter((b) => b._id !== action.payload);
+        state.myBookings = state.myBookings.filter((b) => b._id !== action.payload);
+      })
+      .addMatcher(
+        (action) =>
+          action.type.startsWith("booking/") &&
+          action.type.endsWith("/pending") &&
+          !action.type.includes("checkAvailability") &&
+          !action.type.includes("preview"),
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        (action) =>
+          action.type.startsWith("booking/") &&
+          action.type.endsWith("/rejected") &&
+          !action.type.includes("checkAvailability") &&
+          !action.type.includes("preview"),
+        (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+        }
+      );
   },
 });
 
-export const { clearBookedSlots } = bookingSlice.actions;
+export const { clearBookedSlots, clearPreview } = bookingSlice.actions;
 export default bookingSlice.reducer;

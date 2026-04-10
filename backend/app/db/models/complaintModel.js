@@ -1,50 +1,65 @@
 const mongoose = require("mongoose");
 
-const complaintSchema = new mongoose.Schema({
+const complaintSchema = new mongoose.Schema(
+  {
+    resident: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Resident",
+      required: [true, "Resident ID is required"]
+    },
 
-  resident: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Resident",
-    required: true
+    title: {
+      type: String,
+      required: [true, "Title is required"],
+      trim: true
+    },
+
+    description: {
+      type: String,
+      required: [true, "Description is required"]
+    },
+
+    category: {
+      type: String,
+      enum: {
+        values: ["Water", "Electricity", "Security", "Maintenance", "Other"],
+        message: "Category must be one of: Water, Electricity, Security, Maintenance, Other"
+      },
+      required: [true, "Category is required"]
+    },
+
+    // FIX: Added "Rejected" to enum — was missing, caused 500 when updateComplaintStatus used it
+    status: {
+      type: String,
+      enum: {
+        values: ["Pending", "In Progress", "Resolved", "Rejected"],
+        message: "Status must be one of: Pending, In Progress, Resolved, Rejected"
+      },
+      default: "Pending"
+    },
+
+    priority: {
+      type: String,
+      enum: {
+        values: ["Low", "Medium", "High"],
+        message: "Priority must be one of: Low, Medium, High"
+      },
+      default: "Medium"
+    },
+
+    // FIX: attachment stores a relative URL, not a full OS path
+    attachment: {
+      type: String,
+      default: null
+    },
+
+    // FIX: resolvedAt is now set automatically in the controller when status → "Resolved"
+    resolvedAt: {
+      type: Date,
+      default: null
+    }
   },
-
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
-
-  description: {
-    type: String,
-    required: true
-  },
-
-  category: {
-    type: String,
-    enum: ["Water", "Electricity", "Security", "Maintenance", "Other"],
-    required: true
-  },
-
-  status: {
-    type: String,
-    enum: ["Pending", "In Progress", "Resolved"],
-    default: "Pending"
-  },
-
-  priority: {
-    type: String,
-    enum: ["Low", "Medium", "High"],
-    default: "Medium"
-  },
-
-  attachment: {
-    type: String
-  },
-
-  resolvedAt: {
-    type: Date
-  }
-
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Complaint", complaintSchema);

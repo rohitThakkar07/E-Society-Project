@@ -5,7 +5,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import store from "./store";
-import router from './Routes/routes';
+import router from './Routes/routes.jsx';
 
 function App() {
   return (

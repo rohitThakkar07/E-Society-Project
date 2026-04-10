@@ -1,79 +1,48 @@
 const mongoose = require("mongoose");
 
 const paymentRecordSchema = new mongoose.Schema({
+  // References
+  maintenance: { type: mongoose.Schema.Types.ObjectId, ref: "Maintenance", required: true },
+  resident: { type: mongoose.Schema.Types.ObjectId, ref: "Resident", required: true },
 
-  maintenance: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Maintenance",
-    required: true
+  // Payment Amount
+  totalAmount: { type: Number, required: true },
+  lateFee: { type: Number, default: 0 },
+
+  // Razorpay Fields
+  paymentGateway: { type: String, enum: ["razorpay"], default: "razorpay" },
+  razorpayOrderId: { type: String, required: true, unique: true },
+  razorpayPaymentId: { type: String, unique: true, sparse: true },
+  razorpaySignature: { type: String, sparse: true },
+  signature_verified: { type: Boolean, default: false },
+
+  // Payment Details
+  paymentMethod: { type: String, enum: ["card", "netbanking", "upi", "wallet", "emandate"], sparse: true },
+  cardDetails: {
+    last4: String,
+    brand: String,
+    issuer: String,
   },
+  upiId: String,
 
-  resident: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Resident",
-    required: true
+  // Status & Metadata
+  status: { type: String, enum: ["pending", "successful", "failed", "refunded"], default: "pending" },
+  receiptNumber: { type: String, unique: true, sparse: true },
+  paidAt: { type: Date, sparse: true },
+  refundedAt: { type: Date, sparse: true },
+  refundId: { type: String, sparse: true },
+
+  // Additional Info
+  notes: {
+    month: String,
+    year: String,
+    description: String,
   },
-
-  month: {
-    type: String,
-    required: true
-  },
-
-  year: {
-    type: Number,
-    required: true
-  },
-
-  amount: {
-    type: Number,
-    required: true
-  },
-
-  lateFee: {
-    type: Number,
-    default: 0
-  },
-
-  totalAmount: {
-    type: Number,
-    required: true
-  },
-
-  status: {
-    type: String,
-    enum: ["Pending", "Paid", "Overdue"],
-    default: "Pending"
-  },
-
-  paymentMethod: {
-    type: String,
-    enum: ["Cash", "UPI", "Bank Transfer", "Cheque"],
-    default: null
-  },
-
-  transactionId: {
-    type: String,
-    default: null
-  },
-
-  paidAt: {
-    type: Date,
-    default: null
-  },
-
-  receiptNumber: {
-    type: String,
-    default: null
-  },
-
-  remarks: {
-    type: String,
-    default: null
-  }
-
 }, { timestamps: true });
 
-// Prevent duplicate record for same resident + maintenance period
-paymentRecordSchema.index({ maintenance: 1, resident: 1 }, { unique: true });
+// Index for faster queries
+paymentRecordSchema.index({ resident: 1, createdAt: -1 });
+paymentRecordSchema.index({ status: 1 });
+// razorpayPaymentId is already unique in schema; no separate index needed to avoid duplicate index warnings.
 
 module.exports = mongoose.model("PaymentRecord", paymentRecordSchema);

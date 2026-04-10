@@ -1,25 +1,27 @@
 import React from 'react';
-import ExpenseDashboard from "../../Admin/pages/Finance/Expense/ExpenseDashboard";
-import ExpenseList from "../../Admin/pages/Finance/Expense/ExpenseList";
-import AddExpense from "../../Admin/pages/Finance/Expense/AddExpense";
-import ExpenseReport from "../../Admin/pages/Finance/Expense/ExpenseReport";
+import { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
+const ExpenseDashboard = lazy(() => import("../../Admin/pages/Finance/Expense/ExpenseDashboard"));
+const ExpenseList = lazy(() => import("../../Admin/pages/Finance/Expense/ExpenseList"));
+const AddExpense = lazy(() => import("../../Admin/pages/Finance/Expense/AddExpense"));
+const ExpenseReport = lazy(() => import("../../Admin/pages/Finance/Expense/ExpenseReport"));
 
 const expenseRoutes = [
   {
     path: "expense/dashboard",
-    element: <ExpenseDashboard />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><ExpenseDashboard /></Suspense>,
   },
   {
     path: "expense/add",
-    element: <AddExpense />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><AddExpense /></Suspense>,
   },
   {
     path: "expense/list",
-    element: <ExpenseList />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><ExpenseList /></Suspense>,
   },
   {
     path: "expense/report",
-    element: <ExpenseReport />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><ExpenseReport /></Suspense>,
   },
 ];
 

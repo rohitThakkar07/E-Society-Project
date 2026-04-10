@@ -1,11 +1,12 @@
 import React, { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
 
 // Layout
 const UserLayout = lazy(() => import("../../User/layout/UserLayout"));
 
 // Auth
-import Login       from "../../User/pages/Login";
-import AuthContext from "../../User/context/AuthContext";
+const Login = lazy(() => import("../../User/pages/Login"));
+const AuthContext = lazy(() => import("../../User/context/AuthContext"));
 
 // Route files
 import HomeRoutes        from "./HomeRoutes";
@@ -20,11 +21,11 @@ import ProfileRoutes     from "./ProfileRoutes";
 import PollRoutes from './PollRoutes';
 const UserRouter = [
 
-  // 🔓 PUBLIC — visitors can see home + login
+  // PUBLIC — visitors can see home + login
   {
     path: "/",
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading portal…" />}>
         <UserLayout />
       </Suspense>
     ),
@@ -33,11 +34,10 @@ const UserRouter = [
     ],
   },
 
-  // 🔒 PROTECTED — login required
+  //  PROTECTED — login required
   {
-    path: "/",
     element: (
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Loading...</div>}>
+      <Suspense fallback={<PageLoader message="Loading portal…" />}>
         <AuthContext />
       </Suspense>
     ),
@@ -59,7 +59,7 @@ const UserRouter = [
     ],
   },
 
-  // 🔓 LOGIN PAGE
+  // LOGIN PAGE
   {
     path: "/login",
     element: <Login />,

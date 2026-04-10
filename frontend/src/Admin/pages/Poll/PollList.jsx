@@ -1,119 +1,179 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FiEdit, FiTrash2, FiPlus, FiEye, FiBarChart2, FiClock, FiXCircle } from "react-icons/fi";
 import { fetchPolls, closePoll, deletePoll } from "../../../store/slices/pollSlice";
 
 const PollList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { list: polls, loading } = useSelector((s) => s.poll) ?? {};
+
+  const polls = useSelector((state) => state.poll?.list ?? []);
+  const loading = useSelector((state) => state.poll?.loading ?? false);
   const [filter, setFilter] = useState("All");
 
-  useEffect(() => { dispatch(fetchPolls()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchPolls());
+  }, [dispatch]);
 
-  const filtered = useMemo(() =>
-    (polls || []).filter((p) => {
-      if (filter === "Active")   return p.isActive && new Date(p.expiresAt) > new Date();
-      if (filter === "Expired")  return !p.isActive || new Date(p.expiresAt) <= new Date();
-      return true;
-    }), [polls, filter]);
-
-  const getWinner = (poll) => {
-    if (!poll.options.length) return null;
-    return poll.options.reduce((a, b) => a.votes > b.votes ? a : b);
+  // ✅ Helper to check expiry robustly
+  const isExpiredPoll = (poll) => {
+    if (!poll) return true;
+    if (poll.isActive === false) return true;
+    if (!poll.expiresAt) return false;
+    const now = new Date();
+    const expiryDate = new Date(poll.expiresAt);
+    if (Number.isNaN(expiryDate.getTime())) return false;
+    return expiryDate <= now;
   };
 
-  const isExpired = (poll) => !poll.isActive || new Date(poll.expiresAt) <= new Date();
+  // ✅ Filtering logic
+  const filtered = useMemo(() => {
+    if (!polls || polls.length === 0) return [];
+    if (filter === "All") return polls;
+    return polls.filter((p) => {
+      const expired = isExpiredPoll(p);
+      if (filter === "Active") return !expired;
+      if (filter === "Expired") return expired;
+      return true;
+    });
+  }, [polls, filter]);
+
+  const getWinner = (poll) => {
+    if (!poll.options || poll.options.length === 0) return null;
+    return poll.options.reduce((a, b) => (a.votes > b.votes ? a : b));
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Delete this poll? This cannot be undone.")) {
+      dispatch(deletePoll(id));
+    }
+  };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* HEADER SECTION */}
       <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Polls & Voting</h1>
-          <p className="text-sm text-gray-500">Community polls and decision making</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <FiBarChart2 className="text-indigo-600" /> Polls & Voting
+          </h1>
+          <p className="text-sm text-gray-500">Engage residents with community polls and decision making.</p>
         </div>
-        <button onClick={() => navigate("/admin/poll/create")}
-          className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium self-start">
-          + Create Poll
+        <button
+          onClick={() => navigate("/admin/poll/create")}
+          className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95"
+        >
+          <FiPlus /> Create Poll
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex gap-3">
-        {["All","Active","Expired"].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === f ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+      {/* FILTER TABS */}
+      <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 mb-8 w-fit flex gap-1">
+        {["All", "Active", "Expired"].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+              filter === f
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
             {f}
           </button>
         ))}
       </div>
 
-      <div className="space-y-4">
+      {/* POLL CARDS GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {loading ? (
-          [...Array(3)].map((_, i) => <div key={i} className="bg-white rounded-xl p-6 animate-pulse h-32"/>)
+          [...Array(2)].map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 animate-pulse h-52" />
+          ))
         ) : filtered.length > 0 ? (
           filtered.map((poll) => {
-            const expired = isExpired(poll);
-            const winner  = expired ? getWinner(poll) : null;
+            const expired = isExpiredPoll(poll);
+            const winner = expired ? getWinner(poll) : null;
+            const totalVotes = (poll.options || []).reduce((sum, opt) => sum + (opt.votes || 0), 0);
+
             return (
-              <div key={poll._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${expired ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700"}`}>
-                        {expired ? "Closed" : "Active"}
+              <div key={poll._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        expired ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700"
+                      }`}>
+                        {expired ? "Closed" : "Live"}
                       </span>
-                      <span className="text-xs text-gray-400">
-                        {poll.totalVotes} vote{poll.totalVotes !== 1 ? "s" : ""}
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        {totalVotes} Total Votes
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-3">{poll.question}</h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDelete(poll._id)}
+                        className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
 
-                    {/* Options with vote bars */}
-                    <div className="space-y-2">
-                      {poll.options.map((opt, i) => {
-                        const pct = poll.totalVotes > 0 ? Math.round((opt.votes / poll.totalVotes) * 100) : 0;
-                        const isWinner = winner && opt.text === winner.text && expired;
-                        return (
-                          <div key={i}>
-                            <div className="flex justify-between text-xs mb-0.5">
-                              <span className={`font-medium ${isWinner ? "text-green-700" : "text-gray-700"}`}>
-                                {isWinner && "🏆 "}{opt.text}
-                              </span>
-                              <span className="text-gray-400">{opt.votes} ({pct}%)</span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full transition-all ${isWinner ? "bg-green-500" : "bg-indigo-400"}`}
-                                style={{ width: `${pct}%` }}/>
-                            </div>
+                  <h3 className="font-bold text-gray-800 text-lg mb-6 leading-tight">
+                    {poll.question}
+                  </h3>
+
+                  <div className="space-y-4">
+                    {poll.options?.map((opt, i) => {
+                      const pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                      const isWinner = winner && opt.text === winner.text && expired;
+
+                      return (
+                        <div key={i}>
+                          <div className="flex justify-between text-xs font-bold mb-1.5">
+                            <span className={isWinner ? "text-green-700" : "text-gray-600"}>
+                              {isWinner && "🏆 "}{opt.text}
+                            </span>
+                            <span className="text-gray-400">{pct}%</span>
                           </div>
-                        );
-                      })}
-                    </div>
-
-                    <p className="text-xs text-gray-400 mt-3">
-                      Expires: {new Date(poll.expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    </p>
+                          <div className="h-2 bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${
+                                isWinner ? "bg-green-500" : "bg-indigo-500"
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
 
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button onClick={() => navigate(`/admin/poll/${poll._id}`)} className="text-indigo-600 hover:underline text-sm">View</button>
-                    {!expired && (
-                      <button onClick={() => { if (window.confirm("Close this poll?")) dispatch(closePoll(poll._id)); }}
-                        className="text-yellow-600 hover:underline text-sm">Close</button>
-                    )}
-                    <button onClick={() => { if (window.confirm("Delete this poll?")) dispatch(deletePoll(poll._id)); }}
-                      className="text-red-500 hover:underline text-sm">Delete</button>
+                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-2">
+                    <FiClock size={12} />
+                    <span>Expires: {new Date(poll.expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>
                   </div>
+                  {!expired && (
+                    <button
+                      onClick={() => { if (window.confirm("Close poll?")) dispatch(closePoll(poll._id)); }}
+                      className="text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                    >
+                      <FiXCircle size={12} /> Close Now
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })
         ) : (
-          <div className="bg-white rounded-xl p-12 text-center text-gray-400">
-            <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <p className="text-sm">No polls found</p>
+          <div className="col-span-full bg-white rounded-2xl p-16 text-center border border-gray-100">
+            <FiBarChart2 size={48} className="mx-auto mb-4 text-gray-200" />
+            <h3 className="text-gray-900 font-bold mb-1">No Polls Found</h3>
+            <p className="text-gray-400 text-sm">No records found for the "{filter}" category.</p>
           </div>
         )}
       </div>

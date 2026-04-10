@@ -1,27 +1,17 @@
-const maintenanceRoutes = [
+import { lazy, Suspense } from "react";
+import { PageLoader } from "../../components/PageLoader";
+
+const PayMaintenance = lazy(() => import("../../User/pages/PayMaintenance"));
+
+// Header nav: Finances → "Pay Maintenance" → "/maintenance"
+const MaintenanceRoutes = [
   {
-    path: "maintenance/dashboard",
-    element: <MaintenanceDashboard />,
-  },
-  {
-    path: "maintenance/add",
-    element: <AddMaintenance />,
-  },
-  {
-    path: "maintenance/list",
-    element: <MaintenanceList />,
-  },
-  {
-    path: "maintenance/:id",
-    element: <MaintenanceDetails />,
-  },
-  {
-    path: "maintenance/:id/invoice",
-    element: <InvoiceGenerator />,
-  },
-  {
-    path: "maintenance/:id/receipt",
-    element: <ReceiptGenerator />,
+    path: "maintenance",
+    element: (
+      <Suspense fallback={<PageLoader message="Loading…" />}>
+        <PayMaintenance />
+      </Suspense>
+    ),
   },
 ];
 

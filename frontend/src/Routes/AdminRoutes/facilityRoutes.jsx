@@ -1,11 +1,13 @@
 import React from 'react';
-import FacilityDashboard from "../../Admin/pages/Facility/FacilityDashboard";
-import BookingForm from "../../Admin/pages/Facility/BookingForm";
-import BookingList from "../../Admin/pages/Facility/BookingList";
-import BookingCalendar from "../../Admin/pages/Facility/BookingCalendar";
-import BookingDetails from "../../Admin/pages/Facility/BookingDetails";
-import FacilityForm from '../../Admin/pages/Facility/FacilityForm';
-import FacilityList from '../../Admin/pages/Facility/FacilityList';
+import { lazy, Suspense } from 'react';
+import { PageLoader } from "../../components/PageLoader";
+const FacilityDashboard = lazy(() => import("../../Admin/pages/Facility/FacilityDashboard"));
+const BookingForm = lazy(() => import("../../Admin/pages/Facility/BookingForm"));
+const BookingList = lazy(() => import("../../Admin/pages/Facility/BookingList"));
+const BookingCalendar = lazy(() => import("../../Admin/pages/Facility/BookingCalendar"));
+const BookingDetails = lazy(() => import("../../Admin/pages/Facility/BookingDetails"));
+const FacilityForm = lazy(() => import('../../Admin/pages/Facility/FacilityForm'));
+const FacilityList = lazy(() => import('../../Admin/pages/Facility/FacilityList'));
 
 // FIX: All paths are relative to the /admin/ parent route.
 // If your router wraps these under "/admin", these paths become:
@@ -14,37 +16,37 @@ import FacilityList from '../../Admin/pages/Facility/FacilityList';
 const facilityRoutes = [
   {
     path: "facility/dashboard",
-    element: <FacilityDashboard />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityDashboard /></Suspense>,
   },
   {
     path: "facility/add",
-    element: <FacilityForm />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityForm /></Suspense>,
   },
   {
     path: "facility/edit/:id",
-    element: <FacilityForm />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityForm /></Suspense>,
   },
   {
     path: "facility/list",
-    element: <FacilityList />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><FacilityList /></Suspense>,
   },
   {
     path: "facility/book",
-    element: <BookingForm />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingForm /></Suspense>,
   },
   {
     // FIX: Was "facility-booking/list" — now matches navigate("/admin/facility-booking/list")
     path: "facility-booking/list",
-    element: <BookingList />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingList /></Suspense>,
   },
   {
     path: "facility/calendar",
-    element: <BookingCalendar />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingCalendar /></Suspense>,
   },
   {
     // FIX: Was "facility/booking/:id" — now matches navigate("/admin/facility/booking/:id")
     path: "facility/booking/:id",
-    element: <BookingDetails />,
+    element: <Suspense fallback={<PageLoader message="Loading…" />}><BookingDetails /></Suspense>,
   },
 ];
 

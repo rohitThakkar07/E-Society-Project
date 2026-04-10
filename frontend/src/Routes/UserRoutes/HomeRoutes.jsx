@@ -1,9 +1,11 @@
-import Home from "../../User/pages/Home";
+import { lazy } from "react";
+
+const Home = lazy(() => import("../../User/pages/Home"));
 
 const HomeRoutes = [
   {
     index: true,
-    path:"/",
+    path: "/",
     element: <Home />,
   },
 ];

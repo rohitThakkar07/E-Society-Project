@@ -2,185 +2,153 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import API from "../../service/api";
 
-// ── Thunks ────────────────────────────────────────────────────────────────────
-
-export const fetchDashboardSummary = createAsyncThunk(
-  "maintenance/fetchDashboardSummary",
-  async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await API.get(`/maintenance/dashboard${query ? `?${query}` : ""}`);
-    return res.data.data;
-  }
-);
-
-export const fetchMaintenanceList = createAsyncThunk(
-  "maintenance/fetchMaintenanceList",
-  async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await API.get(`/maintenance/list${query ? `?${query}` : ""}`);
-    return res.data.data;
-  }
-);
-
-export const fetchMaintenanceById = createAsyncThunk(
-  "maintenance/fetchMaintenanceById",
-  async (id) => {
-    if (!id) throw new Error("ID required");
-    const res = await API.get(`/maintenance/${id}`);
-    return res.data.data;
-  }
-);
-
-export const createMaintenance = createAsyncThunk(
-  "maintenance/createMaintenance",
-  async (data, { rejectWithValue }) => {
+// --- Thunks ---
+export const fetchMaintenanceList = createAsyncThunk("maintenance/fetchList", async (_, { rejectWithValue }) => {
     try {
-      const res = await API.post("/maintenance/create", data);
-      toast.success("Maintenance record created!");
-      return res.data.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create");
-      return rejectWithValue(err.response?.data?.message);
-    }
-  }
-);
+        const res = await API.get("/maintenance/list");
+        return res.data.data;
+    } catch (err) { return rejectWithValue(err.response?.data?.message); }
+});
 
-export const updateMaintenance = createAsyncThunk(
-  "maintenance/updateMaintenance",
-  async ({ id, data }, { rejectWithValue }) => {
+export const fetchMaintenanceById = createAsyncThunk("maintenance/fetchById", async (id, { rejectWithValue }) => {
     try {
-      const res = await API.put(`/maintenance/update/${id}`, data);
-      toast.success("Updated successfully!");
-      return res.data.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
-      return rejectWithValue(err.response?.data?.message);
-    }
-  }
-);
+        const res = await API.get(`/maintenance/${id}`);
+        return res.data.data; // Ensure this returns the full object { _id, resident: {...}, amount, etc }
+    } catch (err) { return rejectWithValue(err.response?.data?.message); }
+});
 
-export const deleteMaintenance = createAsyncThunk(
-  "maintenance/deleteMaintenance",
-  async (id) => {
-    await API.delete(`/maintenance/delete/${id}`);
-    toast.success("Deleted.");
-    return id;
-  }
-);
-
-// Add a partial payment
-export const addPayment = createAsyncThunk(
-  "maintenance/addPayment",
-  async ({ id, data }, { rejectWithValue }) => {
+export const fetchMyMaintenance = createAsyncThunk("maintenance/fetchMy", async (_, { rejectWithValue }) => {
     try {
-      const res = await API.post(`/maintenance/${id}/add-payment`, data);
-      toast.success(res.data.message || "Payment recorded!");
-      return res.data.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Payment failed");
-      return rejectWithValue(err.response?.data?.message);
-    }
-  }
-);
+        const res = await API.get("/maintenance/my");
+        return res.data.data;
+    } catch (err) { return rejectWithValue(err.response?.data?.message); }
+});
 
-// Mark fully paid in one shot
-export const markAsPaid = createAsyncThunk(
-  "maintenance/markAsPaid",
-  async ({ id, data = {} }, { rejectWithValue }) => {
+export const createMaintenance = createAsyncThunk("maintenance/create", async (formData, { rejectWithValue }) => {
     try {
-      const res = await API.post(`/maintenance/${id}/mark-paid`, data);
-      toast.success("Marked as paid!");
-      return res.data.data;
+        const res = await API.post("/maintenance/create", formData);
+        toast.success("Maintenance created!");
+        return res.data.data;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed");
-      return rejectWithValue(err.response?.data?.message);
+        toast.error(err.response?.data?.message || "Create failed");
+        return rejectWithValue(err.response?.data?.message);
     }
-  }
-);
+});
 
-// ── Initial state ─────────────────────────────────────────────────────────────
+export const markAsPaid = createAsyncThunk("maintenance/markAsPaid", async ({ id, notes }, { rejectWithValue }) => {
+    try {
+        const res = await API.post(`/maintenance/mark-paid/${id}`, { notes });
+        toast.success("Marked as Paid!");
+        return res.data.data;
+    } catch (err) {
+        toast.error(err.response?.data?.message || "Action failed");
+        return rejectWithValue(err.response?.data?.message);
+    }
+});
 
-const initialState = {
-  list:            [],   // all maintenance records
-  singleRecord:    null, // current detail view
-  summary:         null, // dashboard summary object
-  loading:         false,
-  summaryLoading:  false,
-  error:           null,
-};
+export const fetchDashboardSummary = createAsyncThunk("maintenance/fetchSummary", async (_, { rejectWithValue }) => {
+    try {
+        const res = await API.get("/maintenance/summary");
+        return res.data.data;
+    } catch (err) { return rejectWithValue(err.response?.data?.message); }
+});
 
-// ── Slice ─────────────────────────────────────────────────────────────────────
+export const addPayment = createAsyncThunk("maintenance/addPayment", async ({ id, ...data }, { rejectWithValue }) => {
+    try {
+        const res = await API.post(`/maintenance/add-payment/${id}`, data);
+        toast.success("Payment recorded!");
+        return res.data.data;
+    } catch (err) {
+        toast.error(err.response?.data?.message || "Payment failed");
+        return rejectWithValue(err.response?.data?.message);
+    }
+});
 
+export const payMaintenance = createAsyncThunk("maintenance/pay", async ({ id, method }, { rejectWithValue }) => {
+    try {
+        const res = await API.put(`/maintenance/pay/${id}`, { paymentMethod: method });
+        toast.success("Payment successful");
+        return res.data.data;
+    } catch (err) {
+        toast.error("Payment failed");
+        return rejectWithValue(err.response?.data?.message);
+    }
+});
+
+export const deleteMaintenance = createAsyncThunk("maintenance/delete", async (id, { rejectWithValue }) => {
+    try {
+        await API.delete(`/maintenance/delete/${id}`);
+        toast.success("Deleted!");
+        return id;
+    } catch (err) { return rejectWithValue(err.response?.data?.message); }
+});
+
+// --- Slice ---
 const maintenanceSlice = createSlice({
-  name: "maintenance",
-  initialState,
-  reducers: {
-    clearSingleRecord: (state) => { state.singleRecord = null; },
-  },
-  extraReducers: (builder) => {
+    name: "maintenance",
+    initialState: {
+        list: [],
+        singleRecord: null,
+        summary: null,
+        loading: false,
+        error: null
+    },
+    reducers: {
+        clearSingleRecord: (state) => { state.singleRecord = null; },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchMaintenanceList.fulfilled, (state, action) => {
+                state.list = Array.isArray(action.payload) ? action.payload : [];
+            })
+            .addCase(fetchMyMaintenance.fulfilled, (state, action) => {
+                state.list = action.payload; 
+            })
+            .addCase(fetchMaintenanceById.fulfilled, (state, action) => {
+                // ✅ Ensure singleRecord is populated correctly for the Invoice UI
+                state.singleRecord = action.payload;
+            })
+            .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
+                state.summary = action.payload;
+            })
+            .addCase(createMaintenance.fulfilled, (state, action) => {
+                state.list.unshift(action.payload);
+            })
+            .addCase(deleteMaintenance.fulfilled, (state, action) => {
+                state.list = state.list.filter(item => item._id !== action.payload);
+            })
+            
+            // ✅ Unified Update Matcher
+            .addMatcher(
+                (action) => [
+                    payMaintenance.fulfilled.type, 
+                    markAsPaid.fulfilled.type, 
+                    addPayment.fulfilled.type
+                ].includes(action.type),
+                (state, action) => {
+                    state.singleRecord = action.payload;
+                    const index = state.list.findIndex(item => item._id === action.payload._id);
+                    if (index !== -1) state.list[index] = action.payload;
+                }
+            )
 
-    // Dashboard summary
-    builder.addCase(fetchDashboardSummary.pending,   (s) => { s.summaryLoading = true; });
-    builder.addCase(fetchDashboardSummary.fulfilled, (s, a) => { s.summaryLoading = false; s.summary = a.payload; });
-    builder.addCase(fetchDashboardSummary.rejected,  (s) => { s.summaryLoading = false; });
-
-    // List
-    builder.addCase(fetchMaintenanceList.fulfilled, (s, a) => {
-      s.loading = false; s.list = a.payload;
-    });
-
-    // Single
-    builder.addCase(fetchMaintenanceById.fulfilled, (s, a) => {
-      s.loading = false; s.singleRecord = a.payload;
-    });
-
-    // Create
-    builder.addCase(createMaintenance.fulfilled, (s, a) => {
-      s.loading = false; s.list.unshift(a.payload);
-    });
-    builder.addCase(createMaintenance.rejected, (s, a) => {
-      s.loading = false; s.error = a.payload;
-    });
-
-    // Update
-    builder.addCase(updateMaintenance.fulfilled, (s, a) => {
-      s.loading = false;
-      const i = s.list.findIndex((r) => r._id === a.payload._id);
-      if (i !== -1) s.list[i] = a.payload;
-      s.singleRecord = a.payload;
-    });
-
-    // Delete
-    builder.addCase(deleteMaintenance.fulfilled, (s, a) => {
-      s.loading = false;
-      s.list = s.list.filter((r) => r._id !== a.payload);
-    });
-
-    // Add payment / Mark paid — both update singleRecord + list entry
-    [addPayment, markAsPaid].forEach((thunk) => {
-      builder.addCase(thunk.fulfilled, (s, a) => {
-        s.loading = false;
-        s.singleRecord = a.payload;
-        const i = s.list.findIndex((r) => r._id === a.payload._id);
-        if (i !== -1) s.list[i] = a.payload;
-      });
-      builder.addCase(thunk.rejected, (s, a) => {
-        s.loading = false; s.error = a.payload;
-      });
-    });
-
-    // Scoped loading/error matchers
-    builder.addMatcher(
-      (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/pending")
-        && !action.type.includes("fetchDashboardSummary"),
-      (s) => { s.loading = true; s.error = null; }
-    );
-    builder.addMatcher(
-      (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/rejected")
-        && !action.type.includes("fetchDashboardSummary"),
-      (s) => { s.loading = false; }
-    );
-  },
+            // GLOBAL PENDING
+            .addMatcher(
+                (action) => action.type.startsWith("maintenance/") && action.type.endsWith("/pending"),
+                (state) => { 
+                    state.loading = true; 
+                    state.error = null; 
+                }
+            )
+            // GLOBAL FULFILLED/REJECTED
+            .addMatcher(
+                (action) => action.type.startsWith("maintenance/") && (action.type.endsWith("/fulfilled") || action.type.endsWith("/rejected")),
+                (state, action) => { 
+                    state.loading = false; 
+                    if (action.type.endsWith("/rejected")) state.error = action.payload;
+                }
+            );
+    },
 });
 
 export const { clearSingleRecord } = maintenanceSlice.actions;

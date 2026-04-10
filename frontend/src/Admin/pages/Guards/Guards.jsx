@@ -1,184 +1,310 @@
-// pages/Guards.jsx (Updated with Redux)
-import React, { useEffect } from "react";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchGuards,
-  deleteGuard,
-  updateGuardStatus,
-} from "../../../store/slices/guardSlice";
+import { 
+  Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, TablePagination,
+  IconButton, Tooltip, Chip, InputBase, MenuItem, Select, FormControl, Avatar, Switch
+} from "@mui/material";
+import { FiEdit, FiTrash2, FiSearch, FiPlus, FiShield, FiClock, FiPhone, FiCalendar, FiMail, FiExternalLink } from "react-icons/fi";
+import { fetchGuards, deleteGuard, updateGuardStatus } from "../../../store/slices/guardSlice";
 
-const Guards = () => {
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
+
+const STATUS_STYLE = { 
+  Active: { bg: "#ecfdf5", color: "#059669" }, 
+  OnLeave: { bg: "#fffbeb", color: "#d97706" }, 
+  Inactive: { bg: "#f1f5f9", color: "#64748b" } 
+};
+
+const SHIFT_STYLE = { 
+  Day: "bg-orange-50 text-orange-600 border-orange-100", 
+  Night: "bg-slate-800 text-white border-slate-700" 
+};
+
+const GuardList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  const { guards = [], loading } = useSelector((s) => s.guard || {});
+  
+  const [search, setSearch] = useState("");
+  const [shiftFilter, setShiftFilter] = useState("All");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const { guards, loading } = useSelector((state) => state.guard);
-
-  // Fetch guards on component mount
-  useEffect(() => {
-    dispatch(fetchGuards());
+  useEffect(() => { 
+    dispatch(fetchGuards()); 
   }, [dispatch]);
 
-  // Handle delete
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this guard?")) {
-      dispatch(deleteGuard(id));
+  const filtered = useMemo(() =>
+    guards.filter((g) => {
+      const matchSearch = 
+        g.name?.toLowerCase().includes(search.toLowerCase()) || 
+        g.mobileNumber?.includes(search) ||
+        g.email?.toLowerCase().includes(search.toLowerCase()) ||
+        g.guardId?.toLowerCase().includes(search.toLowerCase());
+      const matchShift = shiftFilter === "All" || g.shift === shiftFilter;
+      return matchSearch && matchShift;
+    }), [guards, search, shiftFilter]);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDelete = (id) => { 
+    if (window.confirm("Are you sure you want to remove this guard?")) {
+      dispatch(deleteGuard(id)); 
     }
   };
 
-  // Handle status toggle
-  const handleToggle = (id, currentStatus) => {
-    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
-    dispatch(updateGuardStatus({ id, status: newStatus }));
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      {/* Table Header Section */}
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+      {/* HEADER */}
+      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Security Guards
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Monitor shifts, assigned posts, and guard availability.
-          </p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+             Security Personnel
+          </h1>
+          <p className="text-sm text-slate-500 font-medium">Manage security staff, shifts, and contact records.</p>
         </div>
-
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md"
-          onClick={() => navigate("/admin/guards/add")}
+        <button 
+          onClick={() => navigate("/admin/guards/add")} 
+          className="admin-btn-primary"
         >
-          + Add Guard
+          <FiPlus size={18} /> Add Guard
         </button>
       </div>
 
-      {/* Guards Table Area */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full text-left border-collapse whitespace-nowrap">
-          <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
-              <th className="px-5 py-4">Guard Name & ID</th>
-              <th className="px-5 py-4">Contact Info</th>
-              <th className="px-5 py-4">Shift Type</th>
-              <th className="px-5 py-4">Assigned Post</th>
-              <th className="px-5 py-4">Current Status</th>
-              <th className="px-5 py-4 text-center">Actions</th>
-            </tr>
-          </thead>
+      {/* CONTROLS */}
+      <div className="mb-6 flex flex-wrap items-center gap-4">
+        <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 px-4 flex-1 min-w-[300px]">
+          <FiSearch className="text-slate-400" />
+          <InputBase
+            placeholder="Search by Name, Email, Mobile or Guard ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full font-medium text-sm"
+          />
+        </div>
+        
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <Select
+            value={shiftFilter}
+            onChange={(e) => setShiftFilter(e.target.value)}
+            displayEmpty
+            className="bg-white rounded-xl font-bold text-xs"
+            sx={{ borderRadius: '12px', '.MuiOutlinedInput-notchedOutline': { borderColor: '#f1f5f9' } }}
+          >
+            <MenuItem value="All"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">All Shifts</span></MenuItem>
+            <MenuItem value="Day"><span className="text-xs font-bold uppercase tracking-wider text-orange-500">Day Shift</span></MenuItem>
+            <MenuItem value="Night"><span className="text-xs font-bold uppercase tracking-wider text-slate-700">Night Shift</span></MenuItem>
+          </Select>
+        </FormControl>
+      </div>
 
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="text-center py-10 text-gray-500 italic">
-                  Loading guards from server...
-                </td>
-              </tr>
-            ) : guards.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-10 text-gray-400 font-medium">
-                  No Guards Registered in the system.
-                </td>
-              </tr>
-            ) : (
-              guards.map((guard) => (
-                <tr key={guard._id} className="hover:bg-gray-50 transition-colors">
-                  
-                  {/* Guard Name and System ID */}
-                  <td className="px-5 py-4">
-                    <div className="font-semibold text-gray-900">
-                      {guard.firstName} {guard.lastName}
+      {/* TABLE */}
+      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+        <Table sx={{ minWidth: 900 }}>
+          <TableHead className="bg-slate-50">
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Guard Identity</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Shift</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Joining Date</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>ID Proof</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly Salary</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          
+          <TableBody>
+            {!loading ? (
+              filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} sx={{ py: 8, textAlign: 'center', color: '#94a3b8' }}>
+                    <div className="flex flex-col items-center gap-2">
+                      <FiShield size={32} className="text-slate-200" />
+                      <span className="text-sm font-medium">No guards found</span>
                     </div>
-                    <div className="text-xs text-indigo-500 font-medium">
-                      UID: {guard._id}
-                    </div>
-                  </td>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((g) => (
+                    <TableRow key={g._id} hover>
+                      {/* Guard Identity */}
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar sx={{ bgcolor: '#f8fafc', color: '#475569', width: 42, height: 42, border: '1px solid #f1f5f9' }}>
+                            <FiShield size={20} />
+                          </Avatar>
+                          <div>
+                            <div className="font-black text-slate-900 text-sm uppercase">{g.name}</div>
+                            <div className="text-[10px] text-slate-400 font-bold tracking-widest mt-0.5">
+                              {g.guardId || `GRD-${g._id?.slice(-5).toUpperCase()}`}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
 
-                  {/* Mobile and Email Address */}
-                  <td className="px-5 py-4">
-                    <div className="font-medium text-gray-800">
-                      {guard.mobileNumber}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {guard.emailAddress || "N/A"}
-                    </div>
-                  </td>
-
-                  {/* Shift Badge */}
-                  <td className="px-5 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        guard.shift === "Day"
-                          ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                          : "bg-indigo-100 text-indigo-700 border border-indigo-200"
-                      }`}
-                    >
-                      {guard.shift}
-                    </span>
-                  </td>
-
-                  {/* Static Placeholder for Post */}
-                  <td className="px-5 py-4">
-                    <span className="text-gray-400 text-xs italic">
-                      Main Gate
-                    </span>
-                  </td>
-
-                  {/* Status Toggle Switch */}
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`min-w-[70px] text-center px-2 py-1 rounded text-[10px] uppercase font-black ${
-                          guard.status === "Active"
-                            ? "text-green-700 bg-green-100 border border-green-200"
-                            : "text-red-700 bg-red-100 border border-red-200"
-                        }`}
-                      >
-                        {guard.status}
-                      </span>
-
-                      <div className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={guard.status === "Active"}
-                          onChange={() => handleToggle(guard._id, guard.status)}
+                      {/* Shift */}
+                      <TableCell>
+                        <Chip
+                          icon={<FiClock size={12} className="ml-1" />}
+                          label={`${g.shift || "—"} SHIFT`}
+                          size="small"
+                          className={SHIFT_STYLE[g.shift] || "bg-gray-100 text-gray-600"}
+                          sx={{ fontWeight: 900, fontSize: '9px', borderRadius: '8px', border: '1px solid transparent' }}
                         />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                      </div>
-                    </div>
-                  </td>
+                      </TableCell>
 
-                  {/* Action Buttons */}
-                  <td className="px-5 py-4">
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={() => navigate(`/admin/guards/edit/${guard._id}`)}
-                        className="text-blue-500 hover:text-blue-700 transition-colors"
-                        title="Edit Guard"
-                      >
-                        <FiEdit size={19} />
-                      </button>
+                      {/* Contact — phone + email */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 font-bold text-slate-700 text-xs">
+                            <FiPhone className="text-slate-300 shrink-0" size={13} />
+                            {g.mobileNumber || "—"}
+                          </div>
+                          {g.email && (
+                            <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                              <FiMail className="text-slate-200 shrink-0" size={12} />
+                              <span className="truncate max-w-[160px]">{g.email}</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
 
-                      <button
-                        onClick={() => handleDelete(guard._id)}
-                        className="text-red-400 hover:text-red-600 transition-colors"
-                        title="Delete Record"
-                      >
-                        <FiTrash2 size={19} />
-                      </button>
-                    </div>
-                  </td>
+                      {/* Joining Date */}
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-slate-600 font-semibold text-xs">
+                          <FiCalendar className="text-slate-300 shrink-0" size={13} />
+                          {formatDate(g.joiningDate)}
+                        </div>
+                      </TableCell>
 
-                </tr>
+                      {/* ID Proof */}
+                      <TableCell>
+                        <div className="text-xs text-slate-600 font-semibold">
+                          {g.idProofType || "—"}
+                        </div>
+                        {/* <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                          #{g.idProofNumber || "—"}
+                        </div> */}
+                        {g.idImage && (
+                          <Tooltip title="View ID Proof">
+                            <button 
+                              onClick={() => window.open(`${BASE_URL}/${g.idImage.replace(/\\/g, "/")}`, "_blank")}
+                              className="mt-1 flex items-center gap-1 text-[9px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <FiExternalLink size={10} /> View Proof
+                            </button>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+
+                      {/* Salary */}
+                      <TableCell>
+                        <div className="font-bold text-slate-900 text-xs">
+                          ₹{(g.monthlySalary || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">Per Month</div>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Chip 
+                            label={g.status}
+                            size="small"
+                            sx={{ 
+                              fontWeight: 900, 
+                              fontSize: '9px',
+                              textTransform: 'uppercase',
+                              bgcolor: STATUS_STYLE[g.status]?.bg || '#f1f5f9',
+                              color: STATUS_STYLE[g.status]?.color || '#64748b',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Switch
+                            checked={g.status === 'Active'}
+                            onChange={() => dispatch(updateGuardStatus({ id: g._id, status: g.status === 'Active' ? 'Inactive' : 'Active' }))}
+                            color="success"
+                            size="small"
+                            inputProps={{ 'aria-label': 'Toggle guard status' }}
+                          />
+                        </div>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell align="center">
+                        <div className="flex justify-center gap-1">
+                          <Tooltip title="Edit Guard">
+                            <IconButton 
+                              onClick={() => navigate(`/admin/guards/edit/${g._id}`)} 
+                              size="small"
+                              sx={{ color: '#2563eb', bgcolor: '#eff6ff', borderRadius: '10px', '&:hover': { bgcolor: '#dbeafe' } }}
+                            >
+                              <FiEdit size={14} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Guard">
+                            <IconButton 
+                              onClick={() => handleDelete(g._id)} 
+                              size="small"
+                              sx={{ color: '#ef4444', bgcolor: '#fef2f2', borderRadius: '10px', '&:hover': { bgcolor: '#fee2e2' } }}
+                            >
+                              <FiTrash2 size={14} />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )
+            ) : (
+              [...Array(rowsPerPage)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={8} sx={{ py: 6, textAlign: 'center', color: '#94a3b8' }}>
+                    Loading guard registry...
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filtered.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid #f1f5f9',
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontWeight: 800,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: '#94a3b8'
+            }
+          }}
+        />
+      </TableContainer>
     </div>
   );
 };
 
-export default Guards;
+export default GuardList;
