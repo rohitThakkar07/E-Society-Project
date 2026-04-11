@@ -23,7 +23,7 @@ import { ThemeProvider } from "../context/ThemeContext";
 import societyConfig from "../../assets/societyConfig";
 
 function getAuthApiUrl() {
-  const raw = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:5000";
+  const raw = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:4000/api";
   return raw.endsWith("/api") ? `${raw}/auth` : `${raw}/api/auth`;
 }
 

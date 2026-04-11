@@ -15,4 +15,4 @@ const MaintenanceRoutes = [
   },
 ];
 
-export default maintenanceRoutes;
+export default MaintenanceRoutes;

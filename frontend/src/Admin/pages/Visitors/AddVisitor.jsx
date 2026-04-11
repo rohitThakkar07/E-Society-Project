@@ -77,7 +77,6 @@ const AddVisitor = () => {
       if (result.type.endsWith("fulfilled")) navigate("/admin/visitors");
       return;
     }
-  };
 
     const result = await dispatch(createVisitor(data));
     if (result.type.endsWith("fulfilled")) {
@@ -85,6 +84,7 @@ const AddVisitor = () => {
       navigate("/admin/visitors");
     }
   };
+
 
   if (loading && isEditMode) {
     return <div className="text-center p-6">Loading visitor...</div>;

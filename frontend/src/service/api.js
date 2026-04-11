@@ -7,7 +7,7 @@ const API = axios.create({
 });
 
 // Attach token to every request automatically
-api.interceptors.request.use((config) => {
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
 });
 
 // Global response error handler
-api.interceptors.response.use(
+API.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
@@ -36,4 +36,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default API;
