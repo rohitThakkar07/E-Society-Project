@@ -4,7 +4,7 @@ import { FiEye, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-const BASE_URL = "http://localhost:4000/api/complaint";
+const BASE_URL = `${import.meta.env.VITE_API_URL}/complaint`;
 
 const priorityStyles = {
   Low: "bg-gray-100 text-gray-600 border border-gray-200",

@@ -89,7 +89,7 @@ const fetchPaymentDetails = async (paymentId) => {
       success: true,
       paymentId: payment.id,
       orderId: payment.order_id,
-      amount: payment.amount / 100, // Convert from paise to rupees
+      amount: payment.amount / 100, 
       currency: payment.currency,
       status: payment.status,
       method: payment.method,

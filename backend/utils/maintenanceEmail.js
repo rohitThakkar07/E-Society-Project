@@ -116,7 +116,7 @@ function buildPaymentReceiptEmail(resident, flat, record) {
 
               <div style="text-align:center;">
                 <p style="margin:0 0 20px;font-size:14px;color:#64748b;">You can download your receipt from the resident portal.</p>
-                <a href="http://localhost:3000/my-invoices" style="display:inline-block;background:#0f172a;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View Invoices</a>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/my-invoices" style="display:inline-block;background:#0f172a;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View Invoices</a>
               </div>
             </td>
           </tr>

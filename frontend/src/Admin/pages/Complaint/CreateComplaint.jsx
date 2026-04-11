@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const BASE_URL = "http://localhost:4000/api/complaints";
+const BASE_URL = `${import.meta.env.VITE_API_URL}/complaints`;
 
 const CreateComplaint = () => {
   const navigate = useNavigate();

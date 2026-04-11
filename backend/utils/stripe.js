@@ -7,13 +7,6 @@
 // Simulate network delay
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-// Dummy card scenarios for testing
-const TEST_CARDS = {
-  "4242424242424242": { success: true,  brand: "Visa",       last4: "4242" },
-  "4000000000000002": { success: false, error: "Card declined" },
-  "4000000000009995": { success: false, error: "Insufficient funds" },
-};
-
 /**
  * Create a dummy Payment Intent (mirrors Stripe's createPaymentIntent)
  * @returns { clientSecret, paymentIntentId, amount }
@@ -30,7 +23,7 @@ const createPaymentIntent = async ({ amount, currency = "inr", metadata = {} }) 
     clientSecret,
     amount,
     currency,
-    status:          "requires_payment_method",
+    status:"requires_payment_method",
   };
 };
 

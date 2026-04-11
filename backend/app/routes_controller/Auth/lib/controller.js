@@ -107,7 +107,12 @@ const login = async (req, res) => {
     const userResponse = user.toObject();
     delete userResponse.password;
 
-    res.json({ success: true, token, user: userResponse });
+    res.json({ 
+      success: true, 
+      token, 
+      user: userResponse,
+      mustChangePassword: user.mustChangePassword 
+    });
 
   } catch (error) {
 
@@ -206,16 +211,42 @@ const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Use updateOne to avoid full-document validation (profileId required check)
-    await User.updateOne(
-      { _id: user._id },
-      { $set: { password: hashedPassword }, $unset: { resetToken: "", resetTokenExpiry: "" } }
-    );
-
     res.json({ success: true, message: "Password reset successfully! You can now log in." });
   } catch (error) {
     console.error("Reset Password Error:", error);
     res.status(500).json({ message: "Password reset failed. Please try again." });
+  }
+};
+
+/* Force Password Change on First Login */
+const changeFirstPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!newPassword) {
+      return res.status(400).json({ message: "New password is required" });
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = hashedPassword;
+    user.mustChangePassword = false;
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Change First Password Error:", error);
+    res.status(500).json({ message: "Failed to update password" });
   }
 };
 
@@ -225,4 +256,5 @@ module.exports = {
   logout,
   forgotPassword,
   resetPassword,
+  changeFirstPassword,
 };

@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
     resetToken: { type: String, default: null },
     resetTokenExpiry: { type: Date, default: null },
+    mustChangePassword: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

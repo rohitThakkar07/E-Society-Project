@@ -28,7 +28,7 @@ const AddEditFlat = () => {
   const fetchFlat = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/api/flats/${id}`
+        `${import.meta.env.VITE_API_URL}/flats/${id}`
       );
 
       if (res.data.success) {
@@ -47,12 +47,12 @@ const AddEditFlat = () => {
 
       if (isEditMode) {
         response = await axios.put(
-          `http://localhost:4000/api/flats/${id}`,
+          `${import.meta.env.VITE_API_URL}/flats/${id}`,
           data
         );
       } else {
         response = await axios.post(
-          `http://localhost:4000/api/flats/create`,
+          `${import.meta.env.VITE_API_URL}/flats/create`,
           data
         );
       }

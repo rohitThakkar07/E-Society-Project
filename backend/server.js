@@ -46,7 +46,9 @@ const PORT = process.env.PORT || 4000;
 connectDB();
 
 /* ============ GLOBAL MIDDLEWARE ============ */
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -73,7 +75,7 @@ app.use("/api/maintenance", authMiddleware, maintenanceRoutes);
 app.use(errorHandler);
 
 /* ============ SERVER ============ */
-app.listen(PORT, () => {
+app.listen(PORT,"0.0.0.0",() => {
   console.log(` Server running on http://localhost:${PORT}`);
 });
 

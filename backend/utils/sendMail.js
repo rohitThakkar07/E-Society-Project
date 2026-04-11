@@ -10,10 +10,10 @@ require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const transporterConfig = {
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false, // true for 465, false for other ports
+  secure: false,
   auth: {
-    user: process.env.SMTP_USER || process.env.EMAIL_USER,
-    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   tls: {
     // Allows connection even if the certificate is self-signed or has issues
@@ -26,7 +26,7 @@ const transporterConfig = {
 const transporter = nodemailer.createTransport(transporterConfig);
 
 // Startup Verification
-const currentEmail = process.env.SMTP_USER || process.env.EMAIL_USER;
+const currentEmail = process.env.SMTP_USER;
 if (currentEmail) {
   console.log(`[Email Service] Initializing for: ${currentEmail}`);
   transporter.verify((error, success) => {
@@ -38,7 +38,7 @@ if (currentEmail) {
     }
   });
 } else {
-  console.error("[Email Service] Error: SMTP_USER or EMAIL_USER not found in .env");
+  console.error("[Email Service] Error: SMTP_USER not found in .env");
 }
 
 /**
@@ -46,7 +46,7 @@ if (currentEmail) {
  */
 const sendMail = async (to, subject, html) => {
   try {
-    const fromUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const fromUser = process.env.SMTP_USER;
     if (!fromUser) throw new Error("No sender email configured in environment");
 
     const mailOptions = {
@@ -83,7 +83,7 @@ const sendResidentWelcomeEmail = async (email, residentName, password) => {
         </div>
         <p>Please login to your portal to manage your account.</p>
         <div style="text-align:center; margin-top:25px">
-          <a href="http://localhost:3000/login"
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login"
              style="background:#2563eb; color:white; padding:12px 25px; text-decoration:none; border-radius:6px">
              Login Portal
           </a>
@@ -110,7 +110,7 @@ const sendGuardWelcomeEmail = async (email, guardName, guardId, password) => {
           <p><strong>Password:</strong> ${password}</p>
         </div>
         <div style="text-align:center; margin-top:25px">
-          <a href="http://localhost:3000/login"
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login"
              style="background:#16a34a; color:white; padding:12px 25px; text-decoration:none; border-radius:6px">
              Login Portal
           </a>

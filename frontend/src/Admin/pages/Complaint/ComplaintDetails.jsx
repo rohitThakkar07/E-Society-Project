@@ -23,7 +23,7 @@ const PRIORITY_STYLE = {
   Low: "bg-gray-50 text-gray-600 border-gray-100",
 };
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
 
 const ComplaintDetails = () => {
   const { id } = useParams();
