@@ -40,7 +40,7 @@ const errorHandler = require("./app/middlewares/errorMiddleware");
 const authMiddleware = require("./app/middlewares/authMiddleware");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 /* ============ DATABASE ============ */
 connectDB();

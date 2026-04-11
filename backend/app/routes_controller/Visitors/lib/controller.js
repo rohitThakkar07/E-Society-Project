@@ -219,20 +219,7 @@ function requireStaff(req, res) {
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // ─── SEND OTP via Email ───────────────────────────────────────────────────────
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: { rejectUnauthorized: false },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-});
+const { sendMail } = require("../../../../utils/sendMail");
 
 const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName) => {
   // Console log always (dev visibility)
@@ -244,11 +231,8 @@ const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName
     return true;
   }
 
-  const mailOptions = {
-    from: `"e-Society Security" <${process.env.EMAIL_USER}>`,
-    to: residentEmail,
-    subject: "🔐 Visitor Entry OTP — e-Society",
-    html: `
+  const subject = "🔐 Visitor Entry OTP — e-Society";
+  const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="background: #1e40af; padding: 28px 32px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">🛡️ e-Society</h1>
@@ -277,10 +261,9 @@ const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName
           <p style="color: #94a3b8; font-size: 11px; margin: 0;">e-Society Management System · Do not reply to this email</p>
         </div>
       </div>
-    `,
-  };
+    `;
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(residentEmail, subject, html);
   console.log(`✅ OTP email sent to ${residentEmail}`);
   return true;
 };

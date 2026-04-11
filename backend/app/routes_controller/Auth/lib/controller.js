@@ -3,23 +3,10 @@ const { assertResidentOrGuardProfileActive } = require("../../../../utils/profil
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-const nodemailer = require("nodemailer");
+const { sendMail } = require("../../../../utils/sendMail");
 const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-});
+// Centralized email utility used instead of inline transporter
 
 /* Register Resident */
 const registerResident = async (req, res) => {
@@ -165,12 +152,8 @@ const forgotPassword = async (req, res) => {
       { $set: { resetToken: otp, resetTokenExpiry: otpExpiry } }
     );
 
-    // Send email with OTP
-    const mailOptions = {
-      from: `"E-Society" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset OTP - E-Society",
-      html: `
+    // Send email with OTP using centralized utility
+    const result = await sendMail(email, "Password Reset OTP - E-Society", `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
           <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
             <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
@@ -190,10 +173,11 @@ const forgotPassword = async (req, res) => {
             </p>
           </div>
         </div>
-      `,
-    };
+    `);
 
-    await transporter.sendMail(mailOptions);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
     res.json({ success: true, message: "OTP sent to your email" });
   } catch (error) {
     console.error("Forgot password error:", error.message || error);

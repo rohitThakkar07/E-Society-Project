@@ -2,7 +2,7 @@ const Maintenance = require("../../../db/models/maintenanceModel");
 const Resident = require("../../../db/models/residentsModel");
 const Flat = require("../../../db/models/flatModal"); 
 const MaintenanceSettings = require("../../../db/models/maintenanceSetting"); 
-const { sendMaintenanceBillEmail } = require("../../../../utils/maintenanceEmail"); 
+const { sendMaintenanceBillEmail, sendMaintenancePaymentReceiptEmail } = require("../../../../utils/maintenanceEmail"); 
 const { syncMaintenanceRecord, syncMaintenanceRecords } = require("./lateFee");
 
 const MONTHS = [
@@ -330,7 +330,7 @@ const addPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "amount and mode are required." });
 
     const record = await Maintenance.findById(req.params.id)
-      .populate("resident", "flatNumber name");
+      .populate("resident", "flatNumber firstName lastName name email");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
     await syncMaintenanceRecord(record);
@@ -348,6 +348,12 @@ const addPayment = async (req, res) => {
 
     await record.save();
 
+    // Send Receipt if fully paid
+    if (record.status === "Paid" && record.resident?.email) {
+      const populated = await Maintenance.findById(record._id).populate("flat").populate("resident");
+      await sendMaintenancePaymentReceiptEmail(populated.resident, populated.flat, populated);
+    }
+
     res.json({
       success: true,
       data:    record,
@@ -364,7 +370,7 @@ const markAsPaid = async (req, res) => {
     const { mode = "Cash", transactionId } = req.body;
 
     const record = await Maintenance.findById(req.params.id)
-      .populate("resident", "flatNumber name");
+      .populate("resident", "flatNumber firstName lastName name email");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
     await syncMaintenanceRecord(record);
@@ -381,6 +387,12 @@ const markAsPaid = async (req, res) => {
     record.status   = "Paid";
     record.paidDate = new Date();
     await record.save();
+
+    // Send Receipt if resident has email
+    if (record.resident?.email) {
+      const populated = await Maintenance.findById(record._id).populate("flat").populate("resident");
+      await sendMaintenancePaymentReceiptEmail(populated.resident, populated.flat, populated);
+    }
 
     res.json({ success: true, data: record, message: "Marked as paid." });
   } catch (error) {

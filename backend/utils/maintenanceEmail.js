@@ -1,16 +1,4 @@
-const nodemailer = require("nodemailer");
-require('dotenv').config();
-
-// Configure transporter — uses env variables
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false, // true for port 465
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS, // Use App Password for Gmail
-  },
-});
+const { transporter } = require("./sendMail");
 
 /**
  * Build HTML email for maintenance bill
@@ -32,18 +20,11 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
   const html = `
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Maintenance Bill</title>
-</head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 0;">
     <tr>
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-          <!-- Header -->
           <tr>
             <td style="background:${accentColor};padding:28px 36px;">
               <table width="100%" cellpadding="0" cellspacing="0">
@@ -59,77 +40,97 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
               </table>
             </td>
           </tr>
-
-          <!-- Body -->
           <tr>
             <td style="padding:36px;">
-
               <p style="margin:0 0 8px;font-size:15px;color:#64748b;">Dear,</p>
               <h2 style="margin:0 0 4px;font-size:22px;color:#0f172a;font-weight:700;">${name}</h2>
               <p style="margin:0 0 28px;font-size:14px;color:#64748b;">Flat: <strong style="color:#0f172a;">${flat.flatNumber}</strong> &nbsp;|&nbsp; ${flat.type || ""} &nbsp;|&nbsp; Block: ${flat.block || "—"}</p>
-
-              ${isOverdue ? `
-              <div style="background:#fff5f5;border-left:4px solid #e53e3e;padding:14px 18px;border-radius:6px;margin-bottom:24px;">
-                <strong style="color:#e53e3e;">⚠️ Your maintenance bill is overdue.</strong>
-                <p style="margin:4px 0 0;font-size:13px;color:#c53030;">Please clear the dues immediately to avoid further penalties.</p>
-              </div>` : ""}
-
-              <!-- Bill Details -->
+              ${isOverdue ? `<div style="background:#fff5f5;border-left:4px solid #e53e3e;padding:14px 18px;border-radius:6px;margin-bottom:24px;"><strong style="color:#e53e3e;">⚠️ Overdue.</strong></div>` : ""}
               <div style="background:${statusBg};border-radius:10px;padding:24px;margin-bottom:24px;">
-                <h3 style="margin:0 0 18px;font-size:14px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Bill Details</h3>
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #e2e8f0;">Period</td>
-                    <td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #e2e8f0;">${maintenance.month} ${maintenance.year}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #e2e8f0;">Maintenance Amount</td>
-                    <td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #e2e8f0;">₹${(maintenance.amount || 0).toLocaleString("en-IN")}</td>
-                  </tr>
-                  ${maintenance.lateFee > 0 ? `
-                  <tr>
-                    <td style="padding:8px 0;font-size:14px;color:#e53e3e;border-bottom:1px solid #e2e8f0;">Late Fee</td>
-                    <td style="padding:8px 0;font-size:14px;font-weight:600;color:#e53e3e;text-align:right;border-bottom:1px solid #e2e8f0;">₹${maintenance.lateFee.toLocaleString("en-IN")}</td>
-                  </tr>` : ""}
-                  <tr>
-                    <td style="padding:14px 0 0;font-size:16px;font-weight:700;color:#0f172a;">Total Payable</td>
-                    <td style="padding:14px 0 0;font-size:20px;font-weight:800;color:${accentColor};text-align:right;">₹${total.toLocaleString("en-IN")}</td>
-                  </tr>
+                <table width="100%">
+                  <tr><td style="padding:8px 0;color:#475569;">Period</td><td style="text-align:right;font-weight:600;">${maintenance.month} ${maintenance.year}</td></tr>
+                  <tr><td style="padding:8px 0;color:#475569;">Amount</td><td style="text-align:right;font-weight:600;">₹${(maintenance.amount || 0).toLocaleString()}</td></tr>
+                  ${maintenance.lateFee > 0 ? `<tr><td style="padding:8px 0;color:#e53e3e;">Late Fee</td><td style="text-align:right;color:#e53e3e;">₹${maintenance.lateFee.toLocaleString()}</td></tr>` : ""}
+                  <tr><td style="padding:14px 0 0;font-weight:700;">Total</td><td style="text-align:right;font-size:20px;font-weight:800;color:${accentColor};">₹${total.toLocaleString()}</td></tr>
                 </table>
               </div>
-
-              <!-- Due Date -->
-              <div style="display:flex;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
-                <span style="font-size:22px;margin-right:12px;">📅</span>
-                <div>
-                  <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Due Date</div>
-                  <div style="font-size:16px;font-weight:700;color:${accentColor};">${dueDate}</div>
-                </div>
-              </div>
-
-              <p style="font-size:13px;color:#94a3b8;line-height:1.6;margin:0;">
-                This is an auto-generated bill from your society management system. Please contact the admin for any queries.<br/>
-                <strong>Do not reply to this email.</strong>
-              </p>
+              <p style="font-size:13px;color:#94a3b8;">This is auto-generated. Please contact admin for queries.</p>
             </td>
           </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background:#f8fafc;padding:20px 36px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-                © ${new Date().getFullYear()} E-Society Management &nbsp;|&nbsp; Generated on ${new Date().toLocaleDateString("en-IN")}
-              </p>
-            </td>
-          </tr>
-
         </table>
       </td>
     </tr>
   </table>
 </body>
 </html>`;
+  return { subject, html };
+}
 
+/**
+ * Build HTML email for payment receipt
+ */
+function buildPaymentReceiptEmail(resident, flat, record) {
+  const name = `${resident.firstName} ${resident.lastName || ""}`.trim();
+  const paymentDate = new Date(record.paidDate || new Date()).toLocaleDateString("en-IN", {
+    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+  const total = (record.amount || 0) + (record.lateFee || 0);
+  const subject = `✅ Payment Confirmation — ${flat.flatNumber} | ${record.month} ${record.year}`;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+          <tr>
+            <td style="background:#10b981;padding:40px 36px;text-align:center;color:#ffffff;">
+              <div style="font-size:48px;margin-bottom:16px;">✔️</div>
+              <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:0.5px;">Payment Received</h1>
+              <p style="margin:8px 0 0;font-size:15px;opacity:0.9;">Thank you for your maintenance payment</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 48px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Flat Member</p>
+              <h2 style="margin:0 0 24px;font-size:20px;color:#0f172a;">${name} (${flat.flatNumber})</h2>
+              
+              <div style="background:#f1f5f9;border-radius:12px;padding:32px;margin-bottom:32px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding-bottom:12px;font-size:14px;color:#64748b;">Transaction Date</td>
+                    <td style="padding-bottom:12px;font-size:14px;color:#0f172a;text-align:right;font-weight:600;">${paymentDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding-bottom:12px;font-size:14px;color:#64748b;">Maintenance Period</td>
+                    <td style="padding-bottom:12px;font-size:14px;color:#0f172a;text-align:right;font-weight:600;">${record.month} ${record.year}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:16px 0 0;border-top:1px dashed #cbd5e1;font-size:16px;color:#0f172a;font-weight:700;">Amount Paid</td>
+                    <td style="padding:16px 0 0;border-top:1px dashed #cbd5e1;font-size:24px;color:#10b981;text-align:right;font-weight:800;">₹${total.toLocaleString("en-IN")}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="text-align:center;">
+                <p style="margin:0 0 20px;font-size:14px;color:#64748b;">You can download your receipt from the resident portal.</p>
+                <a href="http://localhost:3000/my-invoices" style="display:inline-block;background:#0f172a;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View Invoices</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:24px;border-top:1px solid #f1f5f9;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;">🏢 E-Society Management System &nbsp;|&nbsp; Support: +91 99999 00000</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
   return { subject, html };
 }
 
@@ -138,21 +139,39 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
  */
 async function sendMaintenanceBillEmail(resident, flat, maintenance, isOverdue = false) {
   if (!resident.email) return { success: false, reason: "No email" };
-
   const { subject, html } = buildBillEmail(resident, flat, maintenance, isOverdue);
-
   try {
     await transporter.sendMail({
-      from: `"E-Society" <${process.env.SMTP_USER}>`,
+      from: `"E-Society" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: resident.email,
       subject,
       html,
     });
     return { success: true };
   } catch (err) {
-    console.error(`[Email] Failed to send to ${resident.email}:`, err.message);
+    console.error(`[Email] Bill failed:`, err.message);
     return { success: false, error: err.message };
   }
 }
 
-module.exports = { sendMaintenanceBillEmail };
+/**
+ * Send maintenance payment receipt
+ */
+async function sendMaintenancePaymentReceiptEmail(resident, flat, record) {
+  if (!resident.email) return { success: false, reason: "No email" };
+  const { subject, html } = buildPaymentReceiptEmail(resident, flat, record);
+  try {
+    await transporter.sendMail({
+      from: `"E-Society" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: resident.email,
+      subject,
+      html,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error(`[Email] Receipt failed:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+module.exports = { sendMaintenanceBillEmail, sendMaintenancePaymentReceiptEmail };

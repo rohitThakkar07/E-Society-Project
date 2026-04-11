@@ -19,12 +19,14 @@ export const fetchFlatById = createAsyncThunk("flat/fetchFlatById", async (id) =
   return res.data.data;
 });
 
-export const fetchResidentFlat = createAsyncThunk("flat/fetchResidentFlat", async (userId) => {
+export const fetchResidentFlat = createAsyncThunk("flat/fetchResidentFlat", async (userId, { rejectWithValue }) => {
   try {
     const res = await API.get(`/flat/resident/${userId}`);
     return res.data.data;
   } catch (err) {
-    toast.error(err.response?.data?.message || "Something want wrong");
+    const message = err.response?.data?.message || "Something went wrong";
+    toast.error(message);
+    return rejectWithValue(message);
   }
 });
 

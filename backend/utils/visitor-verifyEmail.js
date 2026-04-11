@@ -1,22 +1,8 @@
-const nodemailer = require("nodemailer");
-
-/**
- * Configure the transporter
- * Note: Use environment variables for security!
- */
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const { sendMail } = require("./sendMail");
 
 const sendVisitorOTPEmail = async (residentEmail, visitorName, otp) => {
-  const mailOptions = {
-    to: residentEmail,
-    subject: "Security Alert: Visitor OTP Request",
-    html: `
+  const subject = "Security Alert: Visitor OTP Request";
+  const html = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
         <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 20px;">e-Society Security</h1>
@@ -37,10 +23,9 @@ const sendVisitorOTPEmail = async (residentEmail, visitorName, otp) => {
           <p style="margin: 0; font-size: 11px; color: #64748b;">Powered by e-Society Management System</p>
         </div>
       </div>
-    `,
-  };
+    `;
 
-  return await transporter.sendMail(mailOptions);
+  return await sendMail(residentEmail, subject, html);
 };
 
 module.exports = { sendVisitorOTPEmail };

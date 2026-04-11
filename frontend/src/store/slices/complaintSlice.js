@@ -147,7 +147,7 @@ const complaintSlice = createSlice({
 
     // 🔥 Global Matchers for Loading and Error State
     builder.addMatcher(
-      (action) => action.type.endsWith("/pending"),
+      (action) => action.type.startsWith("complaint/") && action.type.endsWith("/pending"),
       (state) => {
         state.loading = true;
         state.error = null;
@@ -155,7 +155,7 @@ const complaintSlice = createSlice({
     );
 
     builder.addMatcher(
-      (action) => action.type.endsWith("/rejected"),
+      (action) => action.type.startsWith("complaint/") && action.type.endsWith("/rejected"),
       (state, action) => {
         state.loading = false;
         state.error = action.payload; // Stores the error message from rejectWithValue

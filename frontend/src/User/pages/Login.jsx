@@ -384,6 +384,7 @@ const LoginInner = () => {
         setIsLogin(true);
       }
     } catch (err) {
+      console.log(err);
       toast.error(err.response?.data?.message || "Authentication failed");
     } finally {
       setLoading(false);
