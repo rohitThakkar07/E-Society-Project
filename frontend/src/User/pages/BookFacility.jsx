@@ -388,7 +388,7 @@ const BookFacility = () => {
                 <Building2 size={40} className="mx-auto mb-3 opacity-30" />
                 <p className="font-black text-[var(--text)]">No bookings yet</p>
                 <button type="button" onClick={() => setActiveTab("facilities")} className="mt-3 text-sm font-black text-[var(--accent)] hover:underline">
-                  Browse facilities ->
+                  Browse facilities
                 </button>
               </div>
             )}
