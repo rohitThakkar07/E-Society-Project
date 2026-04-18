@@ -1,12 +1,7 @@
 const nodemailer = require("nodemailer");
 const path = require("path");
-// Ensure dotenv is loaded pointing correctly to the backend root directory
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
-/**
- * Configure Transporter
- * Using manual host/port config as it's often more reliable for Gmail with STARTTLS
- */
 const transporterConfig = {
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT) || 587,
@@ -16,10 +11,9 @@ const transporterConfig = {
     pass: process.env.SMTP_PASS,
   },
   tls: {
-    // Allows connection even if the certificate is self-signed or has issues
     rejectUnauthorized: false
   },
-  connectionTimeout: 20000, // 20 seconds
+  connectionTimeout: 20000, 
   greetingTimeout: 20000,
 };
 
@@ -41,9 +35,6 @@ if (currentEmail) {
   console.error("[Email Service] Error: SMTP_USER not found in .env");
 }
 
-/**
- * Generic mail sender utility
- */
 const sendMail = async (to, subject, html) => {
   try {
     const fromUser = process.env.SMTP_USER;
@@ -110,7 +101,7 @@ const sendGuardWelcomeEmail = async (email, guardName, guardId, password) => {
           <p><strong>Password:</strong> ${password}</p>
         </div>
         <div style="text-align:center; margin-top:25px">
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login"
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3002'}/login"
              style="background:#16a34a; color:white; padding:12px 25px; text-decoration:none; border-radius:6px">
              Login Portal
           </a>

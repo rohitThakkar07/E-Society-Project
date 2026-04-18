@@ -212,9 +212,7 @@ const Home = () => {
 
       <Toaster position="bottom-right" />
 
-      {/* ═══════════════════════════════════════════════
-          HERO SECTION
-      ═══════════════════════════════════════════════ */}
+
       <section className="relative w-full">
         {/* Full-width Background Image for Hero */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -288,9 +286,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          SOCIETY STATS (always visible)
-      ═══════════════════════════════════════════════ */}
+
       <section className="px-4 sm:px-8 mb-20 max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
         {societyStats.map((s, i) => (
           <motion.div 
@@ -313,9 +309,7 @@ const Home = () => {
         ))}
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          LOGGED-IN: PERSONAL STATS
-      ═══════════════════════════════════════════════ */}
+
       {isLoggedIn && (
         <section className="px-4 sm:px-8 mb-12 max-w-7xl mx-auto">
           <div className="mb-8">
@@ -338,36 +332,9 @@ const Home = () => {
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════════
-          HUB SERVICES
-      ═══════════════════════════════════════════════ */}
-      {/* <section className="py-24 border-y border-[var(--border)] bg-indigo-500/[0.02]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="mb-14">
-            <h2 className="text-3xl font-black tracking-tight text-[var(--text)] uppercase">Hub Services</h2>
-            <div className="h-1.5 w-20 bg-indigo-600 rounded-full mt-3" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {visibleLinks.map((link, idx) => (
-              <motion.div key={idx} whileHover={{ y: -10, scale: 1.05 }}>
-                <Link to={link.to} className="flex flex-col items-center p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] transition-all duration-500 shadow-sm overflow-hidden group relative">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity" style={{ backgroundColor: link.color }} />
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:rotate-12" style={{ backgroundColor: link.bg, color: link.color }}>
-                    <link.icon size={32} />
-                  </div>
-                  <span className="text-[11px] font-black text-[var(--text-muted)] group-hover:text-[var(--text)] uppercase tracking-widest text-center transition-colors">
-                    {link.label}
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section> */}
 
-      {/* ═══════════════════════════════════════════════
-          LOGGED-IN: NOTICES & EVENTS
-      ═══════════════════════════════════════════════ */}
+
+
       {isLoggedIn && (
         <section className="px-4 sm:px-8 py-24 max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-10">
@@ -426,9 +393,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════════
-          CORE FEATURES (always visible)
-      ═══════════════════════════════════════════════ */}
+
       <section className="py-24 px-4 sm:px-8 max-w-7xl mx-auto">
         <div className="mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
@@ -463,9 +428,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          FLAT TYPES — Photo Gallery
-      ═══════════════════════════════════════════════ */}
+
       <section className="py-24 border-t border-[var(--border)] bg-[var(--card)]/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="mb-14">
@@ -512,9 +475,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          AMENITIES — Photo Grid
-      ═══════════════════════════════════════════════ */}
+
       <section className="py-24 px-4 sm:px-8 max-w-7xl mx-auto">
         <div className="mb-14">
           <h2 className="text-3xl font-black tracking-tight text-[var(--text)] uppercase">Premium Amenities</h2>
@@ -539,9 +500,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          HOW IT WORKS
-      ═══════════════════════════════════════════════ */}
+
       <section className="py-24 border-t border-[var(--border)] bg-indigo-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="mb-14 text-center">
@@ -565,9 +524,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          CONTACT STRIP
-      ═══════════════════════════════════════════════ */}
+
       <section className="py-16 px-4 sm:px-8 max-w-7xl mx-auto">
         <div className="relative rounded-[3rem] bg-[var(--card)] border border-[var(--border)] p-10 lg:p-12 flex flex-col xl:flex-row items-center justify-between gap-12 shadow-sm overflow-hidden">
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -595,9 +552,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          CTA (non-logged-in only)
-      ═══════════════════════════════════════════════ */}
+
       {!isLoggedIn && (
         <section className="py-24 px-4 sm:px-8 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] bg-[var(--card)] mb-8">

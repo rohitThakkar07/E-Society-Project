@@ -152,7 +152,7 @@ const Header = () => {
       >
         <div className="w-full mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[3.2rem]">
           
-          {/* Logo & Brand - Compact Height */}
+
           <NavLink to="/" className="flex items-center gap-2.5 group shrink-0">
             <motion.div
               variants={logoVariants}
@@ -180,7 +180,7 @@ const Header = () => {
             </div>
           </NavLink>
 
-          {/* CENTER NAVIGATION - Professional Compact */}
+
           <div ref={dropdownRef} className="hidden lg:flex items-center gap-1 flex-1 justify-center">
             {isLoggedIn && navItems.map((item) => hasAccess(item.roles) && (
               <div key={item.label} className="relative">
@@ -229,7 +229,7 @@ const Header = () => {
             ))}
           </div>
 
-          {/* RIGHT SIDE ACTIONS - No redundant borders */}
+
           <div className="flex items-center gap-3 pr-1">
             
             <NavLink to="/" end className={({ isActive }) => `hidden lg:flex ${linkBase} ${isActive ? linkActive : linkIdle}`}>
@@ -297,7 +297,7 @@ const Header = () => {
         </div>
       </nav>
 
-      {/* MOBILE DRAWER */}
+
       <AnimatePresence>
         {menuOpen && (
           <>
