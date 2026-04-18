@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from "framer-motion";
+import ScrollToTop from "../../components/ScrollToTop";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
+  const mainRef = useRef(null);
+
+
 
   // Force light theme for Admin Portal to ensure consistent visibility
   useEffect(() => {
@@ -22,9 +29,21 @@ const AdminLayout = () => {
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-8">
-          <div className="max-w-[1600px] mx-auto">
-            <Outlet />
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-6 lg:p-10">
+          <ScrollToTop containerRef={mainRef} />
+
+          <div className="max-w-[1600px] mx-auto min-h-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

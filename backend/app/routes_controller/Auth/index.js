@@ -4,14 +4,6 @@ const router = express.Router();
 const controller = require("./lib/controller");
 const validation = require("./lib/validation");
 
-/* Register */
-
-// router.post(
-//   "/register",
-//   validation.registerValidation,
-//   controller.registerResident
-// );
-
 /* Login */
 router.post(
   "/login",

@@ -83,6 +83,35 @@ exports.createResident = async (req, res) => {
     sendResidentWelcomeEmail(email, `${firstName} ${lastName}`, password)
       .catch(err => console.error("Email failed:", err));
 
+    // 5️⃣ Create initial bill for one-time parking charges
+    if (resident.parkingCharge && resident.parkingCharge > 0) {
+        try {
+            const Maintenance = require("../../../db/models/maintenanceModel");
+            const { sendMaintenanceBillEmail } = require("../../../../utils/maintenanceEmail");
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            const maintenance = await Maintenance.create({
+                resident: resident._id,
+                flat: resident.flat,
+                month: monthNames[now.getMonth()],
+                year: now.getFullYear(),
+                amount: 0, // One-time selective charge
+                parkingCharge: resident.parkingCharge,
+                dueDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
+                status: "Pending"
+            });
+
+            // Populate and send Maintenance Bill Email
+            const populated = await Maintenance.findById(maintenance._id).populate("resident").populate("flat");
+            if (populated.resident?.email) {
+                await sendMaintenanceBillEmail(populated.resident, populated.flat, populated);
+            }
+        } catch (billingErr) {
+            console.error("Failed to create initial parking bill:", billingErr);
+        }
+    }
+
     res.status(201).json({ success: true, data: resident });
 
   } catch (error) {
@@ -106,7 +135,7 @@ exports.getAllResidents = async (req, res) => {
 
     // Add .populate("flat") here!
     const residents = await Resident.find()
-      .populate("flat") 
+      .populate("flat")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -121,7 +150,6 @@ exports.getAllResidents = async (req, res) => {
  * GET RESIDENT BY ID
  */
 exports.getResidentById = async (req, res) => {
-  console.log("controller resident get by id",req.params.id);
   try {
     if (roleOf(req.user) === "resident") {
       if (req.params.id !== req.user.profileId.toString()) {
@@ -203,7 +231,7 @@ exports.updateResident = async (req, res) => {
     // Admin / staff: full update (flat assignment, status, etc.)
     const body = { ...req.body };
     delete body.password;
-    
+
     if (req.file) {
       body.profileImage = req.file.path; // ADDED: handle image update
     }

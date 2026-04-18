@@ -122,7 +122,8 @@ const FlatList = () => {
             <TableRow>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Flat No</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Floor / Block</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Type & Area</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Flat Type</TableCell>
+              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Occupancy</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Owner Details</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance</TableCell>
               <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
@@ -151,15 +152,22 @@ const FlatList = () => {
                 </TableCell>
 
                 <TableCell>
-                  <div className="space-y-1">
-                    <Chip 
-                      label={f.type} 
-                      size="small" 
-                      sx={{ fontWeight: 800, fontSize: '9px', bgcolor: '#eff6ff', color: '#2563eb', borderRadius: '6px' }}
-                    />
-                    <div className="text-[11px] text-slate-400 font-bold">{f.area || 0} sqft</div>
-                  </div>
+                  <Chip 
+                    label={f.type} 
+                    size="small" 
+                    sx={{ fontWeight: 800, fontSize: '9px', bgcolor: '#eff6ff', color: '#2563eb', borderRadius: '6px' }}
+                  />
                 </TableCell>
+
+                <TableCell>
+                  <Chip 
+                    label={f.occupancyType || "Vacant"} 
+                    variant="outlined"
+                    size="small" 
+                    sx={{ fontWeight: 800, fontSize: '9px', borderRadius: '6px' }}
+                  />
+                </TableCell>
+
 
                 <TableCell>
                    <div className="flex items-center gap-2">
@@ -216,7 +224,7 @@ const FlatList = () => {
               </TableRow>
             )) : (
               [...Array(rowsPerPage)].map((_, i) => (
-                <TableRow key={i}><TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: '#94a3b8' }}>Loading inventory...</TableCell></TableRow>
+                <TableRow key={i}><TableCell colSpan={8} sx={{ py: 6, textAlign: 'center', color: '#94a3b8' }}>Loading inventory...</TableCell></TableRow>
               ))
             )}
           </TableBody>

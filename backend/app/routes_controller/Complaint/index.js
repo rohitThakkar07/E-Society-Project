@@ -59,7 +59,6 @@ router.put("/update/:id", controller.updateComplaint);
 router.delete("/delete/:id", controller.deleteComplaint);
 
 // Update Status Only
-// FIX: uses PATCH (not PUT) — matches the dedicated status-update endpoint
 router.patch("/status-update/:id", controller.updateComplaintStatus);
 
 module.exports = router;

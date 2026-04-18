@@ -23,6 +23,8 @@ import {
 } from "../../store/slices/facilityBookingSlice";
 import FacilityPaymentModal from "../components/FacilityPaymentModal";
 import { SkeletonGrid } from "../../components/PageLoader";
+import { motion } from "framer-motion";
+
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -203,7 +205,13 @@ const BookFacility = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-6">
       <div className="mx-auto max-w-6xl mt-12">
-        <section className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.12),rgba(14,165,233,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8">
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.12),rgba(14,165,233,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8"
+        >
           <div className="absolute -right-12 top-0 h-40 w-40 rounded-full bg-indigo-400/10 blur-3xl" />
           <div className="absolute left-1/3 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -226,15 +234,22 @@ const BookFacility = () => {
                 { label: "Available", value: availableCount, tone: "bg-emerald-50 text-emerald-600" },
                 { label: "My Bookings", value: myBookings.length, tone: "bg-sky-50 text-sky-600" },
                 { label: "Unpaid", value: unpaidBookings, tone: "bg-amber-50 text-amber-600" },
-              ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+              ].map((item, idx) => (
+                <motion.div 
+                  key={item.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * idx }}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm"
+                >
                   <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>{item.label}</div>
                   <div className="text-2xl font-black text-[var(--text)]">{item.value}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         <div className="mt-6 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm">
           {[
@@ -260,10 +275,19 @@ const BookFacility = () => {
               <SkeletonGrid count={6} gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-48" />
             </div>
           ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {facilities.map((f) => (
-                <div
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.1 }}
+              className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {facilities.map((f, idx) => (
+                <motion.div
                   key={f._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
                   className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                 >
                   <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 text-center">
@@ -306,9 +330,9 @@ const BookFacility = () => {
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ))}
 
         {activeTab === "bookings" && (

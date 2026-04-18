@@ -1,4 +1,6 @@
 const Complaint = require("../../../db/models/complaintModel");
+const { sendComplaintResolutionEmail } = require("../../../../utils/complaintEmail");
+
 
 // ─────────────────────────────────────────────
 // Create Complaint
@@ -185,10 +187,17 @@ const updateComplaintStatus = async (req, res) => {
       req.params.id,
       updateData,
       { new: true, runValidators: true }
-    );
+    ).populate("resident");
 
     if (!complaint) {
       return res.status(404).json({ success: false, message: "Complaint not found" });
+    }
+
+    // NEW: If status is Resolved, send resolution email to the resident
+    if (complaint.status === "Resolved" && complaint.resident) {
+      // We don't await this so it doesn't block the response, 
+      // but you can if you want to ensure it's sent before responding.
+      sendComplaintResolutionEmail(complaint.resident, complaint);
     }
 
     res.status(200).json({

@@ -40,20 +40,34 @@ const getPollById = async (req, res) => {
 
 const castVote = async (req, res) => {
   try {
-    const { optionIndex, residentId } = req.body;
+    const { optionIndex } = req.body;
+    const residentId = req.user.profileId; // Securely get ID from token
+
+    if (!residentId) {
+      return res.status(401).json({ success: false, message: "Valid profile required to vote." });
+    }
+
     const poll = await Poll.findById(req.params.id);
     if (!poll) return res.status(404).json({ success: false, message: "Poll not found" });
+    
     if (!poll.isActive || new Date() > new Date(poll.expiresAt))
       return res.status(400).json({ success: false, message: "This poll has expired or is inactive." });
-    // Check if already voted
-    const alreadyVoted = poll.options.some(o => o.votedBy.includes(residentId));
+
+    // Robust check for already voted (comparing strings since o.votedBy items are ObjectIds)
+    const alreadyVoted = poll.options.some(o => 
+      o.votedBy.some(id => id && id.toString() === residentId.toString())
+    );
+
     if (alreadyVoted)
       return res.status(400).json({ success: false, message: "You have already voted in this poll." });
+
     if (optionIndex < 0 || optionIndex >= poll.options.length)
       return res.status(400).json({ success: false, message: "Invalid option." });
+
     poll.options[optionIndex].votes += 1;
     poll.options[optionIndex].votedBy.push(residentId);
     poll.totalVotes += 1;
+    
     await poll.save();
     res.json({ success: true, data: poll, message: "Vote recorded!" });
   } catch (err) {

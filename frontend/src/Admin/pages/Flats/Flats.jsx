@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux"; // ✅ Added Redux hooks
+import { useDispatch, useSelector } from "react-redux"; 
 import { 
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, TablePagination,
@@ -8,27 +8,22 @@ import {
 } from "@mui/material";
 import { FiEdit, FiTrash2, FiSearch, FiPlus, FiGrid, FiLayers } from "react-icons/fi";
 
-// ✅ Import your thunks from the flatSlice
 import { fetchFlats, deleteFlat } from "../../../store/slices/flatSlice"; 
 
 const Flats = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // ✅ Connect to Redux Store
   const { list: flats = [], loading } = useSelector((state) => state.flat || {});
 
-  // State for UI interaction
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // ✅ Fetch real data on mount
   useEffect(() => {
     dispatch(fetchFlats());
   }, [dispatch]);
 
-  // Handlers
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to remove this flat?")) {
       dispatch(deleteFlat(id));
@@ -42,7 +37,6 @@ const Flats = () => {
     setPage(0);
   };
 
-  // ✅ Optimized Filter Logic for real data
   const filteredFlats = useMemo(() => 
     flats.filter((flat) =>
       `${flat.wing}-${flat.flatNumber}`.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -4,6 +4,21 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { createFlat, updateFlat, fetchFlatById } from "../../../store/slices/flatSlice";
 
+const FLOOR_MAPPING = {
+  1: { range: [1, 6], type: "2BHK" },
+  2: { range: [7, 12], type: "3BHK" },
+  3: { range: [13, 19], type: "4BHK" },
+  4: { range: [20, 26], type: "2BHK" },
+  5: { range: [27, 32], type: "3BHK" },
+  6: { range: [33, 38], type: "4BHK" },
+  7: { range: [39, 45], type: "2BHK" },
+  8: { range: [46, 52], type: "3BHK" },
+  9: { range: [53, 59], type: "4BHK" },
+  10: { range: [60, 66], type: "2BHK" },
+  11: { range: [67, 73], type: "3BHK" },
+  12: { range: [74, 80], type: "4BHK" },
+};
+
 const inputClass =
   "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
 const labelClass = "block text-xs font-bold text-gray-500 uppercase mb-1";
@@ -19,8 +34,30 @@ const AddEditFlat = () => {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm();
+
+  const selectedFloor = watch("floor");
+
+  useEffect(() => {
+    if (selectedFloor && FLOOR_MAPPING[selectedFloor]) {
+      setValue("type", FLOOR_MAPPING[selectedFloor].type);
+    }
+  }, [selectedFloor, setValue]);
+
+  const flatNumbers = (() => {
+    if (!selectedFloor || !FLOOR_MAPPING[selectedFloor]) return [];
+    const [start, end] = FLOOR_MAPPING[selectedFloor].range;
+    const count = end - start + 1;
+    const nums = [];
+    for (let i = 1; i <= count; i++) {
+      // Formats as 101, 102... or 1201, 1202...
+      nums.push((Number(selectedFloor) * 100 + i).toString());
+    }
+    return nums;
+  })();
 
   useEffect(() => {
     if (isEdit && id) dispatch(fetchFlatById(id));
@@ -33,10 +70,8 @@ const AddEditFlat = () => {
         floor: singleFlat.floor,
         block: singleFlat.block,
         type: singleFlat.type,
-        area: singleFlat.area,
         status: singleFlat.status,
         occupancyType: singleFlat.occupancyType,
-        parkingSlot: singleFlat.parkingSlot,
         monthlyMaintenance: singleFlat.monthlyMaintenance,
         ownerName: singleFlat.owner?.name,
         ownerPhone: singleFlat.owner?.phone,
@@ -51,10 +86,8 @@ const AddEditFlat = () => {
       floor: Number(data.floor),
       block: data.block,
       type: data.type,
-      area: data.area ? Number(data.area) : undefined,
       status: data.status,
       occupancyType: data.occupancyType,
-      parkingSlot: data.parkingSlot,
       monthlyMaintenance: data.monthlyMaintenance ? Number(data.monthlyMaintenance) : 0,
       owner: {
         name: data.ownerName,
@@ -84,37 +117,50 @@ const AddEditFlat = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Flat Number *</label>
-            <input {...register("flatNumber", { required: "Flat number is required" })} placeholder="e.g. A-101" className={inputClass} />
-            {errors.flatNumber && <p className={errorClass}>{errors.flatNumber.message}</p>}
+            <label className={labelClass}>Block / Wing *</label>
+            <select {...register("block", { required: "Block/Wing is required" })} className={inputClass}>
+              <option value="">Select Wing</option>
+              <option value="WING A">WING A</option>
+              <option value="WING B">WING B</option>
+              <option value="WING C">WING C</option>
+              <option value="WING D">WING D</option>
+            </select>
+            {errors.block && <p className={errorClass}>{errors.block.message}</p>}
           </div>
 
           <div>
             <label className={labelClass}>Floor *</label>
-            <input type="number" {...register("floor", { required: "Floor is required" })} className={inputClass} />
+            <select {...register("floor", { required: "Floor is required" })} className={inputClass}>
+              <option value="">Select Floor</option>
+              {[...Array(12)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Floor {i + 1}
+                </option>
+              ))}
+            </select>
             {errors.floor && <p className={errorClass}>{errors.floor.message}</p>}
           </div>
 
           <div>
-            <label className={labelClass}>Block / Wing</label>
-            <input {...register("block")} placeholder="e.g. Wing-A" className={inputClass} />
+            <label className={labelClass}>Flat Number *</label>
+            <select {...register("flatNumber", { required: "Flat number is required" })} className={inputClass}>
+              <option value="">Select Flat</option>
+              {flatNumbers.map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+            {errors.flatNumber && <p className={errorClass}>{errors.flatNumber.message}</p>}
           </div>
 
           <div>
             <label className={labelClass}>Flat Type *</label>
-            <select {...register("type", { required: "Flat type is required" })} className={inputClass}>
-              <option value="">Select Flat Type</option>
-              <option value="1BHK">1BHK</option>
-              <option value="2BHK">2BHK</option>
-              <option value="3BHK">3BHK</option>
-              <option value="4BHK">4BHK</option>
-            </select>
-            {errors.type && <p className={errorClass}>{errors.type.message}</p>}
-          </div>
-
-          <div>
-            <label className={labelClass}>Area (sq ft)</label>
-            <input type="number" {...register("area")} className={inputClass} />
+            <input
+              {...register("type", { required: "Flat type is required" })}
+              readOnly
+              className={`${inputClass} bg-gray-100 cursor-not-allowed`}
+            />
           </div>
 
           <div>
@@ -140,10 +186,7 @@ const AddEditFlat = () => {
             </select>
           </div>
 
-          <div>
-            <label className={labelClass}>Parking Slot</label>
-            <input {...register("parkingSlot")} placeholder="e.g. P-12" className={inputClass} />
-          </div>
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const residentSchema = new mongoose.Schema({
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, trim: true },
-  gender: { type: String, enum: ["Male", "Female"], required: true },
+  gender: { type: String, enum: ["Male", "Female"] },
   dateOfBirth: { type: Date },
   mobileNumber: { type: String, required: true },
   email: { type: String, lowercase: true, unique: true, sparse: true },

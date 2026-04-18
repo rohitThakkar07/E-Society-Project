@@ -5,6 +5,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   CartesianGrid, ResponsiveContainer, Legend,
 } from "recharts";
+import { motion } from "framer-motion";
+
 
 import { fetchDashboardSummary as fetchMaintenanceSummary } from "../store/slices/maintainenceSlice";
 import { fetchResidents } from "../store/slices/residentSlice";
@@ -35,9 +37,14 @@ const StatCard = ({ label, value, icon, iconBg, onClick }) => (
     </div>
     <div className="flex-1">
       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-500 transition-colors">{label}</p>
-      <div className="flex items-baseline gap-1">
+      <motion.div 
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex items-baseline gap-1"
+      >
         <p className="text-3xl font-black text-slate-900 tracking-tight">{value}</p>
-      </div>
+      </motion.div>
     </div>
     
     {/* Subtle Background Glow on Hover */}
@@ -89,9 +96,15 @@ const AdminDashboard = () => {
   const chartData         = maintenanceSummary?.monthlyData ?? [];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
       {/* ── NEW PREMIUM HEADER ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-100 p-8 shadow-sm">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden rounded-3xl bg-white border border-slate-100 p-8 shadow-sm"
+      >
+
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -123,7 +136,7 @@ const AdminDashboard = () => {
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl -z-0" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-50/50 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl -z-0" />
-      </div>
+      </motion.div>
 
       <div className="space-y-6">
         {/* ── SECTION: Society Stats */}
@@ -134,34 +147,28 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            label="Total Residents"
-            value={residents.length}
-            iconBg="bg-blue-50"
-            icon={<Icon path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" cls="w-6 h-6 text-blue-600" />}
-            onClick={() => navigate("/admin/residents")}
-          />
-          <StatCard
-            label="Total Flats"
-            value={flats.length}
-            iconBg="bg-emerald-50"
-            icon={<Icon path="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" cls="w-6 h-6 text-emerald-600" />}
-            onClick={() => navigate("/admin/flat/list")}
-          />
-          <StatCard
-            label="Total Guards"
-            value={guards.length}
-            iconBg="bg-purple-50"
-            icon={<Icon path="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" cls="w-6 h-6 text-purple-600" />}
-            onClick={() => navigate("/admin/guards")}
-          />
-          <StatCard
-            label="Today's Visitors"
-            value={todayVisitorCount}
-            iconBg="bg-amber-50"
-            icon={<Icon path="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" cls="w-6 h-6 text-amber-600" />}
-            onClick={() => navigate("/admin/visitors")}
-          />
+          {[
+            { label: "Total Residents", val: residents.length, icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", bg: "bg-blue-50", text: "text-blue-600", link: "/admin/residents" },
+            { label: "Total Flats", val: flats.length, icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", bg: "bg-emerald-50", text: "text-emerald-600", link: "/admin/flat/list" },
+            { label: "Total Guards", val: guards.length, icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", bg: "bg-purple-50", text: "text-purple-600", link: "/admin/guards" },
+            { label: "Today's Visitors", val: todayVisitorCount, icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z", bg: "bg-amber-50", text: "text-amber-600", link: "/admin/visitors" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <StatCard
+                label={stat.label}
+                value={stat.val}
+                iconBg={stat.bg}
+                icon={<Icon path={stat.icon} cls={`w-6 h-6 ${stat.text}`} />}
+                onClick={() => navigate(stat.link)}
+              />
+            </motion.div>
+          ))}
         </div>
 
         {/* ── RECENT ACTIVITIES ROW */}
@@ -311,7 +318,6 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
-
   );
 };
 

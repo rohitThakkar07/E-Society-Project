@@ -293,7 +293,15 @@ const Home = () => {
       ═══════════════════════════════════════════════ */}
       <section className="px-4 sm:px-8 mb-20 max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
         {societyStats.map((s, i) => (
-          <motion.div key={i} whileHover={{ y: -8 }} className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] flex flex-col items-start gap-6 shadow-sm hover:shadow-xl transition-all">
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            whileHover={{ y: -8 }} 
+            className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] flex flex-col items-start gap-6 shadow-sm hover:shadow-xl transition-all"
+          >
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: s.color + "20", color: s.color }}>
               <s.icon size={28} />
             </div>
@@ -436,7 +444,15 @@ const Home = () => {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {coreFeatures.map((f, i) => (
-            <motion.div key={i} whileHover={{ y: -6 }} className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] hover:shadow-xl transition-all group">
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ delay: i * 0.05, duration: 0.5 }}
+              whileHover={{ y: -6 }} 
+              className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] hover:shadow-xl transition-all group"
+            >
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: f.bg, color: f.color }}>
                 <f.icon size={28} />
               </div>
@@ -459,7 +475,15 @@ const Home = () => {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {flatTypes.map((f, i) => (
-              <motion.div key={i} whileHover={{ y: -8 }} className="flat-card rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-2xl transition-all">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -8 }} 
+                className="flat-card rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-2xl transition-all"
+              >
                 <div className="relative h-56 overflow-hidden">
                   <img src={f.img} alt={f.type} className="flat-img w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

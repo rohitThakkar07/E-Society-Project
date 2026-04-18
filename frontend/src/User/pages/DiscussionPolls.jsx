@@ -131,8 +131,11 @@ const DiscussionPolls = () => {
             <div className="grid md:grid-cols-2 gap-6">
               {polls.map((poll) => {
                 const totalVotes = getTotalVotes(poll);
-                const userId = JSON.parse(localStorage.getItem("userData") || "{}").profileId;
-                const hasVoted = (poll.options || []).some((opt) => opt.votedBy?.includes(userId));
+                const user = JSON.parse(localStorage.getItem("userData") || "{}");
+                const userId = user.profileId || user._id;
+                const hasVoted = (poll.options || []).some((opt) => 
+                  opt.votedBy?.some(id => id && String(id) === String(userId))
+                );
 
                 return (
                   <div key={poll._id} className="bg-white shadow-sm rounded h-full">

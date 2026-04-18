@@ -5,9 +5,7 @@ const ResidentValidation = [
   // Personal Info
   body("firstName").trim().notEmpty().withMessage("First name is required"),
   body("lastName").optional({ checkFalsy: true }).trim(),
-body("gender")
-  .notEmpty().withMessage("Gender is required")
-  .isIn(["Male", "Female"]).withMessage("Invalid selection"), 
+  body("gender").optional({ checkFalsy: true }).isIn(["Male", "Female"]).withMessage("Invalid selection"), 
    body("dateOfBirth").optional({ checkFalsy: true }).isISO8601().withMessage("Invalid date of birth"),
   
   // Contact Info
