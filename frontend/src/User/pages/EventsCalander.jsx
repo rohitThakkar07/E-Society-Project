@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Calendar, MapPin, Clock, Plus, X, ChevronLeft, ChevronRight, Users, Sparkles, ArrowRight } from "lucide-react";
 import { fetchEvents, createEvent, deleteEvent } from "../../store/slices/eventSlice";
 import { ListSkeleton } from "../../components/PageLoader";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 const EventsCalendar = () => {
   const dispatch = useDispatch();
@@ -10,10 +12,12 @@ const EventsCalendar = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
   const isAdmin = user?.role?.toLowerCase() === "admin";
 
-  const [view, setView] = useState("list"); // list | calendar
+  const [view, setView] = useState("calendar"); // Default to calendar now for better "interactive" feel
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null); // Filter by calendar date
   const [showForm, setShowForm] = useState(false);
+
   const [form, setForm] = useState({ title: "", description: "", date: "", time: "", location: "", organizer: "" });
 
   useEffect(() => { dispatch(fetchEvents()); }, [dispatch]);
@@ -46,12 +50,11 @@ const EventsCalendar = () => {
   ];
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-8 transition-all duration-500">
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-8">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeUp 0.5s ease forwards; }
       `}</style>
+
 
       <div className="max-w-6xl mx-auto m-12">
         
@@ -106,10 +109,14 @@ const EventsCalendar = () => {
                   {upcoming.map((e, i) => {
                     const color = typeColors[i % 4];
                     return (
-                      <div key={e._id} onClick={() => setSelected(e)}
-                        style={{ animationDelay: `${i * 100}ms` }}
-                        className={`group relative bg-[var(--card)] rounded-[2rem] border ${color.border} p-6 cursor-pointer transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${color.glow} flex flex-col sm:flex-row gap-6 items-center animate-fade-up opacity-0`}>
-                        
+                      <motion.div 
+                        key={e._id} 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        onClick={() => setSelected(e)}
+                        className={`group relative bg-[var(--card)] rounded-[2rem] border ${color.border} p-6 cursor-pointer transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${color.glow} flex flex-col sm:flex-row gap-6 items-center`}
+                      >
                         <div className={`text-center min-w-[70px] ${color.bg} rounded-2xl p-4 border ${color.border} group-hover:scale-110 transition-transform`}>
                           <p className={`text-3xl font-black leading-none ${color.text}`}>{new Date(e.date).getDate()}</p>
                           <p className={`text-[10px] font-black uppercase mt-1 ${color.text} opacity-70`}>{new Date(e.date).toLocaleString("default", { month: "short" })}</p>
@@ -124,7 +131,7 @@ const EventsCalendar = () => {
                           </div>
                         </div>
                         <ArrowRight className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-blue-500" size={20} />
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -161,41 +168,128 @@ const EventsCalendar = () => {
           </div>
         )}
 
-        {/* CALENDAR VIEW */}
+        {/* CALENDAR VIEW - Reimagined as Dual Pane */}
         {view === "calendar" && (
-          <div className="bg-[var(--card)] rounded-[2.5rem] border border-[var(--border)] shadow-2xl overflow-hidden animate-fade-up">
-            <div className="flex items-center justify-between px-8 py-6 bg-[linear-gradient(to_right,var(--card),var(--bg))] border-b border-[var(--border)]">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                className="p-3 hover:bg-blue-500/10 text-blue-500 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-blue-500/20"><ChevronLeft size={20} /></button>
-              <h2 className="text-xl font-black text-[var(--text)] uppercase tracking-tighter">
-                {currentMonth.toLocaleString("default", { month: "long", year: "numeric" })}
-              </h2>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                className="p-3 hover:bg-blue-500/10 text-blue-500 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-blue-500/20"><ChevronRight size={20} /></button>
+          <div className="grid lg:grid-cols-3 gap-8 animate-fade-up">
+            {/* LEFT: Calendar Module */}
+            <div className="lg:col-span-2 bg-[var(--card)] rounded-[2.5rem] border border-[var(--border)] shadow-2xl overflow-hidden self-start">
+              <div className="flex items-center justify-between px-8 py-6 bg-[linear-gradient(to_right,var(--card),var(--bg))] border-b border-[var(--border)]">
+                <button 
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                  className="p-3 hover:bg-blue-500/10 text-blue-500 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-blue-500/20"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <h2 className="text-xl font-black text-[var(--text)] uppercase tracking-tighter">
+                  {currentMonth.toLocaleString("default", { month: "long", year: "numeric" })}
+                </h2>
+                <button 
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                  className="p-3 hover:bg-blue-500/10 text-blue-500 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-blue-500/20"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+              <div className="grid grid-cols-7 text-center border-b border-[var(--border)] bg-[var(--bg)]/50">
+                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+                  <div key={d} className="py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 p-4 gap-2">
+                {Array.from({ length: first }).map((_, i) => <div key={`e-${i}`} className="aspect-square" />)}
+                {Array.from({ length: days }).map((_, i) => {
+                  const d = i + 1;
+                  const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d);
+                  const dateStr = dateObj.toDateString();
+                  const hasEvent = eventDates.includes(dateStr);
+                  const isToday = new Date().toDateString() === dateStr;
+                  const isSelected = selectedDate === dateStr;
+                  
+                  return (
+                    <div 
+                      key={d} 
+                      onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                      className={`aspect-square flex flex-col items-center justify-center text-sm relative group cursor-pointer transition-all duration-300 rounded-[1.5rem]
+                        ${isSelected ? "ring-2 ring-blue-500 ring-offset-4 ring-offset-[var(--card)]" : ""}
+                        ${isToday ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-95" : "text-[var(--text)] hover:bg-blue-500/10 hover:scale-105"}
+                      `}
+                    >
+                      <span className="font-black text-base">{d}</span>
+                      {hasEvent && (
+                        <div className={`w-1.5 h-1.5 rounded-full absolute bottom-4 ${isToday ? "bg-white" : "bg-blue-500 shadow-[0_0_8px_#3b82f6]"}`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="p-6 bg-[var(--bg)]/30 border-t border-[var(--border)] text-[var(--text-muted)] text-[10px] uppercase font-black tracking-widest flex items-center gap-6">
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-600" /> Today</div>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> Event Scheduled</div>
+              </div>
             </div>
-            <div className="grid grid-cols-7 text-center border-b border-[var(--border)] bg-[var(--bg)]/50">
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
-                <div key={d} className="py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 p-2">
-              {Array.from({ length: first }).map((_, i) => <div key={`e-${i}`} className="aspect-square" />)}
-              {Array.from({ length: days }).map((_, i) => {
-                const d = i + 1;
-                const dateStr = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d).toDateString();
-                const hasEvent = eventDates.includes(dateStr);
-                const isToday = new Date().toDateString() === dateStr;
-                return (
-                  <div key={d} className={`aspect-square flex flex-col items-center justify-center text-sm relative group cursor-pointer
-                    ${isToday ? "bg-blue-600 text-white rounded-[1.5rem] shadow-lg shadow-blue-600/30 scale-90 z-10" : "text-[var(--text)] hover:bg-blue-500/5 transition rounded-[1.5rem]"}`}>
-                    <span className="font-black">{d}</span>
-                    {hasEvent && <div className={`w-1.5 h-1.5 rounded-full absolute bottom-3 ${isToday ? "bg-white" : "bg-blue-500 shadow-[0_0_8px_#3b82f6]"}`} />}
-                  </div>
-                );
-              })}
+
+            {/* RIGHT: Quick Agenda / Info Pane */}
+            <div className="flex flex-col gap-6">
+              <div className="bg-[var(--card)] rounded-[2.5rem] border border-[var(--border)] p-8 shadow-xl">
+                <h3 className="text-sm font-black text-[var(--text-muted)] uppercase tracking-widest mb-6 flex items-center justify-between">
+                  <span>{selectedDate ? "Events on this Day" : "Upcoming Agenda"}</span>
+                  <div className="w-8 h-px bg-[var(--border)]" />
+                </h3>
+                
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
+                  {(selectedDate 
+                    ? (events || []).filter(e => new Date(e.date).toDateString() === selectedDate)
+                    : upcoming.slice(0, 5)
+                  ).map((e, idx) => (
+                    <div 
+                      key={e._id}
+                      onClick={() => setSelected(e)}
+                      className="group bg-[var(--bg)] p-5 rounded-2xl border border-[var(--border)] hover:border-blue-500/30 transition-all cursor-pointer hover:shadow-lg"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="font-bold text-[var(--text)] group-hover:text-blue-500 transition-colors leading-tight">
+                          {e.title}
+                        </h4>
+                        <Sparkles size={14} className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
+                         <div className="flex items-center gap-1"><Clock size={12} className="text-blue-500" />{e.time || "TBA"}</div>
+                         <div className="flex items-center gap-1"><MapPin size={12} className="text-blue-500" />{e.location || "Society"}</div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {((selectedDate 
+                    ? (events || []).filter(e => new Date(e.date).toDateString() === selectedDate)
+                    : upcoming.slice(0, 5)
+                  ).length === 0) && (
+                    <div className="text-center py-10 opacity-30">
+                      <p className="text-[10px] font-black uppercase tracking-widest">No Events Found</p>
+                    </div>
+                  )}
+                </div>
+                
+                <button 
+                  onClick={() => setView("list")}
+                  className="mt-8 w-full flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                >
+                  View Full Event List <ArrowRight size={14} />
+                </button>
+              </div>
+
+              {selectedDate && (
+                <button 
+                  onClick={() => setSelectedDate(null)}
+                  className="py-3 px-6 rounded-2xl border border-[var(--border)] text-[var(--text-muted)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--card)] transition-all flex items-center justify-center gap-2"
+                >
+                  <X size={14} /> Clear Selection
+                </button>
+              )}
             </div>
           </div>
         )}
+
       </div>
 
       {/* DETAIL MODAL WITH BLUR */}
