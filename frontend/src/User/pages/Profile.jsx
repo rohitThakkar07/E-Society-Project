@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+
 import {
   User, Phone, FileText, MapPin, Edit2, ShieldCheck,
   Calendar, Mail, Sparkles, Loader2, Camera, CheckCircle2,
@@ -220,12 +220,12 @@ const ProfilePage = () => {
                       <span className="text-2xl font-bold text-indigo-600">{initials}</span>
                     )}
                   </div>
-                  <AnimatePresence>
+                  
                     {editing && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
+                      <div
+                       
+                       
+                       
                         className="absolute -bottom-1 -right-1 flex gap-1.5"
                       >
                         <button
@@ -244,9 +244,9 @@ const ProfilePage = () => {
                             <Trash2 size={13} />
                           </button>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
                   <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                 </div>
 
@@ -302,13 +302,13 @@ const ProfilePage = () => {
 
             {/* Tab Content */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.div
+              
+                <div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.18 }}
+                 
+                 
+                 
+                 
                 >
                   {/* Tab Header */}
                   <div className="px-6 pt-6 pb-4 border-b border-[var(--border)] flex items-center gap-3">
@@ -458,8 +458,8 @@ const ProfilePage = () => {
                     )}
 
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              
             </div>
           </main>
         </div>

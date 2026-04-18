@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Calendar, MapPin, Clock, Plus, X, ChevronLeft, ChevronRight, Users, Sparkles, ArrowRight } from "lucide-react";
 import { fetchEvents, createEvent, deleteEvent } from "../../store/slices/eventSlice";
 import { ListSkeleton } from "../../components/PageLoader";
-import { motion, AnimatePresence } from "framer-motion";
+
 
 
 const EventsCalendar = () => {
@@ -109,11 +109,11 @@ const EventsCalendar = () => {
                   {upcoming.map((e, i) => {
                     const color = typeColors[i % 4];
                     return (
-                      <motion.div 
+                      <div 
                         key={e._id} 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
+                       
+                       
+                       
                         onClick={() => setSelected(e)}
                         className={`group relative bg-[var(--card)] rounded-[2rem] border ${color.border} p-6 cursor-pointer transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${color.glow} flex flex-col sm:flex-row gap-6 items-center`}
                       >
@@ -131,7 +131,7 @@ const EventsCalendar = () => {
                           </div>
                         </div>
                         <ArrowRight className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-blue-500" size={20} />
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>

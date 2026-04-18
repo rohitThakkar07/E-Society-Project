@@ -109,7 +109,7 @@ export const deleteVisitor = createAsyncThunk(
   }
 );
 
-export const markVisitorExit = createAsyncThunk(
+export const markExit = createAsyncThunk(
   "visitor/markExit",
   async (id, { rejectWithValue }) => {
     try {
@@ -236,7 +236,7 @@ const visitorSlice = createSlice({
     });
 
     // Exit
-    builder.addCase(markVisitorExit.fulfilled, (state, action) => {
+    builder.addCase(markExit.fulfilled, (state, action) => {
       state.loading = false;
       const idx = state.visitors.findIndex((v) => v._id === action.payload?._id);
       if (idx !== -1) state.visitors[idx] = action.payload;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+
 import {
   Users, Plus, Search, XCircle,
   Clock, MapPin, Key, ShieldCheck, RefreshCw, ChevronRight,
@@ -95,45 +95,45 @@ const VisitorManagement = () => {
   };
 
   return (
-    <div className="mt-15 min-h-full space-y-5 bg-[linear-gradient(180deg,#f4f6fb_0%,#eef1f8_100%)] p-4 sm:p-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
-        <div className="absolute -right-12 top-0 h-40 w-40 rounded-full bg-indigo-400/10 blur-3xl" />
-        <div className="absolute left-1/3 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
-        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-              <Sparkles size={13} className="text-indigo-500" />
+    <div className="mt-20 min-h-full space-y-4 bg-[linear-gradient(180deg,#f4f6fb_0%,#eef1f8_100%)] p-4 sm:p-6 max-w-7xl mx-auto">
+      <section className="relative overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="absolute -right-12 top-0 h-32 w-32 rounded-full bg-indigo-400/10 blur-3xl" />
+        <div className="absolute left-1/3 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
+        <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+              <Sparkles size={11} className="text-indigo-500" />
               Secure entry flow
             </div>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl p-3 text-white shadow-lg" style={{ background: ACCENT }}>
-                <Users size={22} />
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded-xl p-2.5 text-white shadow-md" style={{ background: ACCENT }}>
+                <Users size={18} />
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">Visitor Management</h1>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">Visitor Management</h1>
             </div>
-            <p className="max-w-xl text-sm font-medium leading-6 text-slate-500">
+            <p className="max-w-lg text-xs font-medium leading-5 text-slate-500">
               {isResident
-                ? "Track visitor requests, check who is currently approved, and open full guest details from a friendlier resident dashboard."
-                : "Review visitor requests, track entries, and manage OTP-based approvals with a clearer, more interactive dashboard."}
+                ? "Track visitor requests and manage OTP-based approvals from your dashboard."
+                : "Review arrivals, track entries, and manage approvals with a clear interface."}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {[
               { label: "Records", value: listSource.length, tone: "bg-slate-100 text-slate-600" },
               { label: "Pending", value: pendingCount, tone: "bg-amber-50 text-amber-600" },
               { label: isResident ? "Inside" : "Approved", value: isResident ? insideCount : approvedCount, tone: "bg-emerald-50 text-emerald-600" },
               { label: "Denied", value: deniedCount, tone: "bg-rose-50 text-rose-600" },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm">
-                <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>{item.label}</div>
-                <div className="text-2xl font-black text-slate-900">{item.value}</div>
+              <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 shadow-sm min-w-[100px]">
+                <div className={`mb-2 inline-flex rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] ${item.tone}`}>{item.label}</div>
+                <div className="text-xl font-black text-slate-900">{item.value}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-bold text-slate-500">
             {filtered.length} record{filtered.length !== 1 ? "s" : ""} available in this view
@@ -168,7 +168,7 @@ const VisitorManagement = () => {
             </button>
           )}
         </div>
-      </motion.div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-sm">
         <div className="relative min-w-[220px] flex-1">
@@ -232,11 +232,10 @@ const VisitorManagement = () => {
               }
 
               return (
-                <motion.div
+                <div
                   key={v._id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
+                 
+                 
                   onClick={() => navigate(`/visitors/visitor/${v._id}`)}
                   className="cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-100 bg-white shadow-md transition hover:-translate-y-1 hover:shadow-xl"
                 >
@@ -286,7 +285,7 @@ const VisitorManagement = () => {
                       </span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
@@ -344,11 +343,10 @@ const VisitorManagement = () => {
               }
 
               return (
-                <motion.div
+                <div
                   key={v._id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                 
+                 
                   onClick={() => navigate(isResident ? `/visitors/visitor/${v._id}` : `/guard/visitor/${v._id}`)}
                   className="group grid cursor-pointer items-center gap-3 border-b border-slate-100 px-4 py-4 transition-colors last:border-0 hover:bg-slate-50/90 sm:px-5"
                   style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 0.8fr" }}
@@ -400,7 +398,7 @@ const VisitorManagement = () => {
                       <StatusBadge status={v.status} />
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
@@ -430,7 +428,7 @@ const VisitorManagement = () => {
 
       {showOtpModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.55)", backdropFilter: "blur(8px)" }}>
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-[2rem] bg-white p-8 text-center shadow-2xl">
+          <div className="w-full max-w-sm rounded-[2rem] bg-white p-8 text-center shadow-2xl">
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
               <Key size={26} className="text-emerald-600" />
             </div>
@@ -458,7 +456,7 @@ const VisitorManagement = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>

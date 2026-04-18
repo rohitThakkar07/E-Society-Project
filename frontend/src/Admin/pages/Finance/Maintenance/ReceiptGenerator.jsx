@@ -1,7 +1,7 @@
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import societyConfig from "../../../../../assets/societyConfig";
+import societyConfig from "../../../../assets/societyConfig";
 
 const ReceiptGenerator = () => {
 

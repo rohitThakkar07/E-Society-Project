@@ -5,7 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   Search, LogOut, Clock, ChevronRight, RefreshCw, Users, Filter, MapPin
 } from "lucide-react";
-import { fetchVisitors, fetchMyVisitors, markVisitorExit } from "../../store/slices/visitorSlice";
+import { fetchVisitors, fetchMyVisitors, markExit } from "../../store/slices/visitorSlice";
 import { PageLoaderInline } from "../../components/PageLoader";
 
 const ACCENT = "#4F6EF7";
@@ -65,7 +65,7 @@ const VisitorLog = () => {
     e.preventDefault(); e.stopPropagation();
     if (!window.confirm("Mark this visitor as exited?")) return;
     setExitingId(id);
-    await dispatch(markVisitorExit(id));
+    await dispatch(markExit(id));
     setExitingId(null);
   };
 

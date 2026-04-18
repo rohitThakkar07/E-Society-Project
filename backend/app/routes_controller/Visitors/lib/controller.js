@@ -285,9 +285,16 @@ exports.createVisitor = async (req, res) => {
       return res.status(404).json({ success: false, message: "Resident not found." });
     }
 
-    // Generate OTP
-    const otp          = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    // Status handling (allow frontend override for Admins)
+    const initialStatus = req.body.status || "Pending";
+
+    // Generate OTP only if Pending
+    let otp = null;
+    let otpExpiresAt = null;
+    if (initialStatus === "Pending") {
+      otp          = generateOTP();
+      otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    }
 
     const visitor = await Visitor.create({
       visitorName,
@@ -301,15 +308,20 @@ exports.createVisitor = async (req, res) => {
       notes:          notes          || null,
       otp,
       otpExpiresAt,
-      status: "Pending"
+      status: initialStatus,
+      entryTime: initialStatus === "Inside" ? new Date() : null
     });
 
-    // Send OTP to resident (email + mobile fallback)
-    await sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitorName);
+    // Send OTP to resident only if Pending
+    if (initialStatus === "Pending") {
+      await sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitorName);
+    }
 
     res.status(201).json({
       success: true,
-      message: `Visitor entry created. OTP sent to resident (${resident.flatNumber}).`,
+      message: initialStatus === "Inside" 
+        ? "Visitor entry logged directly." 
+        : `Visitor entry created. OTP sent to resident (${resident.flatNumber}).`,
       data: visitor
     });
   } catch (error) {

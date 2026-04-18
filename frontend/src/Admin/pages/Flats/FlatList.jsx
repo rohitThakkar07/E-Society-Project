@@ -147,7 +147,7 @@ const FlatList = () => {
                 <TableCell>
                   <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
                     <FiMapPin className="text-slate-300" />
-                    {f.block ? `${f.block} - ` : ""}Floor {f.floor}
+                    {f.wing ? `${f.wing} - ` : ""}Floor {f.floor}
                   </div>
                 </TableCell>
 

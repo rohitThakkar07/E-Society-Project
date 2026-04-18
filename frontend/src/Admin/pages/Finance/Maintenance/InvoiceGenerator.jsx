@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchMaintenanceById } from "../../../../store/slices/maintenanceSlice";
 import { FiFileText, FiDownload, FiArrowLeft, FiUser, FiHome, FiCreditCard } from "react-icons/fi";
 import jsPDF from "jspdf";
-import societyConfig from "../../../../../assets/societyConfig";
+import societyConfig from "../../../../assets/societyConfig";
 import autoTable from "jspdf-autotable";
 
 const InvoiceGenerator = () => {

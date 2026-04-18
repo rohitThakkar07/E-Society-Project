@@ -16,7 +16,7 @@ const indianNames = [
 ];
 
 const blocks = ["A", "B", "C"];
-const types = ["1BHK", "2BHK", "3BHK", "4BHK"];
+const types = ["2BHK", "3BHK", "4BHK"];
 const statuses = ["Occupied", "Vacant", "Under Maintenance"];
 
 let phoneBase = 9876500000;
@@ -25,7 +25,7 @@ const generateFlats = () => {
   const flats = [];
 
   for (let i = 1; i <= 50; i++) {
-    const block = blocks[i % blocks.length];
+    const wing = blocks[i % blocks.length];
     const type = types[i % types.length];
 
     let status = statuses[i % statuses.length];
@@ -36,13 +36,12 @@ const generateFlats = () => {
     const name = indianNames[i - 1];
 
     flats.push({
-      flatNumber: `${block}-${100 + i}`,
+      flatNumber: `${100 + i}`,
       floor: Math.ceil(i / 5),
-      block,
+      wing,
       type,
 
       area:
-        type === "1BHK" ? 550 :
         type === "2BHK" ? 850 :
         type === "3BHK" ? 1200 : 1600,
 
@@ -56,7 +55,6 @@ const generateFlats = () => {
       occupancyType,
 
       monthlyMaintenance:
-        type === "1BHK" ? 1500 :
         type === "2BHK" ? 2200 :
         type === "3BHK" ? 3000 : 4000,
     });
@@ -71,11 +69,8 @@ const seedFlats = async () => {
 
     const flats = generateFlats();
 
-    //  safe delete (only dev)
-    if (process.env.NODE_ENV === "development") {
-      await Flat.deleteMany();
-      console.log("🗑️ Old flats removed");
-    }
+    await Flat.deleteMany();
+    console.log("🗑️ Old flats removed");
 
     await Flat.insertMany(flats);
 

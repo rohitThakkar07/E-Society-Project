@@ -68,72 +68,114 @@ const Payments = () => {
       }
 
       const doc = new jsPDF();
-      const money = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
-      const line = (label, value, y, bold = false) => {
-        doc.setFont("helvetica", bold ? "bold" : "normal");
-        doc.setTextColor(75, 85, 99);
-        doc.text(`${label}:`, 16, y);
-        doc.setTextColor(17, 24, 39);
-        doc.text(String(value ?? "-"), 72, y);
-      };
+      
+      // Receipt Styling Constants
+      const primaryColor = [37, 99, 235]; // Blue 600
+      const secondaryColor = [107, 114, 128]; // Gray 400
+      const textColor = [31, 41, 55]; // Gray 800
+      const lightGray = [249, 250, 251]; // Gray 50
 
-      doc.setFillColor(37, 99, 235);
-      doc.rect(0, 0, 210, 24, "F");
+      // 1. HEADER BANNER
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 40, "F");
+      
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
+      doc.setFontSize(22);
       doc.setTextColor(255, 255, 255);
-      doc.text(`${societyConfig.name} Payment Receipt`, 16, 15);
+      doc.text(societyConfig.name.toUpperCase(), 15, 20);
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${societyConfig.city}, ${societyConfig.state}`, 15, 28);
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("OFFICIAL PAYMENT RECEIPT", 140, 22);
 
-      doc.setFontSize(11);
-      doc.setTextColor(55, 65, 81);
-      doc.text(`Receipt No: ${receipt.receiptNumber || "-"}`, 16, 34);
-      doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 16, 41);
+      // 2. RECEIPT INFO BOX
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.text(`Receipt No: ${receipt.receiptNumber || "-"}`, 140, 50);
+      doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 140, 56);
+      doc.text(`Status: SUCCESSFUL`, 140, 62);
 
+      // 3. RESIDENT SECTION
       doc.setDrawColor(229, 231, 235);
-      doc.line(16, 46, 194, 46);
-
+      doc.line(15, 68, 195, 68);
+      
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(17, 24, 39);
-      doc.text("Resident Details", 16, 56);
-      line("Name", receipt.resident?.name || "-", 66);
-      line("Flat Number", receipt.resident?.flatNumber || "-", 74);
-      line("Email", receipt.resident?.email || "-", 82);
-      if (receipt.resident?.phone) {
-        line("Phone", receipt.resident.phone, 90);
-      }
-
-      doc.line(16, 96, 194, 96);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(17, 24, 39);
-      doc.text("Payment Details", 16, 106);
-      line("Billing Month", `${receipt.month || "-"} ${receipt.year || ""}`.trim(), 116);
-      line("Base Amount", money(receipt.baseAmount), 124);
-
-      let nextY = 132;
-      if (Number(receipt.lateFee) > 0) {
-        line("Late Fee", money(receipt.lateFee), nextY);
-        nextY += 8;
-      }
-      line("Total Paid", money(receipt.amount), nextY, true);
-
-      nextY += 14;
-      doc.line(16, nextY - 6, 194, nextY - 6);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(17, 24, 39);
-      doc.text("Transaction Details", 16, nextY + 4);
-      line("Payment Method", receipt.paymentMethod || "Razorpay", nextY + 14);
-      line("Payment ID", receipt.paymentId || receipt.razorpayPaymentId || "-", nextY + 22);
-      line("Order ID", receipt.orderId || receipt.razorpayOrderId || "-", nextY + 30);
-      line("Status", "Verified & Completed", nextY + 38, true);
-      line("Paid At", receipt.paidAt ? new Date(receipt.paidAt).toLocaleString("en-IN") : "-", nextY + 46);
-
+      doc.setFontSize(12);
+      doc.text("RESIDENT DETAILS", 15, 80);
+      
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setTextColor(107, 114, 128);
-      doc.text("This is a computer-generated receipt. No signature is required.", 16, 275);
+      doc.setTextColor(...secondaryColor);
+      doc.text("Name:", 15, 88);
+      doc.text("Flat/Unit:", 15, 94);
+      doc.text("Email:", 15, 100);
+      
+      doc.setTextColor(...textColor);
+      doc.text(receipt.resident?.name || "-", 50, 88);
+      doc.text(receipt.resident?.flatNumber || "-", 50, 94);
+      doc.text(receipt.resident?.email || "-", 50, 100);
+
+      // 4. PAYMENT BREAKDOWN TABLE
+      doc.setFillColor(...lightGray);
+      doc.rect(15, 115, 180, 10, "F");
+      doc.setFont("helvetica", "bold");
+      doc.text("DESCRIPTION", 20, 121);
+      doc.text("AMOUNT", 150, 121);
+      
+      doc.line(15, 125, 195, 125);
+      
+      doc.setFont("helvetica", "normal");
+      doc.text(`Maintenance - ${receipt.month || "-"} ${receipt.year || ""}`, 20, 135);
+      doc.text(`Rs. ${Number(receipt.baseAmount || 0).toLocaleString("en-IN")}`, 150, 135);
+      
+      if (Number(receipt.lateFee) > 0) {
+        doc.text("Late Payment Fee", 20, 143);
+        doc.text(`Rs. ${Number(receipt.lateFee).toLocaleString("en-IN")}`, 150, 143);
+      }
+      
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(140, 150, 195, 150);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("TOTAL PAID", 100, 160);
+      doc.text(`Rs. ${Number(receipt.amount || 0).toLocaleString("en-IN")}`, 150, 160);
+
+      // 5. TRANSACTION DETAILS (BOTTOM BOX)
+      doc.setLineWidth(0.1);
+      doc.setDrawColor(229, 231, 235);
+      doc.rect(15, 175, 180, 25);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(...secondaryColor);
+      doc.text("Payment Method", 20, 182);
+      doc.text("Transaction ID", 80, 182);
+      doc.text("Order ID", 140, 182);
+      
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "bold");
+      doc.text(receipt.paymentMethod?.toUpperCase() || "ONLINE", 20, 190);
+      doc.text(receipt.paymentId || "-", 80, 190);
+      doc.text(receipt.orderId || "-", 140, 190);
+
+      // 6. FOOTER
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...secondaryColor);
+      doc.text("This receipt is automatically generated upon successful payment verification.", 105, 230, { align: "center" });
+      doc.text("For any queries, contact the society administration office.", 105, 235, { align: "center" });
+      
+      // SIGNATURE AREA
+      doc.setTextColor(...textColor);
+      doc.setFont("helvetica", "bold");
+      doc.text("Authorized Signatory", 150, 260);
+      doc.setDrawColor(200);
+      doc.line(145, 255, 195, 255);
 
       doc.save(`Receipt_${receipt.receiptNumber || "payment"}.pdf`);
     } catch (err) {

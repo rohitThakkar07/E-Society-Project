@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Home,
   LogOut,
@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import societyConfig from "../../assets/societyConfig";
+
+import logo from "../../assets/logo-dwarkesh.png";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,7 +81,7 @@ const Header = () => {
       children: [
         { label: "Visitor", to: "/visitors", roles: ["admin", "resident"], desc: "Track arrivals", icon: ShieldCheck },
         { label: "Book Facilities", to: "/facilities", roles: ["resident"], desc: "Clubhouse & Gym", icon: Calendar },
-        { label: "Gate Entry Logs", to: "/guard/visitors", roles: ["guard", "admin"], desc: "Security logs", icon: Activity },
+        { label: "Gate Entry Logs", to: "/gate-logs", roles: ["guard", "admin", "resident"], desc: "Visitor history", icon: Activity },
       ],
     },
     {
@@ -120,7 +122,7 @@ const Header = () => {
 
   const logoVariants = {
     animate: {
-      y: [0, -2, 0], 
+      y: [0, -2, 0],
       rotate: [0, 2, -2, 0],
       transition: {
         y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
@@ -141,43 +143,22 @@ const Header = () => {
       `}</style>
 
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-          scrolled ? "shadow-xl py-1 border-b border-[var(--border)]" : "py-1.5 border-b border-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? "shadow-xl py-1 border-b border-[var(--border)]" : "py-1.5 border-b border-transparent"
+          }`}
         style={{
           background: "var(--header-bg)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        <div className="w-full mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[3.2rem]">
-          
-
-          <NavLink to="/" className="flex items-center gap-2.5 group shrink-0">
-            <motion.div
-              variants={logoVariants}
-              animate="animate"
-              className="relative w-10 h-10 rounded-xl flex items-center justify-center border border-[var(--border)] shadow-md overflow-hidden bg-[var(--card)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] to-transparent opacity-10" />
-              <Building2 size={20} className="text-[var(--accent)] relative z-10" />
-            </motion.div>
-            
-            <div className="flex flex-col ml-0.5 relative pr-4">
-              <span className="text-xl font-black tracking-tighter leading-none italic text-glow-aura"
-                style={{
-                  background: "linear-gradient(135deg, var(--text) 20%, var(--accent) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                {societyConfig.name.toUpperCase()}
-              </span>
-              <div className="h-[1.5px] w-full bg-gradient-to-r from-[var(--accent)] to-transparent mt-0.5 rounded-full opacity-50" />
-              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-[var(--text-muted)] mt-0.5 hidden sm:block">
-                Resident Hub
-              </span>
-            </div>
+        <div className="w-full mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[3.5rem]">
+          <NavLink to="/" className="flex items-center shrink-0 py-1 transition-opacity hover:opacity-90">
+            <img 
+              src={logo} 
+              alt="Dwarkesh Residency" 
+              className="object-contain"
+              style={{ height: '38px', width: 'auto' }} 
+            />
           </NavLink>
 
 
@@ -187,14 +168,13 @@ const Header = () => {
                 <button
                   type="button"
                   onMouseEnter={() => setOpenDropdown(item.label)}
-                  className={`${linkBase} ${isParentActive(item) ? linkActive : linkIdle} ${
-                    openDropdown === item.label ? "bg-[var(--accent-soft)]" : ""
-                  }`}
+                  className={`${linkBase} ${isParentActive(item) ? linkActive : linkIdle} ${openDropdown === item.label ? "bg-[var(--accent-soft)]" : ""
+                    }`}
                 >
                   {item.label}
                   <ChevronDown size={13} className={`transition-transform duration-300 ${openDropdown === item.label ? "rotate-180" : ""}`} />
                 </button>
-                
+
                 {openDropdown === item.label && (
                   <div
                     onMouseLeave={() => setOpenDropdown(null)}
@@ -209,9 +189,8 @@ const Header = () => {
                           key={child.to}
                           to={child.to}
                           onClick={() => setOpenDropdown(null)}
-                          className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                            active ? "bg-[var(--nav-active-bg)] border-l-4 border-[var(--accent)]" : "hover:bg-[var(--accent-soft)] border-l-4 border-transparent"
-                          }`}
+                          className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${active ? "bg-[var(--nav-active-bg)] border-l-4 border-[var(--accent)]" : "hover:bg-[var(--accent-soft)] border-l-4 border-transparent"
+                            }`}
                         >
                           <div className={`mt-0.5 p-1.5 rounded-lg ${active ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "bg-[var(--bg)] text-[var(--text-muted)] shadow-inner"}`}>
                             <Icon size={13} strokeWidth={2.5} />
@@ -231,15 +210,14 @@ const Header = () => {
 
 
           <div className="flex items-center gap-3 pr-1">
-            
+
             <NavLink to="/" end className={({ isActive }) => `hidden lg:flex ${linkBase} ${isActive ? linkActive : linkIdle}`}>
               <Home size={15} strokeWidth={2.5} /> Home
             </NavLink>
 
             {isLoggedIn && hasAccess(["resident", "admin"]) && (
-              <NavLink to="/raise-complaint" className={({ isActive }) => `hidden md:flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all ${
-                isActive ? "bg-orange-500/10 text-orange-500" : "text-orange-500 hover:bg-orange-500/5"
-              }`}>
+              <NavLink to="/raise-complaint" className={({ isActive }) => `hidden md:flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all ${isActive ? "bg-orange-500/10 text-orange-500" : "text-orange-500 hover:bg-orange-500/5"
+                }`}>
                 <Bell size={14} /> Help Desk
               </NavLink>
             )}
@@ -249,17 +227,17 @@ const Header = () => {
               onClick={toggle}
               className="p-2.5 rounded-xl transition-all duration-300 hover:bg-[var(--accent-soft)] text-[var(--text)] active:scale-90"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
+              
+                <div
                   key={dark ? "dark" : "light"}
-                  initial={{ y: 5, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -5, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                 
+                 
+                 
+                 
                 >
                   {dark ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              
             </button>
 
             {isLoggedIn ? (
@@ -274,8 +252,8 @@ const Header = () => {
                   </div>
                 </NavLink>
 
-                <button 
-                  onClick={handleLogout} 
+                <button
+                  onClick={handleLogout}
                   className="p-2 rounded-xl text-red-500 hover:bg-red-500/10 transition-all active:scale-90"
                 >
                   <LogOut size={19} strokeWidth={2.5} />
@@ -298,13 +276,13 @@ const Header = () => {
       </nav>
 
 
-      <AnimatePresence>
+      
         {menuOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen(false)} />
-            <motion.aside initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed top-0 right-0 bottom-0 z-[120] w-[260px] bg-[var(--card)] border-l border-[var(--border)] flex flex-col shadow-2xl">
+            <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen(false)} />
+            <aside className="fixed top-0 right-0 bottom-0 z-[120] w-[260px] bg-[var(--card)] border-l border-[var(--border)] flex flex-col shadow-2xl">
               <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
-                <span className="font-black text-lg tracking-tighter text-[var(--accent)] uppercase">{societyConfig.name}</span>
+                <img src={logo} alt={societyConfig.name} className="h-8 object-contain" />
                 <button onClick={() => setMenuOpen(false)} className="p-2 rounded-xl bg-[var(--bg)] shadow-inner"><X size={20} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
@@ -322,12 +300,12 @@ const Header = () => {
                 ))}
               </div>
               <div className="p-4 border-t border-[var(--border)] bg-[var(--bg)]">
-                {isLoggedIn && <button onClick={handleLogout} className="w-full py-3.5 rounded-2xl bg-red-500 text-white font-black text-sm flex items-center justify-center gap-3 active:scale-95"><LogOut size={18}/> LOG OUT</button>}
+                {isLoggedIn && <button onClick={handleLogout} className="w-full py-3.5 rounded-2xl bg-red-500 text-white font-black text-sm flex items-center justify-center gap-3 active:scale-95"><LogOut size={18} /> LOG OUT</button>}
               </div>
-            </motion.aside>
+            </aside>
           </>
         )}
-      </AnimatePresence>
+      
     </>
   );
 };

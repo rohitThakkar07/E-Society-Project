@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Shield, Mail, Phone, MapPin, Heart, Sparkles } from "lucide-react";
 import { FaFacebook, FaWhatsapp, FaLinkedin, FaInstagram } from "react-icons/fa";
 import societyConfig from "../../assets/societyConfig";
@@ -54,19 +53,17 @@ const Footer = () => {
         style={{ background: "#8B5CF6" }}
       />
 
-      <motion.div
-        variants={containerVars}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
+      <div
+       
+       
         className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-16 sm:mb-20">
-          <motion.div variants={itemVars} className="space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div className="flex items-center gap-4 group cursor-default">
-              <motion.div
-                whileHover={{ rotate: [0, -8, 8, 0], scale: 1.05 }}
-                transition={{ duration: 0.5 }}
+              <div
+               
+               
                 className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
                 style={{
                   background: "linear-gradient(135deg, var(--accent), #6366f1)",
@@ -74,7 +71,7 @@ const Footer = () => {
                 }}
               >
                 <Shield size={28} className="text-white" />
-              </motion.div>
+              </div>
               <div>
                 <span className="text-white text-2xl font-black leading-none block tracking-tight">{societyConfig.name}</span>
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] mt-1.5 block opacity-80">
@@ -93,22 +90,22 @@ const Footer = () => {
                 { Icon: FaLinkedin, href: "https://linkedin.com", hover: "hover:bg-blue-700" },
                 { Icon: FaInstagram, href: "https://instagram.com", hover: "hover:bg-pink-600" },
               ].map((item, i) => (
-                <motion.a
+                <a
                   key={i}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ y: -4, scale: 1.08 }}
-                  whileTap={{ scale: 0.97 }}
+                 
+                 
                   className={`w-11 h-11 rounded-xl border flex items-center justify-center text-slate-400 hover:text-white transition-colors duration-300 shadow-lg bg-white/5 border-white/10 ${item.hover}`}
                 >
                   <item.Icon size={20} />
-                </motion.a>
+                </a>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVars}>
+          <div>
             <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block mb-8">Explore</span>
             <ul className="space-y-4">
               {quickLinks.map(({ label, to }) => (
@@ -123,9 +120,9 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVars}>
+          <div>
             <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block mb-8">Resident portal</span>
             <ul className="space-y-4">
               {serviceLinks.map(({ label, to }) => (
@@ -140,9 +137,9 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVars} className="space-y-8">
+          <div className="space-y-8">
             <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-60 block">Contact</span>
             <div className="space-y-4">
               <div className="flex items-start gap-4 group">
@@ -163,8 +160,8 @@ const Footer = () => {
               </a>
             </div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
+            <div
+             
               className="rounded-3xl p-6 text-white relative overflow-hidden cursor-pointer shadow-2xl border border-white/10"
               style={{
                 background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, #1e1b4b), #4338ca)",
@@ -183,16 +180,16 @@ const Footer = () => {
                   <Phone size={20} fill="currentColor" />
                 </div>
               </a>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
 
         <div
           className="pt-10 border-t flex flex-col md:flex-row items-center justify-between gap-8"
           style={{ borderColor: "var(--footer-border)" }}
         >
-          <motion.div
-            variants={itemVars}
+          <div
+           
             className="text-[11px] font-black uppercase tracking-[0.18em] flex flex-wrap items-center justify-center gap-3 opacity-70"
           >
             © {currentYear} {societyConfig.name} Hub
@@ -200,9 +197,9 @@ const Footer = () => {
             <span className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
               Made with <Heart size={14} className="text-rose-400 fill-rose-400" /> for community
             </span>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVars} className="flex flex-wrap justify-center gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {["Privacy", "Terms"].map((text) => (
               <Link
                 key={text}
@@ -213,9 +210,9 @@ const Footer = () => {
                 <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[var(--accent)] group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </footer>
   );
 };

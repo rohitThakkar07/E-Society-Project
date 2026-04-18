@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { useNavigate } from "react-router-dom";
 import {
   Wrench,
@@ -96,123 +96,113 @@ const RaiseComplaint = () => {
     show: { opacity: 1, transition: { staggerChildren: 0.08 } },
   };
   const itemAnim = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
-  
+
   const activeStatus = statusConfig[selectedComplaint?.status];
 
   return (
     <div
       style={{ fontFamily: "'DM Sans', sans-serif" }}
-      className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-all duration-500 sm:p-8 pt-28"
+      className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-all duration-500 sm:p-8"
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .stats-glow { transition: all 0.4s ease; }
+        .stats-glow:hover { transform: translateY(-5px); }
       `}</style>
 
-      <div className="relative z-[1] mx-auto max-w-6xl m-12">
-        
+      <div className="relative z-[1] mx-auto max-w-6xl mt-4">
+
         {/* --- MAIN HERO HEADER --- */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-1 shadow-2xl transition-all hover:shadow-orange-500/5">
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-orange-500/10 blur-[100px] animate-pulse" />
-            
-            <div className="grid gap-8 p-8 md:grid-cols-[1.3fr_0.7fr]">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500">
-                  <Sparkles size={14} className="animate-pulse" />
+        <div className="mb-4">
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--card)] p-1 shadow-md">
+            <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-indigo-500/10 blur-[60px]" />
+
+            <div className="grid gap-3 p-4 lg:p-5 lg:grid-cols-[1fr_auto]">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3 py-0.5 text-[8px] font-black uppercase tracking-widest text-indigo-500">
+                  <Sparkles size={10} className="animate-pulse" />
                   Resident Support Desk
                 </div>
-                <div className="flex items-center gap-5">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-orange-500 text-white shadow-xl shadow-orange-500/30">
-                    <Wrench size={32} />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 shrink-0">
+                    <Wrench size={24} />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl">Help Desk</h1>
-                    <p className="mt-2 text-sm font-medium text-[var(--text-muted)] opacity-80">Report issues, attach proof, and track each update in real-time.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-[var(--text)] leading-none">Help Desk</h1>
+                    <p className="mt-1.5 text-[11px] lg:text-xs font-medium text-[var(--text-muted)] opacity-75 max-w-md">Report and track society issues in real-time.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] bg-[var(--bg)] border border-[var(--border)] p-6 shadow-inner">
-                <div>
-                  <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500">
-                    <Activity size={14} /> Quick Action
-                  </p>
-                  <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--text-muted)]">
-                    Fast-track your issues by providing category and clear photos.
-                  </p>
-                </div>
+              <div className="flex items-center">
                 <button
                   type="button"
                   onClick={() => navigate("/raise-complaint/new")}
-                  className="group flex items-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-600 hover:-translate-y-1 shadow-lg shadow-orange-500/25 active:scale-95 w-full justify-center sm:w-auto"
+                  className="group flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-700 hover:-translate-y-0.5 shadow-md shadow-indigo-600/20 active:scale-95 w-full lg:w-auto justify-center"
                 >
-                  <Plus size={18} /> New Ticket
-                  <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  <Plus size={14} /> Create Ticket
+                  <ArrowUpRight size={12} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </button>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* --- STATS GRID --- */}
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={listAnim}
-          className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4"
+        <div
+         
+          className="mb-8 grid grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {stats.map((s) => (
-            <motion.button
+            <button
               key={s.label}
-              variants={itemAnim}
-              whileHover={{ y: -5 }}
+             
+             
               onClick={() => setFilter(s.label === "Total" ? "All" : s.label)}
-              className={`${s.bg} group relative overflow-hidden rounded-[2rem] border border-[var(--border)] p-6 text-left transition-all hover:border-indigo-500/30`}
-              style={{ boxShadow: `0 15px 30px -15px ${s.glow}` }}
+              className={`${s.bg} group relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] p-5 text-left transition-all hover:border-indigo-500/20 shadow-sm`}
             >
-              <p className={`text-4xl font-black ${s.color}`}>{s.value}</p>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-60">{s.label}</p>
-              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-                <ChevronRight size={20} className={s.color} />
+              <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
+              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--text-muted)] opacity-60">{s.label}</p>
+              <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                <ChevronRight size={16} className={s.color} />
               </div>
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
 
         {/* --- FILTER & SEARCH BAR --- */}
-        <div className="mb-8 rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-6 rounded-[1.75rem] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 group">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-orange-500 transition-colors" />
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-indigo-600 transition-colors" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search ticket title, description, category..."
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3.5 pl-12 pr-5 text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500/50 transition-all shadow-inner"
+                placeholder="Search tickets..."
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] py-3 pl-11 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-600/30 transition-all"
               />
             </div>
-            
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {["All", "Pending", "In Progress", "Resolved"].map((s) => (
                 <button
                   key={s}
                   onClick={() => setFilter(s)}
-                  className={`rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-90 ${
-                    filter === s
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "bg-[var(--bg)] text-[var(--text-muted)] border border-[var(--border)] hover:border-orange-500/40"
-                  }`}
+                  className={`rounded-xl px-4 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${filter === s
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10"
+                      : "bg-[var(--bg)] text-[var(--text-muted)] border border-[var(--border)] hover:border-indigo-600/30"
+                    }`}
                 >
                   {s}
                 </button>
               ))}
             </div>
           </div>
-          
+
           <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-5">
             <div className="flex items-center gap-2 rounded-full bg-[var(--bg)] px-4 py-1.5 border border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-               <Filter size={12} /> Results: {filtered.length}
+              <Filter size={12} /> Results: {filtered.length}
             </div>
             {filter !== "All" && (
               <span className="rounded-full bg-orange-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500 border border-orange-500/20">
@@ -231,14 +221,14 @@ const RaiseComplaint = () => {
               <Wrench size={48} className="text-[var(--text-muted)] opacity-20" />
             </div>
             <p className="text-xl font-black uppercase tracking-widest text-[var(--text-muted)] opacity-50">No tickets found</p>
-            <button onClick={() => {setFilter("All"); setSearch("");}} className="mt-4 text-xs font-bold text-orange-500 underline underline-offset-4">Reset all filters</button>
+            <button onClick={() => { setFilter("All"); setSearch(""); }} className="mt-4 text-xs font-bold text-orange-500 underline underline-offset-4">Reset all filters</button>
           </div>
         ) : (
-          <motion.div initial="hidden" animate="show" variants={listAnim} className="grid gap-6">
+          <div className="grid gap-6">
             {filtered.map((c, idx) => (
-              <motion.div
+              <div
                 key={c._id}
-                variants={itemAnim}
+               
                 onClick={() => setSelectedComplaint(c)}
                 className="group cursor-pointer relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[var(--card)] p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:border-indigo-500/30"
               >
@@ -254,41 +244,41 @@ const RaiseComplaint = () => {
                     <p className="text-sm font-medium leading-relaxed text-[var(--text-muted)] opacity-80 line-clamp-2">
                       {c.description}
                     </p>
-                    
+
                     <div className="flex flex-wrap items-center gap-4 pt-2">
-                       <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${categoryColors[c.category] || "border-[var(--border)]"}`}>
-                         {c.category}
-                       </span>
-                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-                         <Clock size={14} className="text-orange-500" /> {new Date(c.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
-                       </div>
-                       {c.attachment && (
-                         <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 border border-emerald-500/20">
-                            <ImageIcon size={12} /> Attached
-                         </div>
-                       )}
+                      <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${categoryColors[c.category] || "border-[var(--border)]"}`}>
+                        {c.category}
+                      </span>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                        <Clock size={14} className="text-orange-500" /> {new Date(c.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </div>
+                      {c.attachment && (
+                        <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 border border-emerald-500/20">
+                          <ImageIcon size={12} /> Attached
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-end md:border-l border-[var(--border)] md:pl-8">
-                     <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-[var(--bg)] border border-[var(--border)] group-hover:bg-orange-500 group-hover:text-white group-hover:border-orange-500 transition-all duration-300">
-                        <ChevronRight size={28} />
-                     </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-[var(--bg)] border border-[var(--border)] group-hover:bg-orange-500 group-hover:text-white group-hover:border-orange-500 transition-all duration-300">
+                      <ChevronRight size={28} />
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
 
         {/* --- COMPLAINT DETAIL MODAL --- */}
-        <AnimatePresence>
+        
           {selectedComplaint && (
             <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-md bg-black/60">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              <div
+               
+               
+               
                 className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--card)] shadow-2xl"
               >
                 <div className="flex h-full flex-col">
@@ -311,52 +301,52 @@ const RaiseComplaint = () => {
                   {/* Modal Body */}
                   <div className="overflow-y-auto p-8 scrollbar-hide">
                     <div className="grid gap-6 md:grid-cols-3 mb-8">
-                       <div className={`rounded-3xl border p-5 ${activeStatus?.color}`}>
-                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Status</p>
-                         <div className="mt-3 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
-                           {activeStatus?.icon} {selectedComplaint.status}
-                         </div>
-                       </div>
-                       <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
-                         <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Category</p>
-                         <p className="mt-3 text-sm font-black uppercase tracking-widest">{selectedComplaint.category}</p>
-                       </div>
-                       <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
-                         <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Last Updated</p>
-                         <p className="mt-3 text-sm font-black uppercase tracking-widest">
-                           {new Date(selectedComplaint.updatedAt || selectedComplaint.createdAt).toLocaleDateString()}
-                         </p>
-                       </div>
+                      <div className={`rounded-3xl border p-5 ${activeStatus?.color}`}>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Status</p>
+                        <div className="mt-3 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                          {activeStatus?.icon} {selectedComplaint.status}
+                        </div>
+                      </div>
+                      <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Category</p>
+                        <p className="mt-3 text-sm font-black uppercase tracking-widest">{selectedComplaint.category}</p>
+                      </div>
+                      <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Last Updated</p>
+                        <p className="mt-3 text-sm font-black uppercase tracking-widest">
+                          {new Date(selectedComplaint.updatedAt || selectedComplaint.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="space-y-8">
-                       <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--bg)] p-8">
-                          <h4 className="mb-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Subject Description</h4>
-                          <p className="text-base font-medium leading-8 text-[var(--text-muted)] whitespace-pre-wrap">{selectedComplaint.description}</p>
-                       </div>
+                      <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--bg)] p-8">
+                        <h4 className="mb-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Subject Description</h4>
+                        <p className="text-base font-medium leading-8 text-[var(--text-muted)] whitespace-pre-wrap">{selectedComplaint.description}</p>
+                      </div>
 
-                       {selectedComplaint.attachment && (
-                         <div className="space-y-4">
-                           <h4 className="ml-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Attachment Proof</h4>
-                           <div className="overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-black/10">
-                              <img
-                                src={selectedComplaint.attachment?.startsWith("http") ? selectedComplaint.attachment : `${filePublicOrigin()}${selectedComplaint.attachment}`}
-                                alt="Complaint proof"
-                                className="max-h-[500px] w-full object-contain"
-                                onError={(e) => { e.target.style.display = 'none'; }}
-                              />
-                           </div>
-                         </div>
-                       )}
+                      {selectedComplaint.attachment && (
+                        <div className="space-y-4">
+                          <h4 className="ml-4 text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Attachment Proof</h4>
+                          <div className="overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-black/10">
+                            <img
+                              src={selectedComplaint.attachment?.startsWith("http") ? selectedComplaint.attachment : `${filePublicOrigin()}${selectedComplaint.attachment}`}
+                              alt="Complaint proof"
+                              className="max-h-[500px] w-full object-contain"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
-                       <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg)] p-6">
-                         <div className="flex flex-col gap-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between">
-                            <p>Ticket Opened: {new Date(selectedComplaint.createdAt).toLocaleString()}</p>
-                            {selectedComplaint.status === "Resolved" && (
-                              <p className="text-emerald-500">Resolution Date: {new Date(selectedComplaint.resolvedAt).toLocaleString()}</p>
-                            )}
-                         </div>
-                       </div>
+                      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg)] p-6">
+                        <div className="flex flex-col gap-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between">
+                          <p>Ticket Opened: {new Date(selectedComplaint.createdAt).toLocaleString()}</p>
+                          {selectedComplaint.status === "Resolved" && (
+                            <p className="text-emerald-500">Resolution Date: {new Date(selectedComplaint.resolvedAt).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -370,10 +360,10 @@ const RaiseComplaint = () => {
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           )}
-        </AnimatePresence>
+        
       </div>
     </div>
   );

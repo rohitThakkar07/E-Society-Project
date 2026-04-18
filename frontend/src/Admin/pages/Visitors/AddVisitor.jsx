@@ -51,7 +51,7 @@ const AddVisitor = () => {
     if (selectedResidentId) {
       const selected = residents.find((resident) => resident._id === selectedResidentId);
       if (selected) {
-        setValue("wing", selected.wing || selected.block || "");
+        setValue("wing", selected.wing || "");
         setValue("flatNumber", selected.flatNumber || "");
       }
     }
@@ -85,98 +85,65 @@ const AddVisitor = () => {
     }
   };
 
-
   if (loading && isEditMode) {
-    return <div className="text-center p-6">Loading visitor...</div>;
+    return <div className="text-center p-12 text-slate-400 font-black uppercase tracking-widest text-xs">Loading visitor...</div>;
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="p-6 bg-gray-50 min-h-screen font-['Inter',_sans-serif]">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? "Edit" : "Add"} Visitor</h1>
-          <p className="text-sm text-gray-500">
-            {isEditMode ? "Update" : "Create"} visitor details in the same style as the event form.
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            {isEditMode ? "Manage" : "Direct Entry"} Registry
+          </h1>
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            {isEditMode ? "Update" : "Register"} visitor entry directly into the inside logs.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Visitor Name *</label>
-            <input {...register("visitorName", { required: "Visitor name is required" })} className={inputClass} />
-            {errors.visitorName && <p className={errorClass}>{errors.visitorName.message}</p>}
-          </div>
-
-          <div>
-            <label className={labelClass}>Mobile Number *</label>
-            <input
-              {...register("mobileNumber", {
-                required: "Mobile number is required",
-                pattern: { value: /^[0-9]{10}$/, message: "Invalid number" },
-              })}
-              className={inputClass}
-            />
-            {errors.mobileNumber && <p className={errorClass}>{errors.mobileNumber.message}</p>}
-          </div>
-
-          <div>
-            <label className={labelClass}>Purpose</label>
-            <input {...register("purpose")} className={inputClass} placeholder="Why is the visitor coming?" />
-          </div>
-
-          <div>
-            <label className={labelClass}>Status *</label>
-            <select {...register("status", { required: "Status is required" })} className={inputClass}>
-              <option value="Inside">Inside</option>
-              <option value="Exited">Outside</option>
-            </select>
-            {errors.status && <p className={errorClass}>{errors.status.message}</p>}
-          </div>
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <label className={labelClass}>Select Resident *</label>
-            <select {...register("visitingResident", { required: "Resident is required" })} className={inputClass}>
-              <option value="">Select Resident</option>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Resident Being Visited *</label>
+            <select {...register("visitingResident", { required: "Resident is required" })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
+              <option value="">Search resident...</option>
               {residents.map((resident) => {
-                const wing = resident.wing || resident.block || "";
+                const wing = resident.wing || "";
                 const flat = resident.flatNumber || "";
-                // If flatNumber already starts with the wing (e.g. "B-137" starts with "B"), don't prepend wing again
                 const flatDisplay = flat.startsWith(wing) ? flat : `${wing}-${flat}`;
-                
                 return (
                   <option key={resident._id} value={resident._id}>
                     {resident.firstName} {resident.lastName} ({flatDisplay})
                   </option>
                 );
               })}
-
             </select>
-            {errors.visitingResident && <p className={errorClass}>{errors.visitingResident.message}</p>}
           </div>
 
           <div>
-            <label className={labelClass}>Wing</label>
-            <input {...register("wing")} readOnly className={`${inputClass} bg-gray-50`} />
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Visitor Name *</label>
+             <input {...register("visitorName", { required: "Visitor name is required" })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Legal name" />
           </div>
 
           <div>
-            <label className={labelClass}>Flat Number</label>
-            <input {...register("flatNumber")} readOnly className={`${inputClass} bg-gray-50`} />
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Contact Number *</label>
+             <input {...register("mobileNumber", { required: "Mobile is required" })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Mobile" />
           </div>
+
+          <div className="md:col-span-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Purpose / Observation</label>
+             <input {...register("purpose")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Note purpose of entry" />
+          </div>
+
+          {/* Hidden but required for submission logic consistency */}
+          <input type="hidden" {...register("status")} />
         </div>
 
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/visitors")}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" disabled={loading}>
-            {loading ? "Saving..." : isEditMode ? "Update Visitor" : "Create Visitor"}
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+          <button type="button" onClick={() => navigate("/admin/visitors")} className="px-6 py-3 font-bold text-slate-400 text-sm uppercase tracking-widest">Cancel</button>
+          <button type="submit" className="px-10 py-3 bg-slate-900 text-white rounded-xl hover:bg-black font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-slate-900/20">
+            {isEditMode ? "Update Log" : "Allow Entry Now"}
           </button>
         </div>
       </form>

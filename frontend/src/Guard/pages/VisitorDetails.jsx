@@ -6,7 +6,7 @@ import {
   ChevronLeft, Phone, MapPin, Clock, Car, Shield,
   CheckCircle, XCircle, LogOut, RefreshCw, Loader2, User
 } from "lucide-react";
-import { fetchVisitorById, markVisitorExit } from "../../store/slices/visitorSlice";
+import { fetchVisitorById, markExit } from "../../store/slices/visitorSlice";
 import API from "../../service/api";
 import { toast } from "react-toastify";
 
@@ -97,7 +97,7 @@ const VisitorDetail = () => {
   const handleExit = async () => {
     if (!window.confirm("Mark visitor as exited?")) return;
     setActionLoad(true);
-    await dispatch(markVisitorExit(id));
+    await dispatch(markExit(id));
     dispatch(fetchVisitorById(id));
     setActionLoad(false);
   };

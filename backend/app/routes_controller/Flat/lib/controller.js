@@ -3,11 +3,12 @@ const User = require("../../../db/models/userModel");
 const Resident = require("../../../db/models/residentsModel");
 const createFlat = async (req, res) => {
   try {
-    const { flatNumber, floor, type } = req.body;
-    if (!flatNumber || floor === undefined || !type)
-      return res.status(400).json({ success: false, message: "flatNumber, floor and type are required." });
-    const exists = await Flat.findOne({ flatNumber });
-    if (exists) return res.status(409).json({ success: false, message: `Flat ${flatNumber} already exists.` });
+    const { flatNumber, floor, wing, type } = req.body;
+    if (!flatNumber || floor === undefined || !wing || !type)
+      return res.status(400).json({ success: false, message: "flatNumber, floor, wing and type are required." });
+    
+    const exists = await Flat.findOne({ flatNumber, wing });
+    if (exists) return res.status(409).json({ success: false, message: `Flat ${flatNumber} already exists in ${wing}.` });
     const flat = await Flat.create(req.body);
     res.status(201).json({ success: true, data: flat });
   } catch (err) {

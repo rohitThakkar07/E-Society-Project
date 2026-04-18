@@ -81,7 +81,7 @@ const ResidentForm = () => {
     formData.append("status", data.status || "Active");
 
     // Denormalized fields
-    formData.append("wing", selectedFlat.wing || selectedFlat.block);
+    formData.append("wing", selectedFlat.wing);
     formData.append("flatNumber", selectedFlat.flatNumber);
     formData.append("floorNumber", Number(selectedFlat.floor ?? selectedFlat.floorNumber ?? 0));
     formData.append("flatType", selectedFlat.type);
@@ -118,7 +118,7 @@ const ResidentForm = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? "Edit" : "Add"} Resident</h1>
           <p className="text-sm text-gray-500">
-            {isEditMode ? "Update" : "Create"} resident details in the same style as the event form.
+            {isEditMode ? "Update" : "Create"} resident details.
           </p>
         </div>
       </div>

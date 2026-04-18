@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const flatSchema = new mongoose.Schema({
-  flatNumber: { type: String, required: true, unique: true, trim: true },
+  flatNumber: { type: String, required: true, trim: true },
   floor:      { type: Number, required: true },
-  block:      { type: String, trim: true },
+  wing:       { type: String, trim: true, required: true },
   type:       { type: String, enum: ["2BHK", "3BHK", "4BHK"], required: true },
 
   owner: {
@@ -25,5 +25,6 @@ const flatSchema = new mongoose.Schema({
 
   monthlyMaintenance: { type: Number, default: 0 },
 }, { timestamps: true });
-flatSchema.index({ flatNumber: 1, block: 1 }, { unique: true });
+
+flatSchema.index({ flatNumber: 1, wing: 1 }, { unique: true });
 module.exports = mongoose.model("Flat", flatSchema);

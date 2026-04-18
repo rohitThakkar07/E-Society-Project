@@ -11,6 +11,16 @@ import {
   Sparkles,
   ArrowRight,
   Wallet,
+  Waves,
+  Dumbbell,
+  Film,
+  Flower2,
+  Bed,
+  Trophy,
+  Gamepad2,
+  Trees,
+  Home,
+  Users,
 } from "lucide-react";
 import { fetchFacilities } from "../../store/slices/facilitySlice";
 import {
@@ -23,7 +33,7 @@ import {
 } from "../../store/slices/facilityBookingSlice";
 import FacilityPaymentModal from "../components/FacilityPaymentModal";
 import { SkeletonGrid } from "../../components/PageLoader";
-import { motion } from "framer-motion";
+
 
 
 function pad(n) {
@@ -161,19 +171,6 @@ const BookFacility = () => {
     );
     if (res.type.endsWith("fulfilled") && res.payload) {
       dispatch(fetchMyBookings());
-      setPayModal({
-        open: true,
-        bookingId: res.payload._id,
-        summary: {
-          amount: res.payload.totalAmount,
-          label: `${selected.name} booking`,
-          lines: [
-            `${new Date(res.payload.startDateTime).toLocaleString()} -> ${new Date(
-              res.payload.endDateTime
-            ).toLocaleString()}`,
-          ],
-        },
-      });
       setSelected(null);
       setPurpose("");
       setStartDT("");
@@ -183,12 +180,37 @@ const BookFacility = () => {
   };
 
   const facilityIcons = {
-    "Swimming Pool": "Pool",
-    Gym: "Gym",
-    Clubhouse: "Club",
-    "Tennis Court": "Court",
-    Garden: "Park",
-    Parking: "Park",
+    "Swimming Pool": <Waves size={28} />,
+    Pool: <Waves size={28} />,
+    Gym: <Dumbbell size={28} />,
+    Fitness: <Dumbbell size={28} />,
+    Clubhouse: <Home size={28} />,
+    "Tennis Court": <Trophy size={28} />,
+    Court: <Trophy size={28} />,
+    Garden: <Trees size={28} />,
+    Lawn: <Trees size={28} />,
+    Theater: <Film size={28} />,
+    Cinema: <Film size={28} />,
+    Yoga: <Flower2 size={28} />,
+    Studio: <Flower2 size={28} />,
+    Games: <Gamepad2 size={28} />,
+    Guest: <Bed size={28} />,
+    Room: <Bed size={28} />,
+    Library: <Building2 size={28} />,
+  };
+
+  const getFacilityIcon = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("pool")) return facilityIcons["Swimming Pool"];
+    if (n.includes("gym") || n.includes("fitness")) return facilityIcons.Gym;
+    if (n.includes("clubhouse") || n.includes("hall")) return facilityIcons.Clubhouse;
+    if (n.includes("tennis") || n.includes("badminton")) return facilityIcons["Tennis Court"];
+    if (n.includes("theater") || n.includes("cinema")) return facilityIcons.Theater;
+    if (n.includes("yoga") || n.includes("meditation")) return facilityIcons.Yoga;
+    if (n.includes("game") || n.includes("indoor")) return facilityIcons.Games;
+    if (n.includes("guest") || n.includes("suite")) return facilityIcons.Guest;
+    if (n.includes("garden") || n.includes("lawn")) return facilityIcons.Garden;
+    return <Building2 size={28} />;
   };
 
   const statusColors = {
@@ -205,11 +227,11 @@ const BookFacility = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-6">
       <div className="mx-auto max-w-6xl mt-12">
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <section 
+         
+         
+         
+         
           className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.12),rgba(14,165,233,0.08),rgba(255,255,255,0.02))] p-6 shadow-sm sm:p-8"
         >
           <div className="absolute -right-12 top-0 h-40 w-40 rounded-full bg-indigo-400/10 blur-3xl" />
@@ -235,21 +257,21 @@ const BookFacility = () => {
                 { label: "My Bookings", value: myBookings.length, tone: "bg-sky-50 text-sky-600" },
                 { label: "Unpaid", value: unpaidBookings, tone: "bg-amber-50 text-amber-600" },
               ].map((item, idx) => (
-                <motion.div 
+                <div 
                   key={item.label}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 * idx }}
+                 
+                 
+                 
+                 
                   className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm"
                 >
                   <div className={`mb-3 inline-flex rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${item.tone}`}>{item.label}</div>
                   <div className="text-2xl font-black text-[var(--text)]">{item.value}</div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
-        </motion.section>
+        </section>
 
         <div className="mt-6 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm">
           {[
@@ -275,24 +297,24 @@ const BookFacility = () => {
               <SkeletonGrid count={6} gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3" itemClassName="h-48" />
             </div>
           ) : (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ staggerChildren: 0.1 }}
+            <div 
+             
+             
+             
               className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3"
             >
               {facilities.map((f, idx) => (
-                <motion.div
+                <div
                   key={f._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.05 }}
+                 
+                 
+                 
+                 
                   className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                 >
                   <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-sm font-black text-slate-600 shadow-sm">
-                      {facilityIcons[f.name] || "Space"}
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-110">
+                      {getFacilityIcon(f.name)}
                     </div>
                   </div>
                   <div className="p-5">
@@ -330,9 +352,9 @@ const BookFacility = () => {
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           ))}
 
         {activeTab === "bookings" && (
@@ -348,8 +370,8 @@ const BookFacility = () => {
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-xs font-black text-blue-700">
-                          {facilityIcons[b.facility?.name] || "Space"}
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                          {getFacilityIcon(b.facility?.name)}
                         </div>
                         <div>
                           <p className="font-black text-[var(--text)]">{b.facility?.name || "Facility"}</p>
@@ -369,7 +391,7 @@ const BookFacility = () => {
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${statusColors[b.status] || statusColors.Pending}`}>
                           {b.status}
                         </span>
-                        {b.paymentStatus !== "paid" && b.status === "Pending" && (
+                        {b.paymentStatus !== "paid" && b.status === "Approved" && (
                           <button
                             type="button"
                             onClick={() =>
@@ -518,7 +540,7 @@ const BookFacility = () => {
                   disabled={!startDT || !endDT || new Date(endDT) <= new Date(startDT)}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-2.5 text-sm font-black text-white disabled:opacity-40"
                 >
-                  <CheckCircle size={16} /> Create &amp; pay
+                  <CheckCircle size={16} /> Request Booking
                 </button>
               </div>
             </form>

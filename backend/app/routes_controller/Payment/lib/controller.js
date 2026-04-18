@@ -32,8 +32,8 @@ exports.initiatePayment = async (req, res) => {
       currency: "INR",
       metadata: {
         maintenanceId: maintenanceId,
-        resident: bill.resident._id.toString(),
-        flatNumber: bill.resident.flatNumber,
+        resident: bill.resident?._id?.toString() || "Unknown",
+        flatNumber: bill.resident?.flatNumber || "N/A",
         month: bill.month,
         year: bill.year,
       },
@@ -51,11 +51,11 @@ exports.initiatePayment = async (req, res) => {
         amountInPaise: orderResult.amountInPaise,
         currency: orderResult.currency,
         resident: {
-          id: bill.resident._id,
-          name: `${bill.resident.firstName} ${bill.resident.lastName || ""}`.trim(),
-          email: bill.resident.email || "",
-          phone: bill.resident.mobileNumber || bill.resident.mobile || "",
-          flatNumber: bill.resident.flatNumber,
+          id: bill.resident?._id || null,
+          name: bill.resident ? `${bill.resident.firstName} ${bill.resident.lastName || ""}`.trim() : "Resident",
+          email: bill.resident?.email || "",
+          phone: bill.resident?.mobileNumber || bill.resident?.mobile || "",
+          flatNumber: bill.resident?.flatNumber || "N/A",
         },
         billDetails: {
           maintenanceId,
@@ -180,7 +180,7 @@ exports.createPayment = async (req, res) => {
     try {
       payment = await PaymentRecord.create({
         maintenance: maintenanceId,
-        resident: bill.resident,
+        resident: bill.resident?._id || bill.resident,
         totalAmount,
         lateFee: bill.lateFee || 0,
         paymentGateway: "razorpay",
@@ -299,8 +299,11 @@ exports.initiateFacilityBookingPayment = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
-    if (booking.status === "Cancelled" || booking.status === "Rejected") {
-      return res.status(400).json({ success: false, message: "This booking cannot be paid" });
+    if (booking.status !== "Approved") {
+      const msg = booking.status === "Pending" 
+        ? "Payment can only be made after admin approval"
+        : `Cannot pay for a booking with status: ${booking.status}`;
+      return res.status(400).json({ success: false, message: msg });
     }
 
     if (booking.paymentStatus === "paid") {
@@ -317,7 +320,7 @@ exports.initiateFacilityBookingPayment = async (req, res) => {
       currency: "INR",
       metadata: {
         facilityBookingId: facilityBookingId.toString(),
-        resident: booking.resident._id.toString(),
+        resident: booking.resident?._id?.toString() || "Unknown",
         facility: booking.facility?.toString?.() || String(booking.facility),
       },
     });
@@ -339,11 +342,11 @@ exports.initiateFacilityBookingPayment = async (req, res) => {
         amountInPaise: orderResult.amountInPaise,
         currency: orderResult.currency,
         resident: {
-          id: r._id,
-          name: `${r.firstName || ""} ${r.lastName || ""}`.trim(),
-          email: r.email || "",
-          phone: r.mobileNumber || r.mobile || "",
-          flatNumber: r.flatNumber,
+          id: booking.resident?._id || null,
+          name: booking.resident ? `${booking.resident.firstName || ""} ${booking.resident.lastName || ""}`.trim() : "Resident",
+          email: booking.resident?.email || "",
+          phone: booking.resident?.mobileNumber || booking.resident?.mobile || "",
+          flatNumber: booking.resident?.flatNumber || "N/A",
         },
         billDetails: {
           facilityBookingId,
@@ -567,10 +570,10 @@ exports.getReceipt = async (req, res) => {
         paymentId: payment.razorpayPaymentId,
         orderId: payment.razorpayOrderId,
         resident: {
-          name: `${payment.resident.firstName} ${payment.resident.lastName}`,
-          flatNumber: payment.resident.flatNumber,
-          email: payment.resident.email,
-          phone: payment.resident.mobile,
+          name: payment.resident ? `${payment.resident.firstName} ${payment.resident.lastName || ""}` : "Deleted Resident",
+          flatNumber: payment.resident?.flatNumber || "N/A",
+          email: payment.resident?.email || "",
+          phone: payment.resident?.mobile || "",
         },
         amount: payment.totalAmount,
         baseAmount: payment.totalAmount - (payment.lateFee || 0),

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { createFlat, updateFlat, fetchFlatById } from "../../../store/slices/flatSlice";
+import { createFlat, updateFlat, fetchFlatById, fetchFlats } from "../../../store/slices/flatSlice";
 
 const FLOOR_MAPPING = {
   1: { range: [1, 6], type: "2BHK" },
@@ -45,19 +45,34 @@ const AddEditFlat = () => {
     }
   }, [selectedFloor, setValue]);
 
+  const allFlats = useSelector((state) => state.flat?.list ?? []);
+  const selectedWing = watch("wing");
+
   const flatNumbers = (() => {
     if (!selectedFloor || !FLOOR_MAPPING[selectedFloor]) return [];
     const [start, end] = FLOOR_MAPPING[selectedFloor].range;
     const count = end - start + 1;
     const nums = [];
+    
     for (let i = 1; i <= count; i++) {
-      // Formats as 101, 102... or 1201, 1202...
-      nums.push((Number(selectedFloor) * 100 + i).toString());
+      const flatNum = (Number(selectedFloor) * 100 + i).toString();
+      
+      // Check if this flat (number + wing) already exists in our society
+      const isDuplicate = allFlats.some(f => 
+        f.flatNumber === flatNum && 
+        f.wing === selectedWing &&
+        (!isEdit || f._id !== id) // Allow the current flat to be visible in the list during edit
+      );
+
+      if (!isDuplicate) {
+        nums.push(flatNum);
+      }
     }
     return nums;
   })();
 
   useEffect(() => {
+    dispatch(fetchFlats({ limit: 1000 })); 
     if (isEdit && id) dispatch(fetchFlatById(id));
   }, [id, isEdit, dispatch]);
 
@@ -66,7 +81,7 @@ const AddEditFlat = () => {
       reset({
         flatNumber: singleFlat.flatNumber,
         floor: singleFlat.floor,
-        block: singleFlat.block,
+        wing: singleFlat.wing,
         type: singleFlat.type,
         status: singleFlat.status,
         occupancyType: singleFlat.occupancyType,
@@ -82,15 +97,15 @@ const AddEditFlat = () => {
     const payload = {
       flatNumber: data.flatNumber,
       floor: Number(data.floor),
-      block: data.block,
+      wing: data.wing,
       type: data.type,
       status: data.status,
-      occupancyType: data.occupancyType,
+      occupancyType: data.occupancyType || "Vacant",
       monthlyMaintenance: data.monthlyMaintenance ? Number(data.monthlyMaintenance) : 0,
       owner: {
-        name: data.ownerName,
-        phone: data.ownerPhone,
-        email: data.ownerEmail,
+        name: data.ownerName || "",
+        phone: data.ownerPhone || "",
+        email: data.ownerEmail || "",
       },
     };
 
@@ -116,14 +131,14 @@ const AddEditFlat = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
           <div className="admin-form-group">
             <label className={labelClass}>Block / Wing *</label>
-            <select {...register("block", { required: "Block/Wing is required" })} className="admin-input">
+            <select {...register("wing", { required: "Block/Wing is required" })} className="admin-input">
               <option value="">Select Wing</option>
-              <option value="WING A">WING A</option>
-              <option value="WING B">WING B</option>
-              <option value="WING C">WING C</option>
-              <option value="WING D">WING D</option>
+              <option value="A">WING A</option>
+              <option value="B">WING B</option>
+              <option value="C">WING C</option>
+              <option value="D">WING D</option>
             </select>
-            {errors.block && <p className={errorClass}>{errors.block.message}</p>}
+            {errors.wing && <p className={errorClass}>{errors.wing.message}</p>}
           </div>
 
           <div className="admin-form-group">

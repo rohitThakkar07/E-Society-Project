@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Eye,
   EyeOff,
@@ -171,10 +171,10 @@ const ForgotPasswordModal = ({ onClose }) => {
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-md"
       style={{ background: "color-mix(in srgb, var(--text) 55%, transparent)" }}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96 }}
+      <div
+       
+       
+       
         className="w-full max-w-md overflow-hidden rounded-xl border shadow-2xl"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
@@ -320,7 +320,7 @@ const ForgotPasswordModal = ({ onClose }) => {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -364,9 +364,9 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 backdrop-blur-xl bg-black/40">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+      <div 
+       
+       
         className="w-full max-w-md overflow-hidden rounded-2xl border shadow-2xl bg-[var(--card)] border-[var(--border)]"
       >
         <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-6 text-white text-center">
@@ -414,7 +414,7 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
             {loading ? <RefreshCw className="animate-spin" size={18} /> : "Update & Continue"}
           </button>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -471,8 +471,6 @@ const LoginInner = () => {
           setLoading(false);
           return;
         }
-
-        toast.success(`Welcome back, ${display}!`);
         const userRole = user.role.toLowerCase();
         navigate(userRole === "admin" ? "/admin" : "/");
       } else {
@@ -511,10 +509,10 @@ const LoginInner = () => {
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4 py-10 lg:flex-row lg:items-stretch lg:gap-10 lg:px-8">
         {/* Hero panel */}
-        <motion.div
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+         
+         
+         
           className="relative mb-8 flex min-h-[220px] w-full overflow-hidden rounded-xl border shadow-lg sm:min-h-[280px] lg:mb-0 lg:min-h-[560px] lg:max-w-md lg:flex-col lg:justify-between"
           style={{ borderColor: "var(--border)" }}
         >
@@ -550,13 +548,13 @@ const LoginInner = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Form card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.05 }}
+        <div
+         
+         
+         
           className="w-full max-w-md rounded-xl border p-6 shadow-xl backdrop-blur-xl sm:p-8"
           style={{
             background: "color-mix(in srgb, var(--card) 92%, transparent)",
@@ -576,12 +574,12 @@ const LoginInner = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <AnimatePresence mode="wait">
+            
               {!isLogin && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
+                <div
+                 
+                 
+                 
                   className="space-y-4 overflow-hidden"
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -618,9 +616,9 @@ const LoginInner = () => {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            
 
             <div>
               <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Email</label>
@@ -689,9 +687,9 @@ const LoginInner = () => {
               </div>
             )}
 
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+            <button
+             
+             
               disabled={loading}
               type="submit"
               className="user-btn-primary mt-4 w-full justify-center rounded-md py-3.5 disabled:opacity-50"
@@ -704,7 +702,7 @@ const LoginInner = () => {
                   <ArrowRight size={18} />
                 </>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* <div className="mt-8 border-t border-[var(--border)] pt-6 text-center text-sm text-[var(--text-muted)]">
@@ -720,11 +718,11 @@ const LoginInner = () => {
               {isLogin ? "Switch to register" : "Back to sign in"}
             </button>
           </div> */}
-        </motion.div>
+        </div>
       </div>
 
-      <AnimatePresence>{showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}</AnimatePresence>
-      <AnimatePresence>
+      {showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}
+      
         {showFirstTimeReset && (
           <FirstTimePasswordModal 
             onClose={() => setShowFirstTimeReset(false)} 
@@ -736,7 +734,7 @@ const LoginInner = () => {
             }} 
           />
         )}
-      </AnimatePresence>
+      
     </div>
   );
 };

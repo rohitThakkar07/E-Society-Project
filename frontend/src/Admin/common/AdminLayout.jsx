@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { Outlet, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from "framer-motion";
+
 import ScrollToTop from "../../components/ScrollToTop";
 
 const AdminLayout = () => {
@@ -33,17 +33,17 @@ const AdminLayout = () => {
           <ScrollToTop containerRef={mainRef} />
 
           <div className="max-w-[1600px] mx-auto min-h-full">
-            <AnimatePresence mode="wait">
-              <motion.div
+            
+              <div
                 key={location.pathname}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
+               
+               
+               
+               
               >
                 <Outlet />
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            
           </div>
         </main>
       </div>

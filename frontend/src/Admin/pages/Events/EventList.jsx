@@ -10,7 +10,7 @@ const EventList = () => {
   const navigate = useNavigate();
 
   const { events = [], loading } = useSelector((state) => state.event);
-  const [tab, setTab] = useState("upcoming");
+  const [tab, setTab] = useState("all");
 
   useEffect(() => {
     dispatch(fetchEvents());

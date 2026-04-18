@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+
 import { Wrench, ArrowLeft, Sparkles } from "lucide-react";
 import { createComplaint } from "../../store/slices/complaintSlice";
 import { fetchResidentFlat } from "../../store/slices/flatSlice";
@@ -99,43 +99,43 @@ const RaiseComplaintForm = () => {
   return (
     <div
       style={{ fontFamily: "'DM Sans', sans-serif" }}
-      className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-6"
+      className="user-page-mesh min-h-screen bg-[var(--bg)] p-4 text-[var(--text)] transition-colors duration-300 sm:p-8"
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
       <div className="relative z-[1] mx-auto max-w-5xl">
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-sm">
-            <div className="grid gap-6 px-6 py-7 md:grid-cols-[1.2fr_0.8fr] md:px-8">
-              <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-orange-700">
-                  <Sparkles size={13} />
+        <div className="mb-6 mt-4">
+          <div className="overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--card)] shadow-lg">
+            <div className="grid gap-4 px-5 py-6 md:grid-cols-[1fr_auto] md:px-8">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.24em] text-indigo-700">
+                  <Sparkles size={11} />
                   New Complaint
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/15">
-                    <Wrench size={24} className="text-orange-600" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/10">
+                    <Wrench size={22} />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">Create complaint</h1>
-                    <p className="text-sm text-[var(--text-muted)]">Submit a new issue and we&apos;ll take you back to your complaint list after save.</p>
+                    <h1 className="text-2xl font-black tracking-tighter text-[var(--text)]">Submit Complaint</h1>
+                    <p className="text-[11px] text-[var(--text-muted)] opacity-80">Provide details about the issue and attach photo proof.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-start justify-end">
+              <div className="flex items-center">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 transition hover:bg-slate-50 w-full sm:w-auto shadow-sm"
                 >
-                  <ArrowLeft size={16} />
-                  Back to List
+                  <ArrowLeft size={14} />
+                  Back
                 </button>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <ComplaintFormSection
           form={form}

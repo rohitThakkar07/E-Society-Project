@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { Toaster } from "react-hot-toast";
 import {
   Bell,
@@ -220,7 +220,7 @@ const Home = () => {
 
         <div className="relative z-10 px-4 sm:px-6 py-10 lg:py-24 max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 items-center gap-16">
-          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+          <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] bg-[var(--card)] mb-8 shadow-sm backdrop-blur-xl">
               <Sparkles size={16} className="text-amber-500 animate-pulse" />
               <span className={`text-[10px] font-black uppercase tracking-[0.2em] bg-clip-text text-transparent bg-gradient-to-r ${greeting.col}`}>
@@ -247,10 +247,10 @@ const Home = () => {
                 Notice board
               </Link>
             </div>
-          </motion.div>
+          </div>
 
           {/* Hero right — society photo carousel */}
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative">
+          <div className="relative">
             <div className="relative rounded-[3rem] overflow-hidden h-[420px] border border-[var(--border)] shadow-2xl">
               {SOCIETY_IMAGES.map((src, i) => (
                 <img
@@ -279,7 +279,7 @@ const Home = () => {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
         </div>
       </section>
@@ -287,13 +287,13 @@ const Home = () => {
 
       <section className="px-4 sm:px-8 mb-20 max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
         {societyStats.map((s, i) => (
-          <motion.div 
+          <div 
             key={i} 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.5 }}
-            whileHover={{ y: -8 }} 
+           
+           
+           
+           
+            
             className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] flex flex-col items-start gap-6 shadow-sm hover:shadow-xl transition-all"
           >
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: s.color + "20", color: s.color }}>
@@ -303,7 +303,7 @@ const Home = () => {
               <h4 className="text-4xl font-black tracking-tighter text-[var(--text)]">{s.value}</h4>
               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mt-1 opacity-60">{s.label}</p>
             </div>
-          </motion.div>
+          </div>
         ))}
       </section>
 
@@ -316,7 +316,7 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((s, i) => (
-              <motion.div key={i} whileHover={{ y: -8 }} className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] flex flex-col items-start gap-6 shadow-sm hover:shadow-xl transition-all">
+              <div key={i} className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] flex flex-col items-start gap-6 shadow-sm hover:shadow-xl transition-all">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white" style={{ backgroundColor: s.color }}>
                   <s.icon size={28} />
                 </div>
@@ -324,7 +324,7 @@ const Home = () => {
                   <h4 className="text-4xl font-black tracking-tighter text-[var(--text)]">{s.value}</h4>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mt-1 opacity-60">{s.label}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </section>
@@ -334,57 +334,92 @@ const Home = () => {
 
 
       {isLoggedIn && (
-        <section className="px-4 sm:px-8 py-24 max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10">
-            {/* Notices */}
-            <div className="bg-[var(--card)] rounded-[3rem] border border-[var(--border)] overflow-hidden hover:shadow-2xl transition-all">
+        <section className="px-4 sm:px-8 py-16 max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+            {/* Society Updates Card */}
+            <div 
+             
+             
+             
+              className="bg-[var(--card)] rounded-[3rem] border border-[var(--border)] overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition-all"
+            >
               <div className="p-8 border-b border-[var(--border)] flex justify-between items-center bg-rose-500/[0.03]">
                 <div className="flex items-center gap-4">
-                  <Bell size={24} className="text-rose-500" />
-                  <h3 className="text-2xl font-black tracking-tight">Society Updates</h3>
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                    <Bell size={20} />
+                  </div>
+                  <h3 className="text-xl font-black tracking-tight text-[var(--text)]">Society Updates</h3>
                 </div>
-                <Link to="/notices" className="text-[10px] font-black uppercase text-rose-500 hover:underline tracking-widest">View All</Link>
+                <Link to="/notices" className="text-[10px] font-black uppercase text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-full transition-all tracking-widest">View All</Link>
               </div>
-              <div className="p-6 space-y-2">
-                {notices.slice(0, 3).map((n, i) => (
-                  <Link key={i} to="/notices" className="flex items-center justify-between p-5 rounded-2xl hover:bg-[var(--bg)] transition-all group">
-                    <div className="min-w-0">
-                      <p className="font-bold text-[var(--text)] truncate">{n.title}</p>
-                      <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mt-1 opacity-50">{new Date(n.createdAt).toDateString()}</p>
-                    </div>
-                    <ChevronRight size={18} className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                ))}
+              <div className="flex-1 p-4 space-y-1">
+                {notices.length > 0 ? (
+                  notices.slice(0, 3).map((n, i) => (
+                    <Link key={i} to="/notices" className="flex items-center justify-between p-4 rounded-3xl hover:bg-[var(--bg)] transition-all group border border-transparent hover:border-[var(--border)]">
+                      <div className="min-w-0">
+                        <p className="font-bold text-[var(--text)] truncate text-sm">{n.title}</p>
+                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mt-1 opacity-50">{new Date(n.createdAt).toDateString()}</p>
+                      </div>
+                      <ChevronRight size={16} className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  ))
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center py-10 text-center opacity-40">
+                    <Bell size={30} className="mb-2" />
+                    <p className="text-sm font-bold">No updates yet</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Events */}
-            <div className="bg-indigo-700 text-white rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
+            {/* Upcoming Events Card */}
+            <div 
+             
+             
+             
+              className="bg-indigo-700 text-white rounded-[3rem] p-8 relative overflow-hidden shadow-2xl flex flex-col"
+            >
               <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[100px] rounded-full" />
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-12">
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-center mb-10">
                   <div className="flex items-center gap-4">
-                    <Calendar size={24} />
-                    <h3 className="text-2xl font-black tracking-tight">Upcoming Events</h3>
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                      <Calendar size={20} />
+                    </div>
+                    <h3 className="text-xl font-black tracking-tight">Upcoming Events</h3>
                   </div>
-                  <Link to="/events" className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-indigo-700 transition-all">
-                    <ArrowRight />
+                  <Link to="/events" className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-indigo-700 transition-all">
+                    <ArrowRight size={18} />
                   </Link>
                 </div>
-                <div className="space-y-6">
-                  {upcomingEvents.slice(0, 2).map((e, i) => (
-                    <div key={i} className="flex items-center gap-6 p-6 rounded-[2rem] bg-white/10 border border-white/10 backdrop-blur-sm">
-                      <div className="w-16 h-16 rounded-2xl bg-white text-indigo-700 flex flex-col items-center justify-center font-black shadow-lg shrink-0">
-                        <span className="text-2xl leading-none">{new Date(e.date).getDate()}</span>
-                        <span className="text-[10px] uppercase">{new Date(e.date).toLocaleString("default", { month: "short" })}</span>
+                
+                <div className="flex-1 space-y-4">
+                  {upcomingEvents.length > 0 ? (
+                    upcomingEvents.slice(0, 2).map((e, i) => (
+                      <div key={i} className="flex items-center gap-5 p-5 rounded-[2.5rem] bg-white/10 border border-white/10 backdrop-blur-sm group hover:bg-white/20 transition-all cursor-pointer">
+                        <div className="w-14 h-14 rounded-2xl bg-white text-indigo-700 flex flex-col items-center justify-center font-black shadow-lg shrink-0">
+                          <span className="text-xl leading-none">{new Date(e.date).getDate()}</span>
+                          <span className="text-[9px] uppercase">{new Date(e.date).toLocaleString("default", { month: "short" })}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-black text-lg leading-tight truncate">{e.title}</p>
+                          <p className="text-[9px] font-bold uppercase mt-1.5 opacity-70 flex items-center gap-2"><MapPin size={10} />{e.location || "Society Area"}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-black text-xl leading-tight">{e.title}</p>
-                        <p className="text-[10px] font-bold uppercase mt-2 opacity-70 flex items-center gap-2"><MapPin size={12} />{e.location || "Society Area"}</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center py-6 text-center opacity-60">
+                      <Calendar size={30} className="mb-2" />
+                      <p className="text-sm font-bold">No events scheduled</p>
                     </div>
-                  ))}
+                  )}
                 </div>
+                
+                {upcomingEvents.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-white/10">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Stay tuned for more...</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -407,13 +442,13 @@ const Home = () => {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {coreFeatures.map((f, i) => (
-            <motion.div 
+            <div 
               key={i} 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ delay: i * 0.05, duration: 0.5 }}
-              whileHover={{ y: -6 }} 
+             
+             
+             
+             
+              
               className="p-8 rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] hover:shadow-xl transition-all group"
             >
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: f.bg, color: f.color }}>
@@ -421,7 +456,7 @@ const Home = () => {
               </div>
               <h3 className="text-xl font-black text-[var(--text)] mb-3">{f.title}</h3>
               <p className="text-sm text-[var(--text-muted)] leading-relaxed opacity-80">{f.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -436,13 +471,13 @@ const Home = () => {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {flatTypes.map((f, i) => (
-              <motion.div 
+              <div 
                 key={i} 
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }} 
+               
+               
+               
+               
+                
                 className="flat-card rounded-[2.5rem] bg-[var(--card)] border border-[var(--border)] overflow-hidden shadow-sm hover:shadow-2xl transition-all"
               >
                 <div className="relative h-56 overflow-hidden">
@@ -467,7 +502,7 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -482,7 +517,7 @@ const Home = () => {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {amenities.map((a, i) => (
-            <motion.div key={i} whileHover={{ y: -8 }} className="amenity-card rounded-[2.5rem] overflow-hidden border border-[var(--border)] shadow-sm hover:shadow-2xl transition-all relative group">
+            <div key={i} className="amenity-card rounded-[2.5rem] overflow-hidden border border-[var(--border)] shadow-sm hover:shadow-2xl transition-all relative group">
               <div className="h-48 overflow-hidden">
                 <img src={a.img} alt={a.name} className="amenity-img w-full h-full object-cover" />
               </div>
@@ -493,7 +528,7 @@ const Home = () => {
                 </div>
                 <p className="text-xs text-[var(--text-muted)] opacity-70">{a.desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -512,11 +547,11 @@ const Home = () => {
               { step: "02", title: "Residents Login", desc: "Residents access notices, book facilities, manage visitors, pay maintenance, and raise complaints." },
               { step: "03", title: "Security & Reports", desc: "Security guards log all entries. Admins get real-time reports, expense tracking, and alerts." },
             ].map((s, i) => (
-              <motion.div key={i} whileHover={{ y: -6 }} className="p-10 rounded-[2.5rem] bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div key={i} className="p-10 rounded-[2.5rem] bg-white/10 border border-white/10 backdrop-blur-sm">
                 <div className="text-6xl font-black text-white/20 mb-6 leading-none">{s.step}</div>
                 <h3 className="text-xl font-black mb-3">{s.title}</h3>
                 <p className="text-sm text-white/70 leading-relaxed">{s.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
