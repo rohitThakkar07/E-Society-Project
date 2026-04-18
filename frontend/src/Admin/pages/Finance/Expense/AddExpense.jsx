@@ -80,22 +80,22 @@ const AddExpense = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
 
             {/* Title */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Expense Title *</label>
+            <div className="admin-form-group">
+              <label className="admin-label">Expense Title *</label>
               <input type="text" placeholder="e.g. Lift Repair, Electric Bill"
                 {...register("title", { required: "Title is required", minLength: { value: 3, message: "Min 3 characters" } })}
-                className={`admin-input ${errors.title ? "admin-input-error" : ""}`} />
-              {errors.title && <p className="text-xs text-red-500 font-medium">{errors.title.message}</p>}
+                className={`admin-input ${errors.title ? "border-red-500" : ""}`} />
+              {errors.title && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.title.message}</p>}
             </div>
 
             {/* Category + Payment Mode */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Category *</label>
-                <select {...register("category", { required: "Category is required" })} className={`admin-input ${errors.category ? "admin-input-error" : ""}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+              <div className="admin-form-group">
+                <label className="admin-label">Category *</label>
+                <select {...register("category", { required: "Category is required" })} className={`admin-input ${errors.category ? "border-red-500" : ""}`}>
                   <option value="">Select category</option>
                   <option value="Electricity">Electricity</option>
                   <option value="Water">Water</option>
@@ -104,12 +104,12 @@ const AddExpense = () => {
                   <option value="Repair">Repair</option>
                   <option value="Other">Other</option>
                 </select>
-                {errors.category && <p className="text-xs text-red-500 font-medium">{errors.category.message}</p>}
+                {errors.category && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.category.message}</p>}
               </div>
 
               {selectedCategory === "Salary" && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Select Guard *</label>
+                <div className="admin-form-group">
+                  <label className="admin-label">Select Guard *</label>
                   <select onChange={onGuardChange} className="admin-input">
                     <option value="">Choose Guard</option>
                     {guards.map(g => (
@@ -119,56 +119,50 @@ const AddExpense = () => {
                 </div>
               )}
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Payment Mode *</label>
-                <select {...register("paymentMode", { required: "Payment mode is required" })} className={`admin-input ${errors.paymentMode ? "admin-input-error" : ""}`}>
+              <div className="admin-form-group">
+                <label className="admin-label">Payment Mode *</label>
+                <select {...register("paymentMode", { required: "Payment mode is required" })} className={`admin-input ${errors.paymentMode ? "border-red-500" : ""}`}>
                   <option value="">Select mode</option>
                   <option value="Cash">Cash</option>
                   <option value="UPI">UPI</option>
                   <option value="Bank Transfer">Bank Transfer</option>
                   <option value="Cheque">Cheque</option>
                 </select>
-                {errors.paymentMode && <p className="text-xs text-red-500 font-medium">{errors.paymentMode.message}</p>}
+                {errors.paymentMode && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.paymentMode.message}</p>}
               </div>
-            </div>
 
-            {/* Amount + Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Amount (₹) *</label>
+              <div className="admin-form-group">
+                <label className="admin-label">Amount (₹) *</label>
                 <input type="number" placeholder="e.g. 15000"
                   {...register("amount", { required: "Amount is required", min: { value: 1, message: "Must be > 0" } })}
-                  className={`admin-input ${errors.amount ? "admin-input-error" : ""}`} />
-                {errors.amount && <p className="text-xs text-red-500 font-medium">{errors.amount.message}</p>}
+                  className={`admin-input ${errors.amount ? "border-red-500" : ""}`} />
+                {errors.amount && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.amount.message}</p>}
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Expense Date *</label>
-                <input type="date" {...register("date", { required: "Date is required" })} className={`admin-input ${errors.date ? "admin-input-error" : ""}`} />
-                {errors.date && <p className="text-xs text-red-500 font-medium">{errors.date.message}</p>}
+
+              <div className="admin-form-group">
+                <label className="admin-label">Expense Date *</label>
+                <input type="date" {...register("date", { required: "Date is required" })} className={`admin-input ${errors.date ? "border-red-500" : ""}`} />
+                {errors.date && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.date.message}</p>}
               </div>
             </div>
 
             {/* Description */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Description (Optional)</label>
+            <div className="admin-form-group">
+              <label className="admin-label">Description (Optional)</label>
               <textarea rows={3} placeholder="Additional details..."
                 {...register("description")}
                 className="admin-input resize-none" />
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex justify-end gap-3 pt-6 border-t border-slate-50">
               <button type="button" onClick={() => navigate(-1)}
-                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition">
                 Cancel
               </button>
               <button type="submit" disabled={loading}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2">
-                {loading ? (
-                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Saving...</>
-                ) : (
-                  <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Add Expense</>
-                )}
+                className="admin-btn-primary">
+                {loading ? "Saving..." : "Add Expense"}
               </button>
             </div>
 

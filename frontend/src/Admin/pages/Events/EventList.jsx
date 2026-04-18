@@ -64,34 +64,73 @@ const EventList = () => {
           {[1,2,3].map((i) => (<div key={i} className="h-24 rounded-2xl bg-white animate-pulse border border-gray-100" />))}
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-500">No events found.</div>
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-500 font-bold uppercase tracking-widest">No events found.</div>
       ) : (
-        <div className="grid gap-4">
-          {filteredEvents.map((event) => (
-            <div key={event._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
-                  <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{event.category || "General"}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => navigate(`/admin/event/edit/${event._id}`)} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">
-                    <FiEdit size={16} />
-                  </button>
-                  <button onClick={() => confirmAndDelete(event._id)} className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
-                    <FiTrash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
-                <span><FiCalendar size={14} className="inline mr-1" />{new Date(event.date).toLocaleDateString()}</span>
-                {event.time && <span><FiClock size={14} className="inline mr-1" />{event.time}</span>}
-                {event.location && <span><FiMapPin size={14} className="inline mr-1" />{event.location}</span>}
-              </div>
-              <p className="mt-2 text-sm text-gray-700">{event.description || "No description provided."}</p>
-              <p className="mt-3 text-xs text-gray-500">Organized by: {event.organizer || "Community"}</p>
-            </div>
-          ))}
+        <div className="admin-table-wrap shadow-sm">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Event Title</th>
+                <th>Category</th>
+                <th>Date & Time</th>
+                <th>Location</th>
+                <th>Organizer</th>
+                <th className="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEvents.map((event) => (
+                <tr key={event._id} className="hover:bg-slate-50 transition-colors">
+                  <td>
+                    <div className="font-bold text-slate-800">{event.title}</div>
+                    <div className="text-[10px] text-slate-400 max-w-[200px] truncate">{event.description}</div>
+                  </td>
+                  <td>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-tighter bg-indigo-50 text-indigo-600 border border-indigo-100">
+                      {event.category || "General"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                      <FiCalendar size={12} className="text-slate-400" />
+                      {new Date(event.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                    {event.time && (
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                        <FiClock size={10} />
+                        {event.time}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                      <FiMapPin size={12} className="text-slate-400" />
+                      {event.location || "N/A"}
+                    </div>
+                  </td>
+                  <td className="text-xs font-bold text-slate-600">
+                    {event.organizer || "Community"}
+                  </td>
+                  <td>
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        onClick={() => navigate(`/admin/event/edit/${event._id}`)}
+                        className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                      >
+                        <FiEdit size={14} />
+                      </button>
+                      <button 
+                        onClick={() => confirmAndDelete(event._id)}
+                        className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

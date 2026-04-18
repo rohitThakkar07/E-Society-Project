@@ -21,15 +21,17 @@ const RoleDashboard = () => {
   ];
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* HEADER */}
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Role & Rights Overview</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Role & Rights Overview</h1>
+          <p className="text-sm text-gray-500">Overview of system roles and user distribution.</p>
+        </div>
 
         <button
           onClick={() => navigate("/roles/create-role")}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="admin-btn-primary"
         >
           Create Role
         </button>
@@ -37,45 +39,41 @@ const RoleDashboard = () => {
 
       {/* STATS CARDS */}
       <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-5 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Total Users</p>
-          <h2 className="text-2xl font-bold">{stats.totalUsers}</h2>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Users</p>
+          <h2 className="text-3xl font-black text-slate-800">{stats.totalUsers}</h2>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Active Users</p>
-          <h2 className="text-2xl font-bold text-green-600">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">Active Users</p>
+          <h2 className="text-3xl font-black text-green-600">
             {stats.activeUsers}
           </h2>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Blocked Users</p>
-          <h2 className="text-2xl font-bold text-red-600">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Blocked Users</p>
+          <h2 className="text-3xl font-black text-red-600">
             {stats.blockedUsers}
           </h2>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow">
-          <p className="text-gray-500 text-sm">Suspended Users</p>
-          <h2 className="text-2xl font-bold text-yellow-600">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-1">Suspended Users</p>
+          <h2 className="text-3xl font-black text-amber-600">
             {stats.suspendedUsers}
           </h2>
         </div>
       </div>
 
       {/* ROLE LIST TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="p-5 border-b">
-          <h2 className="text-lg font-semibold">Roles</h2>
-        </div>
-
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b">
+      <div className="admin-table-wrap shadow-sm">
+        <table className="admin-table">
+          <thead>
             <tr>
-              <th className="p-4">Role Name</th>
-              <th className="p-4">Assigned Users</th>
-              <th className="p-4 text-center">Action</th>
+              <th>Role Name</th>
+              <th>Assigned Users</th>
+              <th className="text-center">Action</th>
             </tr>
           </thead>
 
@@ -83,14 +81,14 @@ const RoleDashboard = () => {
             {roles.map((role) => (
               <tr
                 key={role.id}
-                className="border-b hover:bg-gray-50 transition"
+                className="hover:bg-slate-50 transition-colors"
               >
-                <td className="p-4 font-medium">{role.name}</td>
-                <td className="p-4">{role.users}</td>
-                <td className="p-4 text-center">
+                <td className="font-bold text-slate-800">{role.name}</td>
+                <td className="text-sm font-bold text-slate-500">{role.users} Recipients</td>
+                <td className="text-center">
                   <button
                     onClick={() => navigate(`/roles/edit/${role.id}`)}
-                    className="text-blue-600 hover:underline"
+                    className="text-xs font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition"
                   >
                     Edit Permissions
                   </button>

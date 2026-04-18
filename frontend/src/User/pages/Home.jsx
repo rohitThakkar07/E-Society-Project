@@ -54,7 +54,6 @@ const AMENITY_IMAGES = {
   gym: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
   pool: "https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?w=500&q=80",
   garden: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=500&q=80",
-  parking: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=500&q=80",
 };
 
 const Home = () => {
@@ -132,7 +131,6 @@ const Home = () => {
     { name: "Gymnasium", icon: Dumbbell, img: AMENITY_IMAGES.gym, desc: "Fully equipped modern gym" },
     { name: "Swimming Pool", icon: Waves, img: AMENITY_IMAGES.pool, desc: "Olympic-size heated pool" },
     { name: "Landscaped Garden", icon: TreePine, img: AMENITY_IMAGES.garden, desc: "5-acre green retreat" },
-    { name: "Covered Parking", icon: Car, img: AMENITY_IMAGES.parking, desc: "2 slots per flat" },
   ];
 
   const coreFeatures = [

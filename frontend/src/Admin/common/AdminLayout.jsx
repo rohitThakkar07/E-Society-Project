@@ -20,7 +20,7 @@ const AdminLayout = () => {
   }, []);
 
   return (
-    <div className="flex bg-[#F8FAFC] h-screen overflow-hidden text-slate-900">
+    <div className="flex bg-[#F3F6F9] h-screen overflow-hidden text-slate-900 font-sans">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} />
 
@@ -29,7 +29,7 @@ const AdminLayout = () => {
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Page Content */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-6 lg:p-10">
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <ScrollToTop containerRef={mainRef} />
 
           <div className="max-w-[1600px] mx-auto min-h-full">

@@ -25,4 +25,7 @@ router.post("/reset-password", controller.resetPassword);
 // Force Password Change on First Login
 router.post("/change-first-password", authMiddleware, controller.changeFirstPassword);
 
+// Change Password using Old Password
+router.post("/change-password", authMiddleware, controller.changePassword);
+
 module.exports = router;

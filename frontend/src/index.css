@@ -357,21 +357,34 @@ body {
    Consistent classes for inputs, forms, modals, badges
 ═══════════════════════════════════════════════════════════════ */
 
-/* ── Form Inputs ─────────────────────────────────────────────── */
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 2px;
+}
+
 .admin-input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 16px;
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
   background-color: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   font-family: 'Inter', sans-serif;
-  -webkit-appearance: none;
-  appearance: none;
 }
 
 .admin-input::placeholder {
@@ -409,16 +422,16 @@ body {
 }
 
 .admin-page-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
 
 .admin-page-subtitle {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 4px;
   font-weight: 500;
 }
 
@@ -473,10 +486,17 @@ body {
 /* ── Stat/Summary Cards ──────────────────────────────────────── */
 .admin-stat-card {
   background-color: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  transition: all 0.3s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+  border-color: rgba(79, 110, 247, 0.2);
 }
 
 .admin-stat-label {
@@ -516,12 +536,13 @@ body {
 }
 
 .admin-table thead th {
-  padding: 12px 20px;
-  font-size: 10px;
-  font-weight: 800;
-  color: #64748b;
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #333F54;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-align: left;
 }
 
@@ -682,13 +703,14 @@ body {
 }
 
 .MuiTableCell-head {
-  font-size: 10px !important;
-  font-weight: 800 !important;
-  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  background-color: #333F54 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  padding: 12px 16px !important;
+  letter-spacing: 0.1em !important;
+  border-bottom: 1px solid #1e293b !important;
+  padding: 14px 16px !important;
   font-family: 'Inter', sans-serif !important;
 }
 

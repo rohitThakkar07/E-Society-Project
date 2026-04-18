@@ -71,21 +71,23 @@ const EventForm = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Title *</label>
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <div className="admin-form-group">
+            <label className="admin-label">Event Title *</label>
             <input
               name="title"
               value={form.title}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-input"
+              placeholder="e.g. Annual General Meeting"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-            <select name="category" value={form.category} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+          <div className="admin-form-group">
+            <label className="admin-label">Category</label>
+            <select name="category" value={form.category} onChange={handleChange} className="admin-input">
               <option>General</option>
               <option>Security</option>
               <option>Maintenance</option>
@@ -93,70 +95,78 @@ const EventForm = () => {
               <option>Festival</option>
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date *</label>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Date *</label>
             <input
               name="date"
               type="date"
               value={form.date}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-input"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Time</label>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Time</label>
             <input
               name="time"
               type="time"
               value={form.time}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-input"
             />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
+          <div className="admin-form-group">
+            <label className="admin-label">Location</label>
             <input
               name="location"
               value={form.location}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-input"
+              placeholder="e.g. Community Hall"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Organizer</label>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Organizer</label>
             <input
               name="organizer"
               value={form.organizer}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-input"
+              placeholder="e.g. Cultural Committee"
+            />
+          </div>
+
+          <div className="admin-form-group md:col-span-2">
+            <label className="admin-label">Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={4}
+              className="admin-input resize-none"
+              placeholder="Details about the event..."
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
           <button
             onClick={() => navigate("/admin/event/list")}
             type="button"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition"
           >
             Cancel
           </button>
-          <button type="submit" disabled={loading} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="admin-btn-primary"
+          >
             {loading ? "Saving..." : isEdit ? "Update Event" : "Create Event"}
           </button>
         </div>

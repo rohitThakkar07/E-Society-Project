@@ -71,188 +71,102 @@ const CreateComplaint = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
-      <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Create Complaint</h1>
+          <p className="text-sm text-gray-500">Register a new complaint on behalf of a resident.</p>
+        </div>
+      </div>
 
-        {/* Header */}
-        <div className="mb-8 border-b pb-4">
-          <h2 className="text-3xl font-extrabold text-gray-800">
-            Submit a Complaint
-          </h2>
-          <p className="text-gray-500 mt-1">
-            Fill in the details below to register your complaint
-          </p>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <div className="admin-form-group">
+            <label className="admin-label">Complaint Title *</label>
+            <input
+              {...register("title", { required: "Title is required" })}
+              placeholder="e.g. Water leakage in bathroom"
+              className="admin-input"
+            />
+            {errors.title && <span className="text-[10px] font-bold text-red-500 uppercase mt-1">{errors.title.message}</span>}
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Category *</label>
+            <select
+              {...register("category", { required: "Category is required" })}
+              className="admin-input"
+            >
+              <option value="">Select Category</option>
+              <option value="Water">Water</option>
+              <option value="Electricity">Electricity</option>
+              <option value="Security">Security</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Other">Other</option>
+            </select>
+            {errors.category && <span className="text-[10px] font-bold text-red-500 uppercase mt-1">{errors.category.message}</span>}
+          </div>
+
+          <div className="admin-form-group md:col-span-2">
+            <label className="admin-label">Description *</label>
+            <textarea
+              {...register("description", {
+                required: "Description is required",
+                minLength: { value: 10, message: "Description must be at least 10 characters" },
+              })}
+              rows={4}
+              placeholder="Describe the issue in detail..."
+              className="admin-input resize-none"
+            />
+            {errors.description && <span className="text-[10px] font-bold text-red-500 uppercase mt-1">{errors.description.message}</span>}
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Priority</label>
+            <select {...register("priority")} className="admin-input">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-label">Status</label>
+            <select {...register("status")} className="admin-input">
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+
+          <div className="admin-form-group md:col-span-2">
+            <label className="admin-label">Attachment (Optional)</label>
+            <input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              {...register("attachment")}
+              className="admin-input file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-black file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-          {/* Section 1 - Complaint Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">
-                1
-              </span>
-              Complaint Information
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* Title */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register("title", { required: "Title is required" })}
-                  placeholder="e.g. Water leakage in bathroom"
-                  className={`w-full border rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition
-                    ${errors.title ? "border-red-400 bg-red-50" : "border-gray-300"}`}
-                />
-                {errors.title && (
-                  <span className="text-xs text-red-500 mt-1 block">
-                    {errors.title.message}
-                  </span>
-                )}
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Category <span className="text-red-500">*</span>
-                </label>
-                <select
-                  {...register("category", { required: "Category is required" })}
-                  className={`w-full border rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition
-                    ${errors.category ? "border-red-400 bg-red-50" : "border-gray-300"}`}
-                >
-                  <option value="">Select Category</option>
-                  <option value="Water">Water</option>
-                  <option value="Electricity">Electricity</option>
-                  <option value="Security">Security</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.category && (
-                  <span className="text-xs text-red-500 mt-1 block">
-                    {errors.category.message}
-                  </span>
-                )}
-              </div>
-
-            </div>
-
-            {/* Description */}
-            <div className="mt-6">
-              <label className="text-sm font-medium text-gray-700">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                {...register("description", {
-                  required: "Description is required",
-                  minLength: {
-                    value: 10,
-                    message: "Description must be at least 10 characters",
-                  },
-                })}
-                rows={4}
-                placeholder="Describe the issue in detail..."
-                className={`w-full border rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none
-                  ${errors.description ? "border-red-400 bg-red-50" : "border-gray-300"}`}
-              />
-              {errors.description && (
-                <span className="text-xs text-red-500 mt-1 block">
-                  {errors.description.message}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Section 2 - Priority & Status */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">
-                2
-              </span>
-              Priority & Status
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-              {/* Priority */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Priority
-                </label>
-                <select
-                  {...register("priority")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <select
-                  {...register("status")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                </select>
-              </div>
-
-              {/* Attachment */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Attachment{" "}
-                  <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="file"
-                  accept="image/*,.pdf,.doc,.docx"
-                  {...register("attachment")}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 text-sm text-gray-500
-                    file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0
-                    file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-600
-                    hover:file:bg-indigo-100 transition outline-none cursor-pointer"
-                />
-              </div>
-
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="pt-6 border-t flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/resident/complaints")}
-              className="px-6 py-3 rounded-lg border border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 transition"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-8 py-3 rounded-lg text-white font-semibold transition-all shadow-md
-                ${isLoading
-                  ? "bg-indigo-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-            >
-              {isLoading ? "Submitting..." : "Submit Complaint"}
-            </button>
-          </div>
-
-        </form>
-      </div>
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-50">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/complaints")}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="admin-btn-primary"
+          >
+            {isLoading ? "Submitting..." : "Submit Complaint"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

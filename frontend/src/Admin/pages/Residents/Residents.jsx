@@ -79,16 +79,16 @@ const ResidentList = () => {
       </div>
 
       {/* MUI TABLE CONTAINER */}
-      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden">
+      <TableContainer component={Paper} elevation={0} className="admin-table-wrap shadow-sm">
         <Table sx={{ minWidth: 700 }}>
-          <TableHead className="bg-slate-50">
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Resident Details</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Unit</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+              <TableCell>Resident Details</TableCell>
+              <TableCell>Unit</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           

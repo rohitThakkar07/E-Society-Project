@@ -99,90 +99,86 @@ const NoticeList = () => {
         </div>
 
         <div className="p-4 md:p-5">
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-52 rounded-2xl border border-gray-100 bg-gray-50/70 animate-pulse" />
-              ))}
-            </div>
-          ) : filtered.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-16 rounded-xl border border-gray-100 bg-white animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="admin-table-wrap shadow-sm">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Notice Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th className="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
               {filtered.map((notice) => (
-                <article
-                  key={notice._id}
-                  className={`rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md ${
-                    notice.isActive ? "bg-white border-gray-100" : "bg-gray-50/80 border-gray-200"
-                  }`}
-                >
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${CATEGORY_STYLE[notice.category] || CATEGORY_STYLE.Other}`}>
-                        {notice.category}
-                      </span>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${PRIORITY_STYLE[notice.priority]}`}>
-                        {notice.priority}
-                      </span>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${notice.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}>
+                <tr key={notice._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="max-w-md">
+                    <div className="font-bold text-slate-800 leading-tight">{notice.title}</div>
+                    <div className="text-[10px] text-slate-400 truncate max-w-[250px]">{notice.content}</div>
+                  </td>
+                  <td>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-tighter ${CATEGORY_STYLE[notice.category] || CATEGORY_STYLE.Other}`}>
+                      {notice.category}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${PRIORITY_STYLE[notice.priority]}`}>
+                      {notice.priority}
+                    </span>
+                  </td>
+                  <td className="text-xs font-bold text-slate-500 whitespace-nowrap">
+                    {new Date(notice.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${notice.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}>
                       {notice.isActive ? "Active" : "Inactive"}
                     </span>
-                  </div>
-
-                  <div className="mb-5">
-                    <h2 className={`text-lg font-bold leading-snug ${notice.isActive ? "text-gray-900" : "text-gray-500"}`}>
-                      {notice.title}
-                    </h2>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-500 line-clamp-3">
-                      {notice.content}
-                    </p>
-                  </div>
-
-                  <div className="mb-5 flex items-center gap-2 text-gray-500">
-                    <FiCalendar className="text-gray-400" size={14} />
-                    <span className="text-xs font-medium">
-                      {new Date(notice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
-                    <button
-                      onClick={() => navigate(`/admin/notice/${notice._id}`)}
-                      className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                      title="View"
-                    >
-                      <FiEye size={14} />
-                    </button>
-                    <button
-                      onClick={() => navigate(`/admin/notice/edit/${notice._id}`)}
-                      className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <FiEdit size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleToggleActive(notice)}
-                      className={`p-2 rounded-lg transition-colors ${notice.isActive ? "text-amber-600 bg-amber-50 hover:bg-amber-100" : "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"}`}
-                      title={notice.isActive ? "Deactivate" : "Activate"}
-                    >
-                      {notice.isActive ? <FiXCircle size={14} /> : <FiCheckCircle size={14} />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(notice._id)}
-                      className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <FiTrash2 size={14} />
-                    </button>
-                  </div>
-                </article>
+                  </td>
+                  <td>
+                    <div className="flex justify-center gap-1.5">
+                      <button
+                        onClick={() => navigate(`/admin/notice/${notice._id}`)}
+                        className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                        title="View"
+                      >
+                        <FiEye size={14} />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/admin/notice/edit/${notice._id}`)}
+                        className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <FiEdit size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(notice._id)}
+                        className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </div>
-          ) : (
-            <div className="px-6 py-12 text-center text-gray-400">
-              <FiBell size={40} className="mx-auto mb-3 opacity-20" />
-              No notices found matching your search.
-            </div>
-          )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="px-6 py-12 text-center text-gray-400 bg-white rounded-2xl border border-gray-100">
+          <FiBell size={40} className="mx-auto mb-3 opacity-20" />
+          <p className="font-bold uppercase tracking-widest text-sm">No notices found</p>
+        </div>
+      )}
         </div>
       </div>
     </div>

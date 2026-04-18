@@ -115,17 +115,17 @@ const Complaints = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full text-left border-collapse whitespace-nowrap">
+      <div className="admin-table-wrap">
+        <table className="admin-table">
           <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
-              <th className="px-5 py-4 font-semibold">Complaint</th>
-              <th className="px-5 py-4 font-semibold">Resident</th>
-              <th className="px-5 py-4 font-semibold">Category</th>
-              <th className="px-5 py-4 font-semibold">Priority</th>
-              <th className="px-5 py-4 font-semibold">Status</th>
-              <th className="px-5 py-4 font-semibold">Date</th>
-              <th className="px-5 py-4 font-semibold text-center">Actions</th>
+            <tr>
+              <th>Complaint</th>
+              <th>Resident</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
 

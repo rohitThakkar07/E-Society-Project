@@ -9,7 +9,6 @@ const maintenanceSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   amount: { type: Number, required: true },
   lateFee: { type: Number, default: 0 },
-  parkingCharge: { type: Number, default: 0 },
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ["Pending", "Paid", "Overdue"], default: "Pending" },
 

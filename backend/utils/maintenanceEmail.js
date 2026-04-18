@@ -8,7 +8,7 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
   const dueDate = new Date(maintenance.dueDate).toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric",
   });
-  const total = (maintenance.amount || 0) + (maintenance.lateFee || 0) + (maintenance.parkingCharge || 0);
+  const total = (maintenance.amount || 0) + (maintenance.lateFee || 0);
   const subject = isOverdue
     ? `⚠️ Overdue Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`
     : `🏠 Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`;
@@ -50,7 +50,6 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
                 <table width="100%">
                   <tr><td style="padding:8px 0;color:#475569;">Period</td><td style="text-align:right;font-weight:600;">${maintenance.month} ${maintenance.year}</td></tr>
                   <tr><td style="padding:8px 0;color:#475569;">Amount</td><td style="text-align:right;font-weight:600;">₹${(maintenance.amount || 0).toLocaleString()}</td></tr>
-                  ${maintenance.parkingCharge > 0 ? `<tr><td style="padding:8px 0;color:#3b82f6;">Parking Fee (One-time)</td><td style="text-align:right;color:#3b82f6;font-weight:600;">₹${maintenance.parkingCharge.toLocaleString()}</td></tr>` : ""}
                   ${maintenance.lateFee > 0 ? `<tr><td style="padding:8px 0;color:#e53e3e;">Late Fee</td><td style="text-align:right;color:#e53e3e;">₹${maintenance.lateFee.toLocaleString()}</td></tr>` : ""}
                   <tr><td style="padding:14px 0 0;font-weight:700;">Total</td><td style="text-align:right;font-size:20px;font-weight:800;color:${accentColor};">₹${total.toLocaleString()}</td></tr>
                 </table>
@@ -75,7 +74,7 @@ function buildPaymentReceiptEmail(resident, flat, record) {
   const paymentDate = new Date(record.paidDate || new Date()).toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
   });
-  const total = (record.amount || 0) + (record.lateFee || 0) + (record.parkingCharge || 0);
+  const total = (record.amount || 0) + (record.lateFee || 0);
   const subject = `✅ Payment Confirmation — ${flat.flatNumber} | ${record.month} ${record.year}`;
 
   const html = `
@@ -108,12 +107,6 @@ function buildPaymentReceiptEmail(resident, flat, record) {
                     <td style="padding-bottom:12px;font-size:14px;color:#64748b;">Maintenance Period</td>
                     <td style="padding-bottom:12px;font-size:14px;color:#0f172a;text-align:right;font-weight:600;">${record.month} ${record.year}</td>
                   </tr>
-                  ${record.parkingCharge > 0 ? `
-                  <tr>
-                    <td style="padding-bottom:12px;font-size:14px;color:#64748b;">Parking Fee</td>
-                    <td style="padding-bottom:12px;font-size:14px;color:#3b82f6;text-align:right;font-weight:600;">₹${record.parkingCharge.toLocaleString()}</td>
-                  </tr>
-                  ` : ""}
                   <tr>
                     <td style="padding:16px 0 0;border-top:1px dashed #cbd5e1;font-size:16px;color:#0f172a;font-weight:700;">Amount Paid</td>
                     <td style="padding:16px 0 0;border-top:1px dashed #cbd5e1;font-size:24px;color:#10b981;text-align:right;font-weight:800;">₹${total.toLocaleString("en-IN")}</td>

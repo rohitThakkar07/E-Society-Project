@@ -145,16 +145,16 @@ const ExpenseList = () => {
       </div>
 
       {/* MUI TABLE */}
-      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <TableContainer component={Paper} elevation={0} className="admin-table-wrap shadow-sm">
         <Table sx={{ minWidth: 900 }}>
-          <TableHead className="bg-slate-50">
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Expense Title</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Category</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Payment</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+              <TableCell>Expense Title</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Payment</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           

@@ -19,10 +19,8 @@ const FLOOR_MAPPING = {
   12: { range: [74, 80], type: "4BHK" },
 };
 
-const inputClass =
-  "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
-const labelClass = "block text-xs font-bold text-gray-500 uppercase mb-1";
-const errorClass = "mt-1 text-xs text-red-500";
+const labelClass = "admin-label";
+const errorClass = "mt-1 text-[10px] font-bold text-red-500 uppercase tracking-tight";
 
 const AddEditFlat = () => {
   const navigate = useNavigate();
@@ -115,10 +113,10 @@ const AddEditFlat = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+          <div className="admin-form-group">
             <label className={labelClass}>Block / Wing *</label>
-            <select {...register("block", { required: "Block/Wing is required" })} className={inputClass}>
+            <select {...register("block", { required: "Block/Wing is required" })} className="admin-input">
               <option value="">Select Wing</option>
               <option value="WING A">WING A</option>
               <option value="WING B">WING B</option>
@@ -128,9 +126,9 @@ const AddEditFlat = () => {
             {errors.block && <p className={errorClass}>{errors.block.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Floor *</label>
-            <select {...register("floor", { required: "Floor is required" })} className={inputClass}>
+            <select {...register("floor", { required: "Floor is required" })} className="admin-input">
               <option value="">Select Floor</option>
               {[...Array(12)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -141,9 +139,9 @@ const AddEditFlat = () => {
             {errors.floor && <p className={errorClass}>{errors.floor.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Flat Number *</label>
-            <select {...register("flatNumber", { required: "Flat number is required" })} className={inputClass}>
+            <select {...register("flatNumber", { required: "Flat number is required" })} className="admin-input">
               <option value="">Select Flat</option>
               {flatNumbers.map((num) => (
                 <option key={num} value={num}>
@@ -154,55 +152,51 @@ const AddEditFlat = () => {
             {errors.flatNumber && <p className={errorClass}>{errors.flatNumber.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Flat Type *</label>
             <input
               {...register("type", { required: "Flat type is required" })}
               readOnly
-              className={`${inputClass} bg-gray-100 cursor-not-allowed`}
+              className="admin-input bg-gray-50 cursor-not-allowed"
             />
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Monthly Maintenance (Rs.)</label>
-            <input type="number" {...register("monthlyMaintenance")} className={inputClass} />
+            <input type="number" {...register("monthlyMaintenance")} className="admin-input" placeholder="e.g. 2500" />
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Status</label>
-            <select {...register("status")} className={inputClass}>
+            <select {...register("status")} className="admin-input">
               <option value="Vacant">Vacant</option>
               <option value="Occupied">Occupied</option>
               <option value="Under Maintenance">Under Maintenance</option>
             </select>
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Occupancy Type</label>
-            <select {...register("occupancyType")} className={inputClass}>
+            <select {...register("occupancyType")} className="admin-input">
               <option value="">Select Occupancy Type</option>
               <option value="Owner">Owner</option>
               <option value="Tenant">Tenant</option>
             </select>
           </div>
 
-
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Owner Name</label>
-            <input {...register("ownerName")} className={inputClass} />
+            <input {...register("ownerName")} className="admin-input" placeholder="Full Name" />
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Owner Phone</label>
-            <input {...register("ownerPhone")} className={inputClass} />
+            <input {...register("ownerPhone")} className="admin-input" placeholder="+91 XXXXX XXXXX" />
           </div>
 
-          <div className="md:col-span-2">
+          <div className="admin-form-group">
             <label className={labelClass}>Owner Email</label>
-            <input type="email" {...register("ownerEmail")} className={inputClass} />
+            <input type="email" {...register("ownerEmail")} className="admin-input" placeholder="email@example.com" />
           </div>
         </div>
 

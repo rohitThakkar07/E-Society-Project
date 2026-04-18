@@ -6,10 +6,8 @@ import { createGuard, updateGuard, fetchGuardById, clearSingleGuard } from "../.
 
 const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 const PASSWORD_HINT = "Use 8+ characters with uppercase, lowercase, number, and special character.";
-const inputClass =
-  "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
-const labelClass = "block text-xs font-bold text-gray-500 uppercase mb-1";
-const errorClass = "mt-1 text-xs text-red-500";
+const labelClass = "admin-label";
+const errorClass = "mt-1 text-[10px] font-bold text-red-500 uppercase tracking-tight";
 
 const AddGuard = () => {
   const { id } = useParams();
@@ -94,28 +92,28 @@ const AddGuard = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+          <div className="admin-form-group">
             <label className={labelClass}>First Name *</label>
-            <input {...register("firstName", { required: "First name is required" })} className={inputClass} placeholder="e.g. Ramesh" />
+            <input {...register("firstName", { required: "First name is required" })} className="admin-input" placeholder="e.g. Ramesh" />
             {errors.firstName && <p className={errorClass}>{errors.firstName.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Last Name *</label>
-            <input {...register("lastName", { required: "Last name is required" })} className={inputClass} placeholder="e.g. Singh" />
+            <input {...register("lastName", { required: "Last name is required" })} className="admin-input" placeholder="e.g. Singh" />
             {errors.lastName && <p className={errorClass}>{errors.lastName.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>City *</label>
-            <input {...register("city", { required: "City is required" })} className={inputClass} placeholder="e.g. Mumbai" />
+            <input {...register("city", { required: "City is required" })} className="admin-input" placeholder="e.g. Mumbai" />
             {errors.city && <p className={errorClass}>{errors.city.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Shift *</label>
-            <select {...register("shift", { required: "Shift is required" })} className={inputClass}>
+            <select {...register("shift", { required: "Shift is required" })} className="admin-input">
               <option value="">Select Shift</option>
               <option value="Day">Day</option>
               <option value="Night">Night</option>
@@ -123,7 +121,7 @@ const AddGuard = () => {
             {errors.shift && <p className={errorClass}>{errors.shift.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Mobile Number *</label>
             <input
               type="tel"
@@ -131,64 +129,62 @@ const AddGuard = () => {
                 required: "Mobile number is required",
                 pattern: { value: /^[0-9]{10}$/, message: "Must be 10 digits" },
               })}
-              className={inputClass}
+              className="admin-input"
               placeholder="10-digit number"
             />
             {errors.mobileNumber && <p className={errorClass}>{errors.mobileNumber.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Alternative Number</label>
-            <input type="tel" {...register("alternativeNumber")} className={inputClass} placeholder="Optional" />
+            <input type="tel" {...register("alternativeNumber")} className="admin-input" placeholder="Optional" />
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Email Address</label>
-            <input type="email" {...register("emailAddress")} className={inputClass} placeholder="guard@example.com" />
+            <input type="email" {...register("emailAddress")} className="admin-input" placeholder="guard@example.com" />
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>ID Type *</label>
-            <select {...register("idType", { required: "ID Type is required" })} className={inputClass}>
+            <select {...register("idType", { required: "ID Type is required" })} className="admin-input">
               <option value="">Select ID</option>
               <option value="Aadhar Card">Aadhar Card</option>
             </select>
             {errors.idType && <p className={errorClass}>{errors.idType.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>ID Number *</label>
-            <input {...register("idNumber", { required: "ID Number is required" })} className={inputClass} placeholder="Enter ID number" />
+            <input {...register("idNumber", { required: "ID Number is required" })} className="admin-input" placeholder="Enter ID number" />
             {errors.idNumber && <p className={errorClass}>{errors.idNumber.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Joining Date *</label>
-            <input type="date" {...register("joiningDate", { required: "Joining date is required" })} className={inputClass} />
+            <input type="date" {...register("joiningDate", { required: "Joining date is required" })} className="admin-input" />
             {errors.joiningDate && <p className={errorClass}>{errors.joiningDate.message}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Status</label>
-            <select {...register("status")} className={inputClass}>
+            <select {...register("status")} className="admin-input">
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Monthly Salary (₹)</label>
             <input 
               type="number" 
               {...register("monthlySalary")} 
-              className={inputClass} 
+              className="admin-input" 
               placeholder="e.g. 15000" 
             />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>{isEdit ? "Password (leave blank to keep)" : "Password *"}</label>
             <input
               type="password"
@@ -196,19 +192,19 @@ const AddGuard = () => {
                 required: isEdit ? false : "Password is required",
                 validate: (value) => !value || STRONG_PASSWORD_REGEX.test(value) || PASSWORD_HINT,
               })}
-              className={inputClass}
+              className="admin-input"
               placeholder={isEdit ? "Leave empty to keep current" : "Create a strong password"}
             />
-            {errors.password ? <p className={errorClass}>{errors.password.message}</p> : <p className="mt-1 text-xs text-gray-500">{PASSWORD_HINT}</p>}
+            {errors.password ? <p className={errorClass}>{errors.password.message}</p> : <p className="mt-1 text-[10px] text-gray-400 font-medium uppercase tracking-tight">{PASSWORD_HINT}</p>}
           </div>
 
-          <div>
+          <div className="admin-form-group">
             <label className={labelClass}>Upload ID Image</label>
             <input
               type="file"
               accept="image/*"
               {...register("idImage")}
-              className="w-full px-3 py-2 border rounded-lg file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+              className="admin-input file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-black file:text-blue-700 hover:file:bg-blue-100"
             />
           </div>
         </div>

@@ -20,17 +20,20 @@ const UserAccessList = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">User Access Management</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">User Access Management</h1>
+        <p className="text-sm text-gray-500">Manage accessibility and block/unblock system users.</p>
+      </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+      <div className="admin-table-wrap shadow-sm">
+        <table className="admin-table">
+          <thead>
             <tr>
-              <th className="p-4 font-semibold text-sm">Name</th>
-              <th className="p-4 font-semibold text-sm">Role</th>
-              <th className="p-4 font-semibold text-sm">Status</th>
-              <th className="p-4 font-semibold text-sm">Access Control</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Access Control</th>
             </tr>
           </thead>
 

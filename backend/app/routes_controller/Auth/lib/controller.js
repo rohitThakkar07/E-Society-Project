@@ -223,30 +223,38 @@ const changeFirstPassword = async (req, res) => {
   try {
     const { newPassword } = req.body;
     const userId = req.user.id;
-
-    if (!newPassword) {
-      return res.status(400).json({ message: "New password is required" });
-    }
-
-    if (!isStrongPassword(newPassword)) {
-      return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
-    }
-
+    if (!newPassword) return res.status(400).json({ message: "New password is required" });
+    if (!isStrongPassword(newPassword)) return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
+    if (!user) return res.status(404).json({ message: "User not found" });
     user.password = hashedPassword;
     user.mustChangePassword = false;
     await user.save();
-
     res.json({ success: true, message: "Password updated successfully" });
   } catch (error) {
     console.error("Change First Password Error:", error);
     res.status(500).json({ message: "Failed to update password" });
+  }
+};
+
+/* Change Password using Old Password */
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+    if (!oldPassword || !newPassword) return res.status(400).json({ message: "Current and new passwords are required." });
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect current password." });
+    if (!isStrongPassword(newPassword)) return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.updateOne({ _id: userId }, { $set: { password: hashedPassword } });
+    res.json({ success: true, message: "Password updated successfully!" });
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    res.status(500).json({ message: "Failed to update password. Please try again." });
   }
 };
 
@@ -257,4 +265,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changeFirstPassword,
+  changePassword,
 };

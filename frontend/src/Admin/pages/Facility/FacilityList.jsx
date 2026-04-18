@@ -34,14 +34,14 @@ const FacilityList = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr className="text-gray-600 text-sm">
-              <th className="p-4 font-semibold">Name</th>
-              <th className="p-4 font-semibold">Description</th>
-              <th className="p-4 font-semibold">Status</th>
-              <th className="p-4 text-center font-semibold">Actions</th>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
 

@@ -91,17 +91,17 @@ const Visitors = () => {
       </div>
 
       {/* MUI TABLE CONTAINER */}
-      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <TableContainer component={Paper} elevation={0} className="admin-table-wrap shadow-sm">
         <Table sx={{ minWidth: 900 }}>
-          <TableHead className="bg-slate-50">
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Visitor Details</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Visiting Unit</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Entry</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Exit</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+              <TableCell>Visitor Details</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>Visiting Unit</TableCell>
+              <TableCell>Entry</TableCell>
+              <TableCell>Exit</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
 

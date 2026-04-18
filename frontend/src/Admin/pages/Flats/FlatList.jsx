@@ -116,18 +116,18 @@ const FlatList = () => {
       </div>
 
       {/* MUI TABLE */}
-      <TableContainer component={Paper} elevation={0} className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <TableContainer component={Paper} elevation={0} className="admin-table-wrap">
         <Table sx={{ minWidth: 1000 }}>
-          <TableHead className="bg-slate-50">
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Flat No</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Floor / Block</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Flat Type</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Occupancy</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Owner Details</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance</TableCell>
-              <TableCell sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 800, fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</TableCell>
+              <TableCell>Flat No</TableCell>
+              <TableCell>Floor / Block</TableCell>
+              <TableCell>Flat Type</TableCell>
+              <TableCell>Occupancy</TableCell>
+              <TableCell>Owner Details</TableCell>
+              <TableCell>Maintenance</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           

@@ -20,6 +20,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        style={{ zIndex: 99999 }}
       />
       <RouterProvider router={router} />
     </Provider>
