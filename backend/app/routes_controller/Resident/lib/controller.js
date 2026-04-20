@@ -105,9 +105,8 @@ exports.getAllResidents = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied." });
     }
 
-    // Add .populate("flat") here!
     const residents = await Resident.find()
-      .populate("flat")
+      .populate("flat", "flatNumber block floor type status occupancyType monthlyMaintenance")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -129,7 +128,8 @@ exports.getResidentById = async (req, res) => {
       }
     }
 
-    const resident = await Resident.findById(req.params.id).populate('flat');
+    const resident = await Resident.findById(req.params.id)
+      .populate("flat", "flatNumber block floor type status occupancyType monthlyMaintenance");
 
     if (!resident) {
       return res.status(404).json({

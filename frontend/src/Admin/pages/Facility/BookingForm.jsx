@@ -149,7 +149,7 @@ const BookingForm = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex items-start justify-center">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-4xl">
         <div className="mb-8">
           <button
             type="button"
@@ -279,13 +279,13 @@ const BookingForm = () => {
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <button type="button" onClick={() => navigate(-1)} className="px-5 py-2 rounded-lg bg-gray-100">
+              <button type="button" onClick={() => navigate(-1)} className="admin-btn-secondary">
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold disabled:opacity-50"
+                className="admin-btn-primary disabled:opacity-50"
               >
                 {loading ? "Saving…" : isEditMode ? "Update" : "Create"}
               </button>

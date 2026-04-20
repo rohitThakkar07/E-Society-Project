@@ -72,15 +72,16 @@ const CreateComplaint = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Complaint</h1>
-          <p className="text-sm text-gray-500">Register a new complaint on behalf of a resident.</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Complaint</h1>
+            <p className="text-sm text-gray-500">Register a new complaint on behalf of a resident.</p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
           <div className="admin-form-group">
             <label className="admin-label">Complaint Title *</label>
             <input
@@ -150,23 +151,24 @@ const CreateComplaint = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-50">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/complaints")}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="admin-btn-primary"
-          >
-            {isLoading ? "Submitting..." : "Submit Complaint"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-50">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/complaints")}
+              className="admin-btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="admin-btn-primary"
+            >
+              {isLoading ? "Submitting..." : "Submit Complaint"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

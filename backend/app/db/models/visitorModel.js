@@ -26,7 +26,7 @@ const visitorSchema = new mongoose.Schema({
   },
   purpose: {
     type: String,
-    enum: ["Visit", "Delivery", "Service", "Guest", "Other"],
+    trim: true,
     default: "Visit"
   },
   vehicleNumber: {

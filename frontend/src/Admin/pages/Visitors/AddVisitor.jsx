@@ -91,19 +91,20 @@ const AddVisitor = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-['Inter',_sans-serif]">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            {isEditMode ? "Manage" : "Direct Entry"} Registry
-          </h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">
-            {isEditMode ? "Update" : "Register"} visitor entry directly into the inside logs.
-          </p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              {isEditMode ? "Manage" : "Direct Entry"} Registry
+            </h1>
+            <p className="text-sm text-slate-500 font-medium mt-1">
+              {isEditMode ? "Update" : "Register"} visitor entry directly into the inside logs.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Resident Being Visited *</label>
             <select {...register("visitingResident", { required: "Resident is required" })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
@@ -140,13 +141,14 @@ const AddVisitor = () => {
           <input type="hidden" {...register("status")} />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
-          <button type="button" onClick={() => navigate("/admin/visitors")} className="px-6 py-3 font-bold text-slate-400 text-sm uppercase tracking-widest">Cancel</button>
-          <button type="submit" className="px-10 py-3 bg-slate-900 text-white rounded-xl hover:bg-black font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-slate-900/20">
-            {isEditMode ? "Update Log" : "Allow Entry Now"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+            <button type="button" onClick={() => navigate("/admin/visitors")} className="admin-btn-secondary">Cancel</button>
+            <button type="submit" className="admin-btn-primary">
+              {isEditMode ? "Update Log" : "Allow Entry Now"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

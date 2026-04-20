@@ -12,13 +12,14 @@ const CreateRole = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Create Role</h1>
-        <p className="text-sm text-gray-500">Define new custom roles and their system permissions.</p>
-      </div>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Create Role</h1>
+          <p className="text-sm text-gray-500">Define new custom roles and their system permissions.</p>
+        </div>
 
-      <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="admin-form-group max-w-md">
             <label className="admin-label">Role Name *</label>
             <input
@@ -54,15 +55,16 @@ const CreateRole = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
-            <button 
-              type="submit" 
-              className="admin-btn-primary"
-            >
-              Save Role
-            </button>
-          </div>
-        </form>
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+              <button 
+                type="submit" 
+                className="admin-btn-primary"
+              >
+                Save Role
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

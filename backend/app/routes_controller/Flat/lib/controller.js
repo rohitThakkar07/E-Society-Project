@@ -24,7 +24,10 @@ const getAllFlats = async (req, res) => {
     if (status && status !== "All") filter.status = status;
     if (type && type !== "All") filter.type = type;
     if (occupancyType && occupancyType !== "All") filter.occupancyType = occupancyType;
-    const flats = await Flat.find(filter).populate("resident", "name phone").sort({ flatNumber: 1 });
+    const flats = await Flat.find(filter)
+      .populate("resident", "firstName lastName mobileNumber email")
+      .sort({ flatNumber: 1 })
+      .lean();
     res.json({ success: true, data: flats });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -33,7 +36,9 @@ const getAllFlats = async (req, res) => {
 
 const getFlatById = async (req, res) => {
   try {
-    const flat = await Flat.findById(req.params.id).populate("resident", "name phone email");
+    const flat = await Flat.findById(req.params.id)
+      .populate("resident", "firstName lastName mobileNumber email")
+      .lean();
     if (!flat) return res.status(404).json({ success: false, message: "Flat not found" });
     res.json({ success: true, data: flat });
   } catch (err) {
@@ -43,12 +48,12 @@ const getFlatById = async (req, res) => {
 const getResidentFlat = async (req, res) => {
   try {
     // userId comes in → look up user → get profileId → find resident
-    const user = await User.findById(req.params.userId).select("profileId role");
+    const user = await User.findById(req.params.userId).select("profileId role").lean();
 
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     if (user.role !== "resident") return res.status(403).json({ success: false, message: "Not a resident" });
 
-    const resident = await Resident.findById(user.profileId).populate("flat");
+    const resident = await Resident.findById(user.profileId).populate("flat").lean();
 
     if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });
     if (!resident.flat) return res.status(404).json({ success: false, message: "No flat assigned" });
@@ -82,16 +87,47 @@ const deleteFlat = async (req, res) => {
 
 const getDashboardSummary = async (req, res) => {
   try {
-    const all = await Flat.find();
+    const stats = await Flat.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          occupied: {
+            $sum: { $cond: [{ $eq: ["$status", "Occupied"] }, 1, 0] },
+          },
+          vacant: {
+            $sum: { $cond: [{ $eq: ["$status", "Vacant"] }, 1, 0] },
+          },
+          underMaintenance: {
+            $sum: { $cond: [{ $eq: ["$status", "Under Maintenance"] }, 1, 0] },
+          },
+          ownerOccupied: {
+            $sum: { $cond: [{ $eq: ["$occupancyType", "Owner"] }, 1, 0] },
+          },
+          tenantOccupied: {
+            $sum: { $cond: [{ $eq: ["$occupancyType", "Tenant"] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+    const summary = stats[0] || {
+      total: 0,
+      occupied: 0,
+      vacant: 0,
+      underMaintenance: 0,
+      ownerOccupied: 0,
+      tenantOccupied: 0,
+    };
+
     res.json({
       success: true,
       data: {
-        total: all.length,
-        occupied: all.filter(f => f.status === "Occupied").length,
-        vacant: all.filter(f => f.status === "Vacant").length,
-        underMaintenance: all.filter(f => f.status === "Under Maintenance").length,
-        ownerOccupied: all.filter(f => f.occupancyType === "Owner").length,
-        tenantOccupied: all.filter(f => f.occupancyType === "Tenant").length,
+        total: summary.total,
+        occupied: summary.occupied,
+        vacant: summary.vacant,
+        underMaintenance: summary.underMaintenance,
+        ownerOccupied: summary.ownerOccupied,
+        tenantOccupied: summary.tenantOccupied,
       },
     });
   } catch (err) {

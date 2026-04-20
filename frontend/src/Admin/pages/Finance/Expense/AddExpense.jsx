@@ -47,26 +47,27 @@ const AddExpense = () => {
   };
 
   return (
-    <div>
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Expense</h1>
-        <p className="text-sm text-slate-500 font-medium mt-0.5">Record and track society expenditures.</p>
-      </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Expense</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">Record and track society expenditures.</p>
+        </div>
 
-      {/* Sub Navigation */}
-      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
-        {TABS.map((tab) => (
-          <button key={tab.path} onClick={() => navigate(tab.path)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        {/* Sub Navigation */}
+        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit flex-wrap">
+          {TABS.map((tab) => (
+            <button key={tab.path} onClick={() => navigate(tab.path)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${location.pathname === tab.path ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Form Card */}
-      <div className="max-w-2xl">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Form Card */}
+        <div className="max-w-4xl">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Card Header */}
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -80,7 +81,7 @@ const AddExpense = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
 
             {/* Title */}
             <div className="admin-form-group">
@@ -155,18 +156,19 @@ const AddExpense = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-50">
-              <button type="button" onClick={() => navigate(-1)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition">
-                Cancel
-              </button>
-              <button type="submit" disabled={loading}
-                className="admin-btn-primary">
-                {loading ? "Saving..." : "Add Expense"}
-              </button>
-            </div>
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-50">
+                <button type="button" onClick={() => navigate(-1)}
+                  className="admin-btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" disabled={loading}
+                  className="admin-btn-primary">
+                  {loading ? "Saving..." : "Add Expense"}
+                </button>
+              </div>
 
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>

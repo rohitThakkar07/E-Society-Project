@@ -79,15 +79,16 @@ const AddFacility = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? "Edit" : "Add"} Facility</h1>
-          <p className="text-sm text-gray-500">Configure resources available for society residents.</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? "Edit" : "Add"} Facility</h1>
+            <p className="text-sm text-gray-500">Configure resources available for society residents.</p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-3xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
           <div className="admin-form-group md:col-span-2">
             <label className="admin-label">Facility Name *</label>
             <input
@@ -167,23 +168,24 @@ const AddFacility = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="admin-btn-primary"
-          >
-            {loading ? "Saving..." : isEditMode ? "Update Facility" : "Create Facility"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="admin-btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="admin-btn-primary"
+            >
+              {loading ? "Saving..." : isEditMode ? "Update Facility" : "Create Facility"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

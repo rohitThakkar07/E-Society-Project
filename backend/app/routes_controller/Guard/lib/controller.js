@@ -7,7 +7,6 @@ const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils
 
 // ✅ CREATE GUARD
 exports.createGuard = async (req, res) => {
-  console.log(req.body);
   try {
     const {
       firstName,
@@ -59,7 +58,7 @@ exports.createGuard = async (req, res) => {
     const fullName = `${firstName} ${lastName}`.trim();
 
     // Check mobile duplicate
-    const existingMobile = await Guard.findOne({ mobileNumber });
+    const existingMobile = await Guard.findOne({ mobileNumber }).select("_id").lean();
     if (existingMobile) {
       return res.status(400).json({
         success: false,
@@ -69,7 +68,7 @@ exports.createGuard = async (req, res) => {
 
     // Check email duplicate (if provided)
     if (resolvedEmail) {
-      const existingEmail = await Guard.findOne({ email: resolvedEmail });
+      const existingEmail = await Guard.findOne({ email: resolvedEmail }).select("_id").lean();
       if (existingEmail) {
         return res.status(400).json({
           success: false,
@@ -79,7 +78,7 @@ exports.createGuard = async (req, res) => {
     }
 
     // Generate unique Guard ID
-    const lastGuard = await Guard.findOne().sort({ createdAt: -1 });
+    const lastGuard = await Guard.findOne().sort({ createdAt: -1 }).select("guardId").lean();
     let guardId = "GRD-001";
     if (lastGuard?.guardId) {
       const parts = lastGuard.guardId.split("-");
@@ -155,7 +154,7 @@ exports.createGuard = async (req, res) => {
 // ✅ GET ALL GUARDS
 exports.getAllGuards = async (req, res) => {
   try {
-    const guards = await Guard.find({}).sort({ createdAt: -1 });
+    const guards = await Guard.find({}).sort({ createdAt: -1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -177,7 +176,7 @@ exports.getGuardById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const guard = await Guard.findById(id);
+    const guard = await Guard.findById(id).lean();
 
     if (!guard) {
       return res.status(404).json({
@@ -380,20 +379,17 @@ exports.updateGuardStatus = async (req, res) => {
       });
     }
 
-    const guard = await Guard.findById(id);
-
-    if (!guard) {
-      return res.status(404).json({
-        success: false,
-        message: "Guard not found",
-      });
-    }
-
     const updatedGuard = await Guard.findByIdAndUpdate(
       id,
       { status },
       { new: true }
     );
+    if (!updatedGuard) {
+      return res.status(404).json({
+        success: false,
+        message: "Guard not found",
+      });
+    }
 
     res.status(200).json({
       success: true,

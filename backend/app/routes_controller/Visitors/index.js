@@ -58,8 +58,11 @@ const createVisitorValidation = [
   body("flatNumber").notEmpty().withMessage("Flat number is required"),
   body("purpose")
     .optional()
-    .isIn(["Visit", "Delivery", "Service", "Guest", "Other"])
-    .withMessage("Invalid purpose"),
+    .isString()
+    .withMessage("Purpose must be text")
+    .trim()
+    .isLength({ min: 1, max: 120 })
+    .withMessage("Purpose must be 1 to 120 characters"),
 ];
 
 // ─── Routes ────────────────────────────────────────────────────────────────

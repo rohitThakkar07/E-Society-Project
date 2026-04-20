@@ -60,4 +60,8 @@ expenseSchema.pre("save", async function () {
   }
 });
 
+expenseSchema.index({ year: 1, month: 1, date: -1 });
+expenseSchema.index({ category: 1, year: 1, month: 1 });
+expenseSchema.index({ paymentMode: 1, date: -1 });
+
 module.exports = mongoose.model("Expense", expenseSchema);

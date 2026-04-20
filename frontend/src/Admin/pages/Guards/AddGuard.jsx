@@ -80,17 +80,18 @@ const AddGuard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEdit ? "Edit" : "Add"} Guard</h1>
-          <p className="text-sm text-gray-500">
-            {isEdit ? "Update" : "Create"} guard details in the same style as the event form.
-          </p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{isEdit ? "Edit" : "Add"} Guard</h1>
+            <p className="text-sm text-gray-500">
+              {isEdit ? "Update" : "Create"} guard details in the same style as the event form.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
           <div className="admin-form-group">
             <label className={labelClass}>First Name *</label>
             <input {...register("firstName", { required: "First name is required" })} className="admin-input" placeholder="e.g. Ramesh" />
@@ -211,19 +212,20 @@ const AddGuard = () => {
           {/* Upload ID Image removed as requested */}
         </div>
 
-        <div className="flex items-center justify-end gap-3">
-          <button
-            onClick={() => navigate("/admin/guards")}
-            type="button"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button type="submit" disabled={loading} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            {loading ? "Saving..." : isEdit ? "Update Guard" : "Create Guard"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={() => navigate("/admin/guards")}
+              type="button"
+              className="admin-btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="admin-btn-primary">
+              {loading ? "Saving..." : isEdit ? "Update Guard" : "Create Guard"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

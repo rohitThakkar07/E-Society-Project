@@ -21,4 +21,8 @@ const maintenanceSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
+maintenanceSchema.index({ flat: 1, month: 1, year: 1 }, { unique: true });
+maintenanceSchema.index({ resident: 1, createdAt: -1 });
+maintenanceSchema.index({ status: 1, dueDate: 1 });
+
 module.exports = mongoose.model("Maintenance", maintenanceSchema);

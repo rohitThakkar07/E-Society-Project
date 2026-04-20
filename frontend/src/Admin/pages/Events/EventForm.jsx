@@ -64,15 +64,16 @@ const EventForm = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEdit ? "Edit" : "Add"} Event</h1>
-          <p className="text-sm text-gray-500">{isEdit ? "Update" : "Create"} community event details.</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{isEdit ? "Edit" : "Add"} Event</h1>
+            <p className="text-sm text-gray-500">{isEdit ? "Update" : "Create"} community event details.</p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
           <div className="admin-form-group">
             <label className="admin-label">Event Title *</label>
             <input
@@ -154,23 +155,24 @@ const EventForm = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
-          <button
-            onClick={() => navigate("/admin/event/list")}
-            type="button"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-100 transition"
-          >
-            Cancel
-          </button>
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="admin-btn-primary"
-          >
-            {loading ? "Saving..." : isEdit ? "Update Event" : "Create Event"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
+            <button
+              onClick={() => navigate("/admin/event/list")}
+              type="button"
+              className="admin-btn-secondary"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="admin-btn-primary"
+            >
+              {loading ? "Saving..." : isEdit ? "Update Event" : "Create Event"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

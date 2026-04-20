@@ -20,4 +20,8 @@ const residentSchema = new mongoose.Schema({
   profileImage: { type: String }, // ADDED: Resident profile image
 }, { timestamps: true });
 
+residentSchema.index({ status: 1, createdAt: -1 });
+residentSchema.index({ flat: 1 });
+residentSchema.index({ flatNumber: 1, wing: 1 });
+
 module.exports = mongoose.model("Resident", residentSchema);

@@ -33,7 +33,7 @@ const getAllExpenses = async (req, res) => {
     if (year)                                 filter.year        = Number(year);
     if (paymentMode && paymentMode !== "All") filter.paymentMode = paymentMode;
 
-    const expenses = await Expense.find(filter).sort({ date: -1 });
+    const expenses = await Expense.find(filter).sort({ date: -1 }).lean();
     res.json({ success: true, data: expenses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -43,7 +43,7 @@ const getAllExpenses = async (req, res) => {
 // ── GET ONE ───────────────────────────────────────────────────────────────────
 const getExpenseById = async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findById(req.params.id).lean();
     if (!expense)
       return res.status(404).json({ success: false, message: "Expense not found" });
     res.json({ success: true, data: expense });
@@ -98,25 +98,32 @@ const getDashboardSummary = async (req, res) => {
     const thisMonth = now.toLocaleString("default", { month: "long" });
     const thisYear  = now.getFullYear();
 
-    const [allExpenses, monthlyExpenses] = await Promise.all([
-      Expense.find({ year: thisYear }),
-      Expense.find({ month: thisMonth, year: thisYear }),
+    const [yearlyAgg, monthlyAgg, categoryAgg, trendAgg, recentExpenses] = await Promise.all([
+      Expense.aggregate([
+        { $match: { year: thisYear } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+      Expense.aggregate([
+        { $match: { month: thisMonth, year: thisYear } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+      Expense.aggregate([
+        { $match: { month: thisMonth, year: thisYear } },
+        { $group: { _id: "$category", value: { $sum: "$amount" } } },
+      ]),
+      Expense.aggregate([
+        { $match: { year: thisYear } },
+        { $group: { _id: "$month", expense: { $sum: "$amount" } } },
+      ]),
+      Expense.find().sort({ date: -1 }).limit(5).lean(),
     ]);
 
-    const yearlyTotal  = allExpenses.reduce((s, e) => s + e.amount, 0);
-    const monthlyTotal = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
-
-    // Category breakdown for current month
-    const categoryMap = {};
-    monthlyExpenses.forEach((e) => {
-      categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
-    });
-    const categoryData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
-
-    // Monthly trend (all months this year)
+    const yearlyTotal = yearlyAgg[0]?.total || 0;
+    const monthlyTotal = monthlyAgg[0]?.total || 0;
+    const categoryData = categoryAgg.map((item) => ({ name: item._id, value: item.value }));
     const trendMap = {};
-    allExpenses.forEach((e) => {
-      trendMap[e.month] = (trendMap[e.month] || 0) + e.amount;
+    trendAgg.forEach((item) => {
+      trendMap[item._id] = item.expense;
     });
     const monthOrder = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const monthlyTrend = monthOrder
@@ -124,8 +131,6 @@ const getDashboardSummary = async (req, res) => {
       .map((m) => ({ month: m.slice(0, 3), expense: trendMap[m] }));
 
     // Recent 5 expenses
-    const recentExpenses = await Expense.find().sort({ date: -1 }).limit(5);
-
     res.json({
       success: true,
       data: {
@@ -149,7 +154,7 @@ const getReport = async (req, res) => {
     if (!month || !year)
       return res.status(400).json({ success: false, message: "month and year are required." });
 
-    const expenses = await Expense.find({ month, year: Number(year) }).sort({ date: -1 });
+    const expenses = await Expense.find({ month, year: Number(year) }).sort({ date: -1 }).lean();
 
     const total = expenses.reduce((s, e) => s + e.amount, 0);
 

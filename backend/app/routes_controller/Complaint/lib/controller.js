@@ -54,8 +54,9 @@ const createComplaint = async (req, res) => {
 const getAllComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find()
-      .populate("resident")
-      .sort({ createdAt: -1 });
+      .populate("resident", "firstName lastName mobileNumber flatNumber wing email")
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json({
       success: true,
@@ -72,7 +73,9 @@ const getAllComplaints = async (req, res) => {
 // ─────────────────────────────────────────────
 const getComplaintById = async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id).populate("resident");
+    const complaint = await Complaint.findById(req.params.id)
+      .populate("resident", "firstName lastName mobileNumber flatNumber wing email")
+      .lean();
 
     // FIX: was returning 200 with null data for unknown IDs
     if (!complaint) {
@@ -197,7 +200,9 @@ const updateComplaintStatus = async (req, res) => {
     if (complaint.status === "Resolved" && complaint.resident) {
       // We don't await this so it doesn't block the response, 
       // but you can if you want to ensure it's sent before responding.
-      sendComplaintResolutionEmail(complaint.resident, complaint);
+      sendComplaintResolutionEmail(complaint.resident, complaint).catch((err) =>
+        console.error("Complaint resolution email failed:", err.message)
+      );
     }
 
     res.status(200).json({

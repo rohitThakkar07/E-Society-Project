@@ -41,7 +41,8 @@ const AddMaintenance = () => {
   };
 
   return (
-    <div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto">
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">Maintenance</h1>
@@ -65,7 +66,7 @@ const AddMaintenance = () => {
       </div>
 
       {/* Form Card */}
-      <div className="max-w-2xl">
+      <div className="max-w-4xl">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Card Header */}
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
@@ -130,11 +131,11 @@ const AddMaintenance = () => {
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
               <button type="button" onClick={() => navigate(-1)}
-                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                className="admin-btn-secondary">
                 Cancel
               </button>
               <button type="submit" disabled={submitting}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2">
+                className="admin-btn-primary disabled:opacity-60">
                 {submitting ? (
                   <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Saving...</>
                 ) : (
@@ -144,6 +145,7 @@ const AddMaintenance = () => {
             </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

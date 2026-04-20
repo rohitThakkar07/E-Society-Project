@@ -280,7 +280,9 @@ exports.createVisitor = async (req, res) => {
     } = req.body;
 
     // Verify resident exists
-    const resident = await Resident.findById(visitingResident);
+    const resident = await Resident.findById(visitingResident)
+      .select("email mobileNumber flatNumber")
+      .lean();
     if (!resident) {
       return res.status(404).json({ success: false, message: "Resident not found." });
     }
@@ -314,7 +316,9 @@ exports.createVisitor = async (req, res) => {
 
     // Send OTP to resident only if Pending
     if (initialStatus === "Pending") {
-      await sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitorName);
+      sendOTPtoResident(resident.email, resident.mobileNumber, otp, visitorName).catch((err) => {
+        console.error("OTP send failed (non-critical):", err.message);
+      });
     }
 
     res.status(201).json({
@@ -508,7 +512,8 @@ exports.getAllVisitors = async (req, res) => {
     const visitors = await Visitor.find(filter)
       .populate("visitingResident", "firstName lastName mobileNumber flatNumber wing")
       .populate("loggedBy", "name guardId")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json({ success: true, data: visitors });
   } catch (error) {
@@ -539,7 +544,8 @@ exports.getMyVisitors = async (req, res) => {
     const visitors = await Visitor.find({ visitingResident: residentId })
       .populate("visitingResident", "firstName lastName mobileNumber flatNumber wing")
       .populate("loggedBy", "name guardId")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json({ success: true, data: visitors });
   } catch (error) {
@@ -552,7 +558,8 @@ exports.getVisitorById = async (req, res) => {
   try {
     const visitor = await Visitor.findById(req.params.id)
       .populate("visitingResident", "firstName lastName mobileNumber flatNumber wing")
-      .populate("loggedBy", "name guardId");
+      .populate("loggedBy", "name guardId")
+      .lean();
     if (!visitor) {
       return res.status(404).json({ success: false, message: "Visitor not found." });
     }
@@ -620,7 +627,8 @@ exports.searchResidents = async (req, res) => {
       status: "Active"
     })
       .select("firstName lastName flatNumber wing mobileNumber")
-      .limit(10);
+      .limit(10)
+      .lean();
 
     res.json({ success: true, data: residents });
   } catch (error) {
