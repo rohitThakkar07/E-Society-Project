@@ -59,9 +59,7 @@ const AddGuard = () => {
 
     const formData = new FormData();
     for (const key in data) {
-      if (key === "idImage" && data[key]?.length > 0) {
-        formData.append("idImage", data[key][0]);
-      } else {
+      if (key !== "idImage") {
         formData.append(key, data[key]);
       }
     }
@@ -156,7 +154,17 @@ const AddGuard = () => {
 
           <div className="admin-form-group">
             <label className={labelClass}>ID Number *</label>
-            <input {...register("idNumber", { required: "ID Number is required" })} className="admin-input" placeholder="Enter ID number" />
+            <input 
+              {...register("idNumber", { 
+                required: "ID Number is required",
+                pattern: {
+                  value: /^\d{12}$/,
+                  message: "Aadhar must be exactly 12 digits"
+                }
+              })} 
+              className="admin-input" 
+              placeholder="Enter 12-digit Aadhar number" 
+            />
             {errors.idNumber && <p className={errorClass}>{errors.idNumber.message}</p>}
           </div>
 
@@ -166,13 +174,7 @@ const AddGuard = () => {
             {errors.joiningDate && <p className={errorClass}>{errors.joiningDate.message}</p>}
           </div>
 
-          <div className="admin-form-group">
-            <label className={labelClass}>Status</label>
-            <select {...register("status")} className="admin-input">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
+          {/* Status field removed as requested; defaults to Active */}
 
           <div className="admin-form-group">
             <label className={labelClass}>Monthly Salary (₹)</label>
@@ -184,29 +186,29 @@ const AddGuard = () => {
             />
           </div>
 
-          <div className="admin-form-group">
-            <label className={labelClass}>{isEdit ? "Password (leave blank to keep)" : "Password *"}</label>
-            <input
-              type="password"
-              {...register("password", {
-                required: isEdit ? false : "Password is required",
-                validate: (value) => !value || STRONG_PASSWORD_REGEX.test(value) || PASSWORD_HINT,
-              })}
-              className="admin-input"
-              placeholder={isEdit ? "Leave empty to keep current" : "Create a strong password"}
-            />
-            {errors.password ? <p className={errorClass}>{errors.password.message}</p> : <p className="mt-1 text-[10px] text-gray-400 font-medium uppercase tracking-tight">{PASSWORD_HINT}</p>}
-          </div>
+          {!isEdit && (
+            <div className="admin-form-group">
+              <label className={labelClass}>Password *</label>
+              <input
+                type="password"
+                {...register("password", {
+                  required: "Password is required",
+                  validate: (value) => !value || STRONG_PASSWORD_REGEX.test(value) || PASSWORD_HINT,
+                })}
+                className="admin-input"
+                placeholder="Create a strong password"
+              />
+              {errors.password ? (
+                <p className={errorClass}>{errors.password.message}</p>
+              ) : (
+                <p className="mt-1 text-[10px] text-gray-400 font-medium uppercase tracking-tight">
+                  {PASSWORD_HINT}
+                </p>
+              )}
+            </div>
+          )}
 
-          <div className="admin-form-group">
-            <label className={labelClass}>Upload ID Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              {...register("idImage")}
-              className="admin-input file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-black file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
+          {/* Upload ID Image removed as requested */}
         </div>
 
         <div className="flex items-center justify-end gap-3">

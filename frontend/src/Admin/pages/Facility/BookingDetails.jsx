@@ -110,7 +110,19 @@ const BookingDetails = () => {
             <Field label="Facility Name">{facilityName}</Field>
             <Field label="Schedule">{range}</Field>
             <Field label="Total amount">₹{Number(booking.totalAmount || 0).toLocaleString("en-IN")}</Field>
-            <Field label="Payment">{booking.paymentStatus === "paid" ? "Paid" : "Unpaid"}</Field>
+            <Field label="Payment Status">
+              <span className={`font-bold ${booking.paymentStatus === "paid" ? "text-green-600" : "text-amber-600"}`}>
+                {booking.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+              </span>
+            </Field>
+
+            {booking.paymentStatus === "paid" && (
+              <>
+                <Field label="Payment ID">{booking.razorpayPaymentId || "—"}</Field>
+                <Field label="Order ID">{booking.razorpayOrderId || "—"}</Field>
+                <Field label="Paid On">{booking.paidAt ? new Date(booking.paidAt).toLocaleString("en-IN") : "—"}</Field>
+              </>
+            )}
             <Field label="Purpose">{booking.purpose || "—"}</Field>
             <Field label="Location">{facilityLocation}</Field>
             <Field label="Facility Hours">{facilityHours}</Field>
@@ -120,21 +132,14 @@ const BookingDetails = () => {
 
         {bookingStatus === "Pending" && (
           <div className="flex flex-col gap-2 px-8 py-5 border-t bg-gray-50">
-            {!canApprove && (
-              <p className="text-xs text-amber-800 font-medium">
-                Approve is enabled after the resident pays via Razorpay. You can still reject unpaid requests.
-              </p>
-            )}
             <div className="flex gap-3 flex-wrap">
-              {canApprove && (
-                <button
-                  type="button"
-                  onClick={handleApprove}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition"
-                >
-                  Approve
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleApprove}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition"
+              >
+                Approve
+              </button>
               <button
                 type="button"
                 onClick={handleReject}

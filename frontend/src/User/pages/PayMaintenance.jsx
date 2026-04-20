@@ -210,7 +210,7 @@ const PayMaintenance = () => {
                           onClick={() => openPayModal(r)}
                           className="group/pay inline-flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95"
                         >
-                          Pay with Razorpay
+                          Pay Now
                           <ArrowRight size={16} className="group-hover/pay:translate-x-1 transition-transform" />
                         </button>
                       </div>

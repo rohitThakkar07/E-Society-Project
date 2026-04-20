@@ -35,14 +35,12 @@ const expenseSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-
-    // Derived from date — auto-filled by pre-save hook
     month: {
-      type: String, // e.g. "March"
+      type: String, 
     },
 
     year: {
-      type: Number, // e.g. 2026
+      type: Number,
     },
 
     addedBy: {
@@ -57,8 +55,8 @@ const expenseSchema = new mongoose.Schema(
 expenseSchema.pre("save", async function () {
   if (this.date) {
     const d = new Date(this.date);
-    this.month = d.toLocaleString("default", { month: "long" }); // "March"
-    this.year  = d.getFullYear();                                  // 2026
+    this.month = d.toLocaleString("default", { month: "long" }); 
+    this.year  = d.getFullYear();                                 
   }
 });
 

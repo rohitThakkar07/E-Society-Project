@@ -303,12 +303,6 @@ exports.updateBooking = async (req, res) => {
         if (!admin) {
           return res.status(403).json({ success: false, message: "Only admin can approve/reject" });
         }
-        if (next === "Approved" && booking.paymentStatus !== "paid") {
-          return res.status(400).json({
-            success: false,
-            message: "Resident must complete Razorpay payment before approval",
-          });
-        }
         booking.status = next;
         booking.approvedBy = req.user._id;
       } else if (next === "Cancelled") {
@@ -347,8 +341,7 @@ exports.updateBooking = async (req, res) => {
       booking.totalAmount = totalAmount;
       booking.pricingBreakdown = pricingBreakdown;
     }
-
-    await booking.save();
+    await booking.save({ validateModifiedOnly: true });
     const out = await FacilityBooking.findById(booking._id)
       .populate("facility", "name status bookingType")
       .populate("resident", "firstName lastName flatNumber wing email")

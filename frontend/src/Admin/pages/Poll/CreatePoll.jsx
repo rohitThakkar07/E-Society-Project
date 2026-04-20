@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FiPlus, FiXCircle } from "react-icons/fi";
 import { createPoll } from "../../../store/slices/pollSlice";
 
 const CreatePoll = () => {

@@ -190,6 +190,29 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+/* Verify OTP only (no password change) */
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp)
+      return res.status(400).json({ message: "Email and OTP are required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.resetToken || user.resetToken !== otp)
+      return res.status(400).json({ message: "Invalid OTP. Please check and try again." });
+
+    if (!user.resetTokenExpiry || user.resetTokenExpiry < new Date())
+      return res.status(400).json({ message: "OTP has expired. Please request a new one." });
+
+    res.json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Verify OTP Error:", error);
+    res.status(500).json({ message: "OTP verification failed. Please try again." });
+  }
+};
+
 /* Reset Password - Verify OTP & Set New Password */
 const resetPassword = async (req, res) => {
   try {
@@ -210,6 +233,12 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: STRONG_PASSWORD_MESSAGE });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // ✅ Actually save the new password and clear OTP fields
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword }, $unset: { resetToken: 1, resetTokenExpiry: 1 } }
+    );
 
     res.json({ success: true, message: "Password reset successfully! You can now log in." });
   } catch (error) {
@@ -263,6 +292,7 @@ module.exports = {
   login,
   logout,
   forgotPassword,
+  verifyOtp,
   resetPassword,
   changeFirstPassword,
   changePassword,

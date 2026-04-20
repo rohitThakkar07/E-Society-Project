@@ -57,70 +57,110 @@ const generateMonthlyBills = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid month name" });
     }
 
-    const settings = await MaintenanceSettings.findOne();
+    const settings = await MaintenanceSettings.findOne().lean();
     const dueDays        = settings?.dueDays ?? 10;
     const sendEmailOnGenerate = settings?.sendEmailOnGenerate !== false;
 
     const results = { created: [], skipped: [], errors: [] };
+    const dueDate = new Date(year, MONTHS.indexOf(month), dueDays);
 
-    // ✅ Query Active residents directly and populate their flat
-    const residents = await Resident.find({ status: "Active" }).populate("flat");
+    // Query active residents once with only required fields.
+    const residents = await Resident.find({ status: "Active" })
+      .select("_id firstName lastName email flat")
+      .populate("flat", "_id flatNumber monthlyMaintenance")
+      .lean();
 
+    // Filter residents that can be billed and dedupe by flat.
+    const candidateRows = [];
+    const seenFlatIds = new Set();
     for (const resident of residents) {
-      try {
-        const flat = resident.flat;
-
-        if (!flat) {
-          results.skipped.push({ resident: resident.firstName, reason: "No flat linked" });
-          continue;
-        }
-
-        // Skip if bill already exists
-        const existing = await Maintenance.findOne({ flat: flat._id, month, year });
-        if (existing) {
-          results.skipped.push({ flatNumber: flat.flatNumber, reason: "Bill already exists" });
-          continue;
-        }
-
-        const baseAmount = flat.monthlyMaintenance || 0;
-
-        const dueDate = new Date(year, MONTHS.indexOf(month), dueDays);
-
-        const maintenance = await Maintenance.create({
-          resident: resident._id,
-          flat:     flat._id,
-          month,
-          year,
-          amount:   baseAmount,
-          lateFee:  0,
-          dueDate,
-          status:   "Pending",
-        });
-
-        if (sendEmailOnGenerate && resident.email) {
-          await sendMaintenanceBillEmail(resident, flat, maintenance);
-        }
-
-        results.created.push({
-          flatNumber: flat.flatNumber,
-          resident:   `${resident.firstName} ${resident.lastName || ""}`.trim(),
-          amount:     baseAmount,
-          lateFee:    0,
-          email:      resident.email || "—",
-        });
-
-      } catch (err) {
-        const flatDoc = resident.flat;
-        const flatNum =
-          (flatDoc && typeof flatDoc === "object" && flatDoc.flatNumber) ||
-          resident.flatNumber ||
-          "—";
-        results.errors.push({
-          flatNumber: flatNum,
-          resident: `${resident.firstName} ${resident.lastName || ""}`.trim(),
-          error: err.message,
-        });
+      const flat = resident.flat;
+      if (!flat?._id) {
+        results.skipped.push({ resident: resident.firstName, reason: "No flat linked" });
+        continue;
       }
+
+      const flatId = String(flat._id);
+      if (seenFlatIds.has(flatId)) {
+        results.skipped.push({ flatNumber: flat.flatNumber || "—", reason: "Duplicate resident for same flat" });
+        continue;
+      }
+      seenFlatIds.add(flatId);
+
+      candidateRows.push({
+        residentId: resident._id,
+        resident,
+        flat,
+        flatId,
+      });
+    }
+
+    const candidateFlatIds = candidateRows.map((row) => row.flat._id);
+
+    // Fetch existing bills for all candidate flats in one query.
+    const existingRows = candidateFlatIds.length
+      ? await Maintenance.find({ month, year, flat: { $in: candidateFlatIds } })
+          .select("flat")
+          .lean()
+      : [];
+    const existingFlatIds = new Set(existingRows.map((row) => String(row.flat)));
+
+    const toInsert = [];
+    const createdMeta = [];
+
+    for (const row of candidateRows) {
+      if (existingFlatIds.has(row.flatId)) {
+        results.skipped.push({ flatNumber: row.flat.flatNumber || "—", reason: "Bill already exists" });
+        continue;
+      }
+
+      const baseAmount = row.flat.monthlyMaintenance || 0;
+
+      toInsert.push({
+        resident: row.residentId,
+        flat: row.flat._id,
+        month,
+        year,
+        amount: baseAmount,
+        lateFee: 0,
+        dueDate,
+        status: "Pending",
+      });
+
+      createdMeta.push({
+        flatNumber: row.flat.flatNumber || "—",
+        resident: `${row.resident.firstName} ${row.resident.lastName || ""}`.trim(),
+        amount: baseAmount,
+        lateFee: 0,
+        email: row.resident.email || "—",
+        residentObj: row.resident,
+        flatObj: row.flat,
+      });
+    }
+
+    let insertedDocs = [];
+    if (toInsert.length) {
+      insertedDocs = await Maintenance.insertMany(toInsert, { ordered: false });
+    }
+
+    insertedDocs.forEach((doc, idx) => {
+      const meta = createdMeta[idx];
+      results.created.push({
+        flatNumber: meta.flatNumber,
+        resident: meta.resident,
+        amount: meta.amount,
+        lateFee: meta.lateFee,
+        email: meta.email,
+      });
+    });
+
+    // Send emails after db insert so API response is not blocked by SMTP delays.
+    if (sendEmailOnGenerate && insertedDocs.length) {
+      const emailQueue = insertedDocs.map((doc, idx) => {
+        const meta = createdMeta[idx];
+        return sendMaintenanceBillEmail(meta.residentObj, meta.flatObj, doc);
+      });
+      Promise.allSettled(emailQueue).catch(() => {});
     }
 
     res.json({

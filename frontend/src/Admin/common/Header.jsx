@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { toast } from "react-toastify";
 import ChangePasswordModal from "./ChangePasswordModal";
 import { fetchComplaints } from "../../store/slices/complaintSlice";
 import { fetchBookings } from "../../store/slices/facilityBookingSlice";
@@ -62,7 +61,6 @@ const Header = ({ toggleSidebar }) => {
     setLoading(true);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:4000/api"}/auth/logout`);
-      toast.success("Logged out successfully");
     } catch (error) {
       console.error(error);
     } finally {
@@ -177,6 +175,15 @@ const Header = ({ toggleSidebar }) => {
           >
             <FiSettings size={18} />
           </button>
+
+          <button
+            onClick={handleLogout}
+            disabled={loading}
+            title="Sign Out"
+            className="w-10 h-10 hidden sm:flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all"
+          >
+            <FiLogOut size={18} />
+          </button>
         </div>
 
         {/* Divider */}
@@ -184,9 +191,11 @@ const Header = ({ toggleSidebar }) => {
 
         {/* User Info & Profile Dropdown */}
         <div className="flex items-center gap-3 pl-2 group relative cursor-pointer py-2">
-          <div className="text-right hidden sm:block overflow-hidden">
+          <div className="text-center hidden sm:block overflow-hidden">
             <p className="text-sm font-bold text-slate-800 leading-none truncate max-w-[100px]">{user.name || "Admin"}</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">{role}</p>
+            {(user.name || "").toLowerCase() !== role.toLowerCase() && (
+              <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">{role}</p>
+            )}
           </div>
           
           <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-[#4F6EF7] text-sm overflow-hidden transition-all group-hover:border-[#4F6EF7]/30 shadow-inner">

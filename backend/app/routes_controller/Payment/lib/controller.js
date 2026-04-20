@@ -331,7 +331,7 @@ exports.initiateFacilityBookingPayment = async (req, res) => {
 
     booking.razorpayOrderId = orderResult.orderId;
     booking.paymentStatus = "unpaid";
-    await booking.save();
+    await booking.save({ validateModifiedOnly: true });
 
     const r = booking.resident;
     res.json({
@@ -424,7 +424,7 @@ exports.verifyFacilityBookingPayment = async (req, res) => {
     booking.razorpayOrderId = orderId;
     booking.paymentStatus = "paid";
     booking.paidAt = new Date();
-    await booking.save();
+    await booking.save({ validateModifiedOnly: true });
 
     res.status(201).json({
       success: true,

@@ -19,6 +19,9 @@ const authMiddleware = require("../../middlewares/authMiddleware");
 // Forgot Password - Send OTP
 router.post("/forgot-password", controller.forgotPassword);
 
+// Verify OTP only (no password change)
+router.post("/verify-otp", controller.verifyOtp);
+
 // Reset Password - Verify OTP & Set New Password
 router.post("/reset-password", controller.resetPassword);
 

@@ -72,7 +72,7 @@ const ChangePasswordModal = ({ onClose }) => {
               <FiShield size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-800 tracking-tight">Security Settings</h2>
+              <h2 className="text-lg font-black text-slate-800 tracking-tight">Change Password</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Update your password</p>
             </div>
           </div>

@@ -120,14 +120,23 @@ const ForgotPasswordModal = ({ onClose }) => {
     }
   };
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 6) {
       toast.error("Enter the full 6-digit OTP");
       return;
     }
-    setStep(3);
+    setLoading(true);
+    try {
+      await axios.post(`${API_URL}/verify-otp`, { email: email.trim(), otp: code });
+      toast.success("OTP verified! Set your new password.");
+      setStep(3);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResetPassword = async (e) => {
@@ -172,9 +181,9 @@ const ForgotPasswordModal = ({ onClose }) => {
       style={{ background: "color-mix(in srgb, var(--text) 55%, transparent)" }}
     >
       <div
-       
-       
-       
+
+
+
         className="w-full max-w-md overflow-hidden rounded-xl border shadow-2xl"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
@@ -253,8 +262,8 @@ const ForgotPasswordModal = ({ onClose }) => {
               >
                 {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
               </button>
-              <button type="submit" className="user-btn-primary w-full justify-center rounded-md py-3.5">
-                Continue
+              <button type="submit" disabled={loading} className="user-btn-primary w-full justify-center rounded-md py-3.5 disabled:opacity-50">
+                {loading ? <RefreshCw className="animate-spin" size={18} /> : <>Verify OTP <ArrowRight size={18} /></>}
               </button>
             </form>
           )}
@@ -347,7 +356,7 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_URL}/change-first-password`, 
+      await axios.post(`${API_URL}/change-first-password`,
         { newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -364,9 +373,9 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 backdrop-blur-xl bg-black/40">
-      <div 
-       
-       
+      <div
+
+
         className="w-full max-w-md overflow-hidden rounded-2xl border shadow-2xl bg-[var(--card)] border-[var(--border)]"
       >
         <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-6 text-white text-center">
@@ -374,7 +383,7 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
           <h2 className="text-xl font-black">Security Update Required</h2>
           <p className="text-xs opacity-90 mt-1">Please change your default password to continue.</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
           <div className="relative">
             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
@@ -406,8 +415,8 @@ const FirstTimePasswordModal = ({ onClose, onSuccess }) => {
             </button>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-orange-600 to-rose-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:shadow-lg disabled:opacity-50 transition-all font-sans uppercase tracking-widest text-xs"
           >
@@ -465,14 +474,16 @@ const LoginInner = () => {
         localStorage.setItem("role", user.role);
         localStorage.setItem("userData", JSON.stringify(user));
         const display = user.fullName || user.name || "Resident";
-        
+
         if (response.data.mustChangePassword) {
           setShowFirstTimeReset(true);
           setLoading(false);
           return;
         }
         const userRole = user.role.toLowerCase();
-        navigate(userRole === "admin" ? "/admin" : "/");
+        if (userRole === "admin") navigate("/admin");
+        else if (userRole === "guard") navigate("/guard");
+        else navigate("/");
       } else {
         if (formData.password !== formData.confirmPassword) {
           toast.error("Passwords do not match");
@@ -510,9 +521,9 @@ const LoginInner = () => {
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4 py-10 lg:flex-row lg:items-stretch lg:gap-10 lg:px-8">
         {/* Hero panel */}
         <div
-         
-         
-         
+
+
+
           className="relative mb-8 flex min-h-[220px] w-full overflow-hidden rounded-xl border shadow-lg sm:min-h-[280px] lg:mb-0 lg:min-h-[560px] lg:max-w-md lg:flex-col lg:justify-between"
           style={{ borderColor: "var(--border)" }}
         >
@@ -552,9 +563,9 @@ const LoginInner = () => {
 
         {/* Form card */}
         <div
-         
-         
-         
+
+
+
           className="w-full max-w-md rounded-xl border p-6 shadow-xl backdrop-blur-xl sm:p-8"
           style={{
             background: "color-mix(in srgb, var(--card) 92%, transparent)",
@@ -574,51 +585,51 @@ const LoginInner = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            
-              {!isLogin && (
-                <div
-                 
-                 
-                 
-                  className="space-y-4 overflow-hidden"
-                >
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                        Full name
-                      </label>
-                      <div className="relative">
-                        <UserCircle className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
-                        <input
-                          type="text"
-                          name="fullName"
-                          placeholder="Your name"
-                          onChange={handleChange}
-                          required={!isLogin}
-                          className={fieldClass}
-                        />
-                      </div>
+
+            {!isLogin && (
+              <div
+
+
+
+                className="space-y-4 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                      Full name
+                    </label>
+                    <div className="relative">
+                      <UserCircle className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+                      <input
+                        type="text"
+                        name="fullName"
+                        placeholder="Your name"
+                        onChange={handleChange}
+                        required={!isLogin}
+                        className={fieldClass}
+                      />
                     </div>
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                        Phone
-                      </label>
-                      <div className="relative">
-                        <Phone className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
-                        <input
-                          type="tel"
-                          name="phone"
-                          placeholder="+91..."
-                          onChange={handleChange}
-                          required={!isLogin}
-                          className={fieldClass}
-                        />
-                      </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                      Phone
+                    </label>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+                      <input
+                        type="tel"
+                        name="phone"
+                        placeholder="+91..."
+                        onChange={handleChange}
+                        required={!isLogin}
+                        className={fieldClass}
+                      />
                     </div>
                   </div>
                 </div>
-              )}
-            
+              </div>
+            )}
+
 
             <div>
               <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Email</label>
@@ -688,8 +699,8 @@ const LoginInner = () => {
             )}
 
             <button
-             
-             
+
+
               disabled={loading}
               type="submit"
               className="user-btn-primary mt-4 w-full justify-center rounded-md py-3.5 disabled:opacity-50"
@@ -722,19 +733,21 @@ const LoginInner = () => {
       </div>
 
       {showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}
-      
-        {showFirstTimeReset && (
-          <FirstTimePasswordModal 
-            onClose={() => setShowFirstTimeReset(false)} 
-            onSuccess={() => {
-              setShowFirstTimeReset(false);
-              const user = JSON.parse(localStorage.getItem("userData") || "{}");
-              const userRole = user.role?.toLowerCase();
-              navigate(userRole === "admin" ? "/admin" : "/");
-            }} 
-          />
-        )}
-      
+
+      {showFirstTimeReset && (
+        <FirstTimePasswordModal
+          onClose={() => setShowFirstTimeReset(false)}
+          onSuccess={() => {
+            setShowFirstTimeReset(false);
+            const user = JSON.parse(localStorage.getItem("userData") || "{}");
+            const userRole = user.role?.toLowerCase();
+            if (userRole === "admin") navigate("/admin");
+            else if (userRole === "guard") navigate("/guard");
+            else navigate("/");
+          }}
+        />
+      )}
+
     </div>
   );
 };

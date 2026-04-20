@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 
 import {
-  User, Phone, FileText, MapPin, Edit2, ShieldCheck,
+  User, Phone, MapPin, Edit2, ShieldCheck,
   Calendar, Mail, Sparkles, Loader2, Camera, CheckCircle2,
-  Trash2, Home, Hash, Layers, CreditCard, Building2, X
+  Trash2, Home, Hash, Layers, CreditCard, Building2, X, Lock
 } from "lucide-react";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -14,8 +15,6 @@ import { PageLoader } from "../../components/PageLoader";
 const emptyForm = {
   firstName: "",
   lastName: "",
-  gender: "Male",
-  dateOfBirth: "",
   mobileNumber: "",
   email: "",
 };
@@ -24,10 +23,13 @@ const TABS = [
   { id: "Personal", icon: User, label: "Identity" },
   { id: "Contact", icon: Phone, label: "Contact" },
   { id: "Address", icon: MapPin, label: "Property" },
-  { id: "Document", icon: FileText, label: "Vault" },
+  { id: "Security", icon: Lock, label: "Security" },
 ];
 
 const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const PASSWORD_HINT = "Use 8+ characters with uppercase, lowercase, number, and special character.";
 
 const ProfilePage = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -39,6 +41,12 @@ const ProfilePage = () => {
   const [previewImg, setPreviewImg] = useState(null);
   const [newImageFile, setNewImageFile] = useState(null);
   const fileInputRef = useRef(null);
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const dispatch = useDispatch();
   const { singleResident: data, profileLoading, loading } = useSelector((s) => s.resident);
@@ -52,8 +60,6 @@ const ProfilePage = () => {
     setForm({
       firstName: data.firstName || "",
       lastName: data.lastName || "",
-      gender: data.gender || "Male",
-      dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
       mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
       email: data.email || "",
     });
@@ -91,8 +97,6 @@ const ProfilePage = () => {
       setForm({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
-        gender: data.gender || "Male",
-        dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : "",
         mobileNumber: data.mobileNumber != null ? String(data.mobileNumber) : "",
         email: data.email || "",
       });
@@ -119,10 +123,7 @@ const ProfilePage = () => {
     const formData = new FormData();
     formData.append("firstName", form.firstName.trim());
     formData.append("lastName", form.lastName.trim());
-    formData.append("gender", form.gender);
-    formData.append("dateOfBirth", form.dateOfBirth);
     formData.append("mobileNumber", form.mobileNumber);
-    formData.append("email", form.email.trim().toLowerCase());
 
     if (newImageFile) {
       formData.append("profileImage", newImageFile);
@@ -146,6 +147,50 @@ const ProfilePage = () => {
   const setField = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const setPasswordField = (key) => (e) =>
+    setPasswordForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    const { oldPassword, newPassword, confirmPassword } = passwordForm;
+
+    if (!oldPassword) {
+      toast.error("Current password is required.");
+      return;
+    }
+
+    if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
+      toast.error(PASSWORD_HINT);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New password and confirm password must match.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/auth/change-password`,
+        { oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res?.data?.success) {
+        toast.success("Password changed successfully.");
+        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        toast.error(res?.data?.message || "Failed to change password.");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to update password. Verify current password.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const fullName = `${form.firstName} ${form.lastName}`.trim() || "—";
   const initials = [form.firstName?.[0], form.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "?";
 
@@ -153,15 +198,12 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
 
         {/* ── Page Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={14} className="text-indigo-500" />
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-indigo-500">Account Profile</span>
-            </div>
+
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Profile</h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">Manage your personal information and settings</p>
           </div>
@@ -267,7 +309,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Property Summary Card */}
-            {data.flat && (
+            {/* {data.flat && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-3">
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">Property</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -276,8 +318,8 @@ const ProfilePage = () => {
                   <MiniStat label="Floor" value={data.flat?.floor ?? "—"} />
                   <MiniStat label="Type" value={data.flat?.type || "—"} />
                 </div>
-              </div>
-            )}
+              </div> */}
+            
           </aside>
 
           {/* ── Main Content ── */}
@@ -318,13 +360,13 @@ const ProfilePage = () => {
                         {activeTab === "Personal" && "Identity Information"}
                         {activeTab === "Contact" && "Contact Details"}
                         {activeTab === "Address" && "Property Information"}
-                        {activeTab === "Document" && "Document Vault"}
+                        {activeTab === "Security" && "Security Settings"}
                       </h3>
                       <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
-                        {activeTab === "Personal" && "Your name, gender and date of birth"}
+                        {activeTab === "Personal" && "Your core account identity details"}
                         {activeTab === "Contact" && "Phone number and email address"}
-                        {activeTab === "Address" && "Your flat and block details"}
-                        {activeTab === "Document" && "Stored identity and occupancy documents"}
+                        {activeTab === "Address" && "Your flat details"}
+                        {activeTab === "Security" && "Change your password directly from here"}
                       </p>
                     </div>
                   </div>
@@ -349,29 +391,23 @@ const ProfilePage = () => {
                           placeholder="Enter last name"
                         />
                         <FormField
-                          label="Date of Birth"
-                          type="date"
-                          value={form.dateOfBirth}
-                          editing={editing}
-                          onChange={setField("dateOfBirth")}
-                          display={form.dateOfBirth ? dayjs(form.dateOfBirth).format("DD MMM YYYY") : "—"}
+                          label="Member Since"
+                          value={data.createdAt ? dayjs(data.createdAt).format("DD MMM YYYY") : ""}
+                          editing={false}
+                          display={data.createdAt ? dayjs(data.createdAt).format("DD MMM YYYY") : "—"}
                         />
-                        <div className="flex flex-col gap-2">
-                          <label className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Gender</label>
-                          {editing ? (
-                            <select
-                              value={form.gender}
-                              onChange={setField("gender")}
-                              className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                            >
-                              <option>Male</option>
-                              <option>Female</option>
-                              <option>Other</option>
-                            </select>
-                          ) : (
-                            <DisplayValue value={data.gender} />
-                          )}
-                        </div>
+                        <FormField
+                          label="Resident Type"
+                          value={data.residentType || ""}
+                          editing={false}
+                          display={data.residentType || "—"}
+                        />
+                        <FormField
+                          label="Account Status"
+                          value={data.status || ""}
+                          editing={false}
+                          display={data.status || "—"}
+                        />
                       </div>
                     )}
 
@@ -392,9 +428,8 @@ const ProfilePage = () => {
                           label="Email Address"
                           type="email"
                           value={form.email}
-                          editing={editing}
-                          onChange={setField("email")}
-                          placeholder="Enter email"
+                          editing={false}
+                          display={form.email || "—"}
                         />
 
                         {/* Read-only info */}
@@ -402,7 +437,7 @@ const ProfilePage = () => {
                           <div className="mt-2 p-4 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-700/30">
                             <p className="text-[12px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2">
                               <ShieldCheck size={13} />
-                              Email and mobile are used for login. Contact the administrator to change verified credentials.
+                              Email ID cannot be changed from resident profile. Contact administrator if needed.
                             </p>
                           </div>
                         </div>
@@ -415,9 +450,14 @@ const ProfilePage = () => {
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                           <AddressBox icon={Building2} label="Wing" value={data.wing} color="indigo" />
                           <AddressBox icon={Hash} label="Flat Number" value={data.flatNumber} color="purple" />
-                          <AddressBox icon={Home} label="Block" value={data.flat?.block} color="pink" />
                           <AddressBox icon={Layers} label="Floor" value={data.flat?.floor} color="sky" />
                           <AddressBox icon={Home} label="Flat Type" value={data.flat?.type} color="amber" />
+                          <AddressBox
+                            icon={Home}
+                            label="Occupancy Type"
+                            value={data.flat?.occupancyType || data.residentType}
+                            color="pink"
+                          />
                           <AddressBox
                             icon={CreditCard}
                             label="Monthly Maintenance"
@@ -441,19 +481,51 @@ const ProfilePage = () => {
                       </div>
                     )}
 
-                    {/* ── Document Tab ── */}
-                    {activeTab === "Document" && (
-                      <div className="py-10 flex flex-col items-center justify-center text-center">
-                        <div className="w-20 h-20 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-5">
-                          <FileText size={36} strokeWidth={1.5} />
+                    {/* ── Security Tab ── */}
+                    {activeTab === "Security" && (
+                      <div className="max-w-xl space-y-4">
+                        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-700/30">
+                          <p className="text-[12px] text-indigo-700 dark:text-indigo-400 font-medium">
+                            Update your password from here. Use a strong password to keep your account secure.
+                          </p>
                         </div>
-                        <h4 className="text-lg font-bold mb-2">Document Vault</h4>
-                        <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-6">
-                          Your identity and occupancy documents are securely stored here. Only you and the administrator can access this data.
-                        </p>
-                        <button className="px-6 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-500 text-sm font-medium hover:bg-indigo-500/10 transition-all">
-                          Request Documents
-                        </button>
+                        <form onSubmit={handleChangePassword} className="grid gap-4 sm:grid-cols-2">
+                          <FormField
+                            label="Current Password"
+                            type="password"
+                            value={passwordForm.oldPassword}
+                            editing
+                            onChange={setPasswordField("oldPassword")}
+                            placeholder="Enter current password"
+                          />
+                          <div />
+                          <FormField
+                            label="New Password"
+                            type="password"
+                            value={passwordForm.newPassword}
+                            editing
+                            onChange={setPasswordField("newPassword")}
+                            placeholder="Create new password"
+                          />
+                          <FormField
+                            label="Confirm New Password"
+                            type="password"
+                            value={passwordForm.confirmPassword}
+                            editing
+                            onChange={setPasswordField("confirmPassword")}
+                            placeholder="Repeat new password"
+                          />
+                          <div className="sm:col-span-2">
+                            <p className="text-[11px] text-[var(--text-muted)] mb-3">{PASSWORD_HINT}</p>
+                            <button
+                              type="submit"
+                              disabled={passwordLoading}
+                              className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all disabled:opacity-60"
+                            >
+                              {passwordLoading ? "Updating..." : "Change Password"}
+                            </button>
+                          </div>
+                        </form>
                       </div>
                     )}
 

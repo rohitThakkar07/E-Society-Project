@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Navigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { ThemeProvider } from "../context/ThemeContext";
@@ -8,6 +8,20 @@ import ScrollToTop from "../../components/ScrollToTop";
 const UserLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
+
+  // Redirect admin or guard away from the user portal
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const user = JSON.parse(localStorage.getItem("userData") || "{}");
+      if (user?.role?.toLowerCase() === "admin") {
+        return <Navigate to="/admin" replace />;
+      }
+      if (user?.role?.toLowerCase() === "guard") {
+        return <Navigate to="/guard" replace />;
+      }
+    }
+  } catch (e) {}
 
   return (
     <ThemeProvider>
@@ -18,10 +32,6 @@ const UserLayout = () => {
           
             <div
               key={location.pathname}
-             
-             
-             
-             
             >
               <Outlet />
             </div>

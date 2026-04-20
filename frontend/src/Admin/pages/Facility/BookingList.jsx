@@ -257,8 +257,7 @@ const BookingList = () => {
 
                     <TableCell align="center">
                       <div className="flex items-center justify-center gap-1 flex-wrap">
-                        {booking.status === "Pending" &&
-                          booking.paymentStatus === "paid" && (
+                        {booking.status === "Pending" && (
                             <>
                               <button
                                 type="button"

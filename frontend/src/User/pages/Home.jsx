@@ -122,7 +122,7 @@ const Home = () => {
   /* ─── data for public sections ─── */
   const societyStats = [
     { value: "148", label: "Resident Families", icon: Users, color: "#6366f1" },
-    { value: "4", label: "Residential Wings", icon: Building2, color: "#10b981" },
+    { value: "3", label: "Residential Wings", icon: Building2, color: "#10b981" },
     { value: "24/7", label: "Security Coverage", icon: Shield, color: "#3b82f6" },
     { value: "12+", label: "Premium Amenities", icon: Sparkles, color: "#f59e0b" },
   ];

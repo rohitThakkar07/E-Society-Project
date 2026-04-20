@@ -121,10 +121,8 @@ const GuardLayout = () => {
                style={{ background: ACCENT }}>
             {user?.name?.[0]?.toUpperCase() || "G"}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-center">
             <p className="text-xs font-bold text-white truncate">{user?.name || "Guard"}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider truncate"
-               style={{ color: "rgba(255,255,255,0.35)" }}>Security Guard</p>
           </div>
         </div>
         <button
@@ -197,9 +195,8 @@ const GuardLayout = () => {
                    style={{ background: ACCENT }}>
                 {user?.name?.[0]?.toUpperCase() || "G"}
               </div>
-              <div className="hidden sm:block text-right">
+              <div className="hidden sm:block text-center mt-1">
                 <p className="text-xs font-bold text-slate-700 leading-none">{user?.name || "Guard"}</p>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Security Guard</p>
               </div>
             </div>
           </div>

@@ -146,9 +146,18 @@ export const denyVisitor = createAsyncThunk(
 
 export const approveVisitor = createAsyncThunk(
   "visitor/approveVisitor",
-  async (id, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await API.put(`/visitor/allow-entry/${id}`);
+      const data = typeof payload === "string" ? { id: payload } : payload;
+      const { id, otp } = data;
+      
+      let response;
+      if (otp) {
+        response = await API.post(`/visitor/verify-otp/${id}`, { otp });
+      } else {
+        response = await API.put(`/visitor/allow-entry/${id}`);
+      }
+      
       toast.success("Visitor entry allowed.");
       return response.data.data;
     } catch (err) {

@@ -194,7 +194,7 @@ export default function FacilityPaymentModal({
                     <Loader2 className="animate-spin" size={18} /> Starting…
                   </>
                 ) : (
-                  "Pay with Razorpay"
+                  "Pay Now"
                 )}
               </button>
             </>

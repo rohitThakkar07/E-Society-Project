@@ -81,7 +81,7 @@ const Header = () => {
       children: [
         { label: "Visitor", to: "/visitors", roles: ["admin", "resident"], desc: "Track arrivals", icon: ShieldCheck },
         { label: "Book Facilities", to: "/facilities", roles: ["resident"], desc: "Clubhouse & Gym", icon: Calendar },
-        { label: "Gate Entry Logs", to: "/gate-logs", roles: ["guard", "admin", "resident"], desc: "Visitor history", icon: Activity },
+        // { label: "Gate Entry Logs", to: "/gate-logs", roles: ["guard", "admin", "resident"], desc: "Visitor history", icon: Activity },
       ],
     },
     {

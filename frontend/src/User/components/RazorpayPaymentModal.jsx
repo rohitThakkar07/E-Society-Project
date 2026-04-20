@@ -252,7 +252,7 @@ export default function RazorpayPaymentModal({
                     Opening checkout…
                   </>
                 ) : (
-                  "Pay with Razorpay"
+                  "Pay Now"
                 )}
               </button>
               <p className="text-center text-[11px] text-[var(--text-muted)] mt-3">

@@ -27,8 +27,6 @@ const complaintSchema = new mongoose.Schema(
       },
       required: [true, "Category is required"]
     },
-
-    // FIX: Added "Rejected" to enum — was missing, caused 500 when updateComplaintStatus used it
     status: {
       type: String,
       enum: {
@@ -47,13 +45,11 @@ const complaintSchema = new mongoose.Schema(
       default: "Medium"
     },
 
-    // FIX: attachment stores a relative URL, not a full OS path
     attachment: {
       type: String,
       default: null
     },
 
-    // FIX: resolvedAt is now set automatically in the controller when status → "Resolved"
     resolvedAt: {
       type: Date,
       default: null

@@ -31,8 +31,6 @@ const paymentRecordSchema = new mongoose.Schema({
   paidAt: { type: Date, sparse: true },
   refundedAt: { type: Date, sparse: true },
   refundId: { type: String, sparse: true },
-
-  // Additional Info
   notes: {
     month: String,
     year: String,
@@ -40,9 +38,7 @@ const paymentRecordSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-// Index for faster queries
 paymentRecordSchema.index({ resident: 1, createdAt: -1 });
 paymentRecordSchema.index({ status: 1 });
-// razorpayPaymentId is already unique in schema; no separate index needed to avoid duplicate index warnings.
 
 module.exports = mongoose.model("PaymentRecord", paymentRecordSchema);

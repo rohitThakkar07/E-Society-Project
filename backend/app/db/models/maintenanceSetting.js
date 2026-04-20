@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 /**
  * Stores global maintenance billing configuration
- * Only one document should exist (singleton pattern)
+ * Only one document should exist 
  */
 const maintenanceSettingsSchema = new mongoose.Schema({
   // Due date: how many days into the month (e.g., 10 = due on 10th)

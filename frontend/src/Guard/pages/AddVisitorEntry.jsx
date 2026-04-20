@@ -154,7 +154,7 @@ const AddVisitorEntry = () => {
     <div className="p-6 min-h-full" style={{ background: "#F4F5FA" }}>
 
       {/* Page Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition shadow-sm">
           <ChevronLeft size={18} className="text-slate-600" />
@@ -166,7 +166,7 @@ const AddVisitorEntry = () => {
       </div>
 
       {/* Stepper */}
-      <div className="flex items-center gap-0 mb-8 max-w-lg">
+      <div className="flex items-center gap-0 mb-8 max-w-2xl mx-auto">
         {STEPS.map((label, i) => {
           const num = i + 1;
           const done = num < step;
@@ -195,9 +195,7 @@ const AddVisitorEntry = () => {
         })}
       </div>
 
-      <div className="max-w-lg">
-
-        {/* ── STEP 1: Select Resident ─────────────────────────────────────── */}
+      <div className="max-w-2xl mx-auto">
         {step === 1 && (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <div className="flex items-center gap-3 mb-6">

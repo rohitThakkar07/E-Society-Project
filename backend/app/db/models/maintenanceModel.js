@@ -12,7 +12,7 @@ const maintenanceSchema = new mongoose.Schema({
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ["Pending", "Paid", "Overdue"], default: "Pending" },
 
-  // Track partial payments if needed
+  // Track partial payments 
   paymentHistory: [{
     date: { type: Date, default: Date.now },
     amount: { type: Number },
