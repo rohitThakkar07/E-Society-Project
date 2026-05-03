@@ -59,7 +59,7 @@ const MaintenanceDetails = () => {
     );
   }
 
-  const totalDue = maintenance.amount + (maintenance.lateFee || 0);
+  const totalDue = maintenance.amount + (maintenance.lateFee || 0) + (maintenance.escalationCharge || 0);
   const totalPaid = (maintenance.paymentHistory || []).reduce((s, p) => s + p.amount, 0);
   const remaining = Math.max(0, totalDue - totalPaid);
 
@@ -135,6 +135,12 @@ dispatch(markAsPaid({ id, notes: "Manual payment" }));
               ₹{(maintenance.lateFee || 0).toLocaleString()}
             </Field>
 
+            {(maintenance.escalationCharge || 0) > 0 && (
+              <Field label="Escalation Charge">
+                <span className="text-red-600">₹{maintenance.escalationCharge.toLocaleString()}</span>
+              </Field>
+            )}
+
             <Field label="Total Due">
               <span className="text-blue-600 font-semibold text-lg">
                 ₹{totalDue.toLocaleString()}
@@ -146,6 +152,37 @@ dispatch(markAsPaid({ id, notes: "Manual payment" }));
                 ₹{remaining.toLocaleString()}
               </span>
             </Field>
+
+            {maintenance.escalationLevel > 0 && (
+              <Field label="Escalation Level">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  maintenance.escalationLevel >= 3 ? 'bg-purple-100 text-purple-700' :
+                  maintenance.escalationLevel >= 2 ? 'bg-red-100 text-red-700' :
+                  'bg-orange-100 text-orange-700'
+                }`}>
+                  Level {maintenance.escalationLevel}
+                  {maintenance.escalationLevel === 1 && ' — Extra charge applied'}
+                  {maintenance.escalationLevel === 2 && ' — Defaulter'}
+                  {maintenance.escalationLevel === 3 && ' — Admin notified'}
+                </span>
+              </Field>
+            )}
+
+            {maintenance.isDefaulter && (
+              <Field label="Defaulter Status">
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                  ⚠ Marked as Defaulter
+                </span>
+              </Field>
+            )}
+
+            {maintenance.gracePeriodEnds && maintenance.status !== 'Paid' && (
+              <Field label="Grace Period Ends">
+                {new Date(maintenance.gracePeriodEnds).toLocaleDateString("en-IN", {
+                  day: "2-digit", month: "long", year: "numeric",
+                })}
+              </Field>
+            )}
 
             {maintenance.description && (
               <div className="md:col-span-2">

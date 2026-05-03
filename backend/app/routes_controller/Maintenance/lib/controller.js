@@ -2,7 +2,7 @@ const Maintenance = require("../../../db/models/maintenanceModel");
 const Resident = require("../../../db/models/residentsModel");
 const Flat = require("../../../db/models/flatModal"); 
 const MaintenanceSettings = require("../../../db/models/maintenanceSetting"); 
-const { sendMaintenanceBillEmail, sendMaintenancePaymentReceiptEmail } = require("../../../../utils/maintenanceEmail"); 
+const { sendMaintenanceBillEmail, sendMaintenancePaymentReceiptEmail } = require("../../../../utils/maintenanceEmail");
 const { syncMaintenanceRecord, syncMaintenanceRecords } = require("./lateFee");
 
 const MONTHS = [
@@ -31,6 +31,14 @@ const createMaintenance = async (req, res) => {
       lateFee: lateFee || 0,
       dueDate,
     });
+
+    // Compute grace period end date on creation
+    const createdSettings = await MaintenanceSettings.findOne();
+    if (createdSettings?.gracePeriodDays) {
+      maintenance.gracePeriodEnds = new Date(dueDate);
+      maintenance.gracePeriodEnds.setDate(maintenance.gracePeriodEnds.getDate() + createdSettings.gracePeriodDays);
+      await maintenance.save();
+    }
 
     // Send email if resident has one
     const populated = await Maintenance.findById(maintenance._id)
@@ -192,22 +200,23 @@ const getSettings = async (req, res) => {
 // ── SETTINGS — SAVE ───────────────────────────────────────────────────────────
 const saveSettings = async (req, res) => {
   try {
-    const {
-      dueDays, lateFeeType, lateFeeAmount, lateFeePercent,
-      autoGenerate, sendEmailOnGenerate, sendOverdueReminder, overdueReminderDays,
-    } = req.body;
+    const allowed = [
+      "dueDays", "gracePeriodDays",
+      "lateFeeType", "lateFeeAmount", "lateFeePercent",
+      "escalation1Enabled", "escalation1Days", "escalation1Type", "escalation1Amount", "escalation1Percent",
+      "escalation2Enabled", "escalation2Days",
+      "escalation3Enabled", "escalation3Days",
+      "blockFacilityOnOverdue",
+      "sendPreDueReminders", "preDueReminderDays",
+      "autoGenerate", "sendEmailOnGenerate", "sendOverdueReminder", "overdueReminderDays",
+    ];
 
     let settings = await MaintenanceSettings.findOne();
     if (!settings) settings = new MaintenanceSettings();
 
-    if (dueDays             !== undefined) settings.dueDays             = dueDays;
-    if (lateFeeType         !== undefined) settings.lateFeeType         = lateFeeType;
-    if (lateFeeAmount       !== undefined) settings.lateFeeAmount       = lateFeeAmount;
-    if (lateFeePercent      !== undefined) settings.lateFeePercent      = lateFeePercent;
-    if (autoGenerate        !== undefined) settings.autoGenerate        = autoGenerate;
-    if (sendEmailOnGenerate !== undefined) settings.sendEmailOnGenerate = sendEmailOnGenerate;
-    if (sendOverdueReminder !== undefined) settings.sendOverdueReminder = sendOverdueReminder;
-    if (overdueReminderDays !== undefined) settings.overdueReminderDays = overdueReminderDays;
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) settings[key] = req.body[key];
+    });
     settings.updatedBy = req.user?._id;
 
     await settings.save();
@@ -320,7 +329,8 @@ const getAllMaintenance = async (req, res) => {
 const getMaintenanceById = async (req, res) => {
   try {
     const record = await Maintenance.findById(req.params.id)
-      .populate("resident", "flatNumber name phone");
+      .populate("resident", "firstName lastName flatNumber wing mobileNumber email")
+      .populate("flat", "flatNumber wing floor type");
 
     if (!record) return res.status(404).json({ success: false, message: "Record not found" });
     await syncMaintenanceRecord(record);

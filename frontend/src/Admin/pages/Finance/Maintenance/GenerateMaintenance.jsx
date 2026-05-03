@@ -139,7 +139,6 @@ export default function GenerateMaintenance() {
           </button>
         ))}
       </div>
-
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-6xl">
         {/* Settings */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -149,125 +148,170 @@ export default function GenerateMaintenance() {
             </div>
             <div>
               <p className="text-sm font-bold text-slate-800">Billing settings</p>
-              <p className="text-[11px] text-slate-400">Due dates, late fees, and email options</p>
+              <p className="text-[11px] text-slate-400">Due dates, grace period, late fees, escalation & reminders</p>
             </div>
           </div>
 
           <form onSubmit={handleSaveSettings} className="p-6 space-y-5">
+
+            {/* ── Due Date ── */}
+            <SectionLabel>📅 Due Date</SectionLabel>
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Due date (day of month)</label>
-              <input
-                type="number"
-                min={1}
-                max={28}
-                value={settings.dueDays}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  updateField("dueDays", Number.isFinite(v) ? Math.min(28, Math.max(1, v)) : 1);
-                }}
-                className="admin-input mt-1.5"
-              />
-              <p className="text-[11px] text-slate-400 mt-1">
-                Bills are due on the {settings.dueDays}
-                {ordinal(settings.dueDays)} of each month.
-              </p>
+              <input type="number" min={1} max={28} value={settings.dueDays}
+                onChange={(e) => { const v = parseInt(e.target.value,10); updateField("dueDays", Number.isFinite(v)?Math.min(28,Math.max(1,v)):1); }}
+                className="admin-input mt-1.5" />
+              <p className="text-[11px] text-slate-400 mt-1">Bills are due on the {settings.dueDays}{ordinal(settings.dueDays)} of each month.</p>
             </div>
 
+            {/* ── Grace Period ── */}
+            <SectionLabel>🕐 Grace Period (no penalty)</SectionLabel>
+            <div>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Grace period (days after due date)</label>
+              <input type="number" min={0} max={30} value={settings.gracePeriodDays}
+                onChange={(e) => { const v = parseInt(e.target.value,10); updateField("gracePeriodDays", Number.isFinite(v)?Math.min(30,Math.max(0,v)):0); }}
+                className="admin-input mt-1.5" />
+              <p className="text-[11px] text-slate-400 mt-1">No penalty during grace period. Set 0 to disable.</p>
+            </div>
+
+            {/* ── Late Fee ── */}
+            <SectionLabel>💸 Late Fee (after grace period)</SectionLabel>
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee type</label>
               <div className="flex gap-2 mt-1.5">
-                {["none", "flat", "percent"].map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => updateField("lateFeeType", t)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
-                      settings.lateFeeType === t
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
-                    }`}
-                  >
-                    {t === "none" ? "None" : t === "flat" ? "Flat ₹" : "Percent %"}
+                {["none","flat","percent"].map((t) => (
+                  <button key={t} type="button" onClick={() => updateField("lateFeeType",t)}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${settings.lateFeeType===t?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-600 border-slate-200 hover:border-blue-300"}`}>
+                    {t==="none"?"None":t==="flat"?"Flat ₹":"Percent %"}
                   </button>
                 ))}
               </div>
             </div>
-
-            {settings.lateFeeType === "flat" && (
+            {settings.lateFeeType==="flat" && (
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee amount (₹)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={settings.lateFeeAmount}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    updateField("lateFeeAmount", Number.isFinite(v) ? Math.max(0, v) : 0);
-                  }}
-                  className="admin-input mt-1.5"
-                />
+                <input type="number" min={0} step={1} value={settings.lateFeeAmount}
+                  onChange={(e) => { const v=parseFloat(e.target.value); updateField("lateFeeAmount",Number.isFinite(v)?Math.max(0,v):0); }}
+                  className="admin-input mt-1.5" />
               </div>
             )}
-
-            {settings.lateFeeType === "percent" && (
+            {settings.lateFeeType==="percent" && (
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={0.5}
-                  value={settings.lateFeePercent}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    updateField(
-                      "lateFeePercent",
-                      Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0
-                    );
-                  }}
-                  className="admin-input mt-1.5"
-                />
+                <input type="number" min={0} max={100} step={0.5} value={settings.lateFeePercent}
+                  onChange={(e) => { const v=parseFloat(e.target.value); updateField("lateFeePercent",Number.isFinite(v)?Math.min(100,Math.max(0,v)):0); }}
+                  className="admin-input mt-1.5" />
               </div>
             )}
 
-            <div className="space-y-3 pt-1 border-t border-slate-100">
-              <ToggleRow
-                label="Auto-generate bills on the 1st of each month"
-                value={settings.autoGenerate}
-                onChange={(v) => updateField("autoGenerate", v)}
-              />
-              <ToggleRow
-                label="Send email when a bill is generated"
-                value={settings.sendEmailOnGenerate}
-                onChange={(v) => updateField("sendEmailOnGenerate", v)}
-              />
-              <ToggleRow
-                label="Send overdue reminder email"
-                value={settings.sendOverdueReminder}
-                onChange={(v) => updateField("sendOverdueReminder", v)}
-              />
-            </div>
+            {/* ── Escalation Level 1 ── */}
+            <SectionLabel>⚠️ Escalation Level 1 — Additional Charge</SectionLabel>
+            <ToggleRow label="Apply extra charge after N days overdue" value={settings.escalation1Enabled} onChange={(v) => updateField("escalation1Enabled",v)} />
+            {settings.escalation1Enabled && (<>
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Trigger after (days past due date)</label>
+                <input type="number" min={1} value={settings.escalation1Days}
+                  onChange={(e) => { const v=parseInt(e.target.value,10); updateField("escalation1Days",Number.isFinite(v)?Math.max(1,v):15); }}
+                  className="admin-input mt-1.5" />
+                <p className="text-[11px] text-slate-400 mt-1">e.g. 15 = extra charge added 15 days after due date.</p>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Extra charge type</label>
+                <div className="flex gap-2 mt-1.5">
+                  {["none","flat","percent"].map((t) => (
+                    <button key={t} type="button" onClick={() => updateField("escalation1Type",t)}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${settings.escalation1Type===t?"bg-orange-500 text-white border-orange-500":"bg-white text-slate-600 border-slate-200 hover:border-orange-300"}`}>
+                      {t==="none"?"None":t==="flat"?"Flat ₹":"Percent %"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {settings.escalation1Type==="flat" && (
+                <div>
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Extra charge (₹)</label>
+                  <input type="number" min={0} step={1} value={settings.escalation1Amount}
+                    onChange={(e) => { const v=parseFloat(e.target.value); updateField("escalation1Amount",Number.isFinite(v)?Math.max(0,v):0); }}
+                    className="admin-input mt-1.5" />
+                </div>
+              )}
+              {settings.escalation1Type==="percent" && (
+                <div>
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Extra charge (%)</label>
+                  <input type="number" min={0} max={100} step={0.5} value={settings.escalation1Percent}
+                    onChange={(e) => { const v=parseFloat(e.target.value); updateField("escalation1Percent",Number.isFinite(v)?Math.min(100,Math.max(0,v)):0); }}
+                    className="admin-input mt-1.5" />
+                </div>
+              )}
+            </>)}
 
+            {/* ── Escalation Level 2 ── */}
+            <SectionLabel>🔴 Escalation Level 2 — Mark as Defaulter</SectionLabel>
+            <ToggleRow label="Mark resident as defaulter after N days past due" value={settings.escalation2Enabled} onChange={(v) => updateField("escalation2Enabled",v)} />
+            {settings.escalation2Enabled && (
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mark defaulter after (days past due date)</label>
+                <input type="number" min={1} value={settings.escalation2Days}
+                  onChange={(e) => { const v=parseInt(e.target.value,10); updateField("escalation2Days",Number.isFinite(v)?Math.max(1,v):30); }}
+                  className="admin-input mt-1.5" />
+                <p className="text-[11px] text-slate-400 mt-1">e.g. 30 = flagged as defaulter after 30 days past due.</p>
+              </div>
+            )}
+
+            {/* ── Escalation Level 3 ── */}
+            <SectionLabel>🚨 Escalation Level 3 — Admin Notification</SectionLabel>
+            <ToggleRow label="Email admin for manual action after N days" value={settings.escalation3Enabled} onChange={(v) => updateField("escalation3Enabled",v)} />
+            {settings.escalation3Enabled && (
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Notify admin after (days past due date)</label>
+                <input type="number" min={1} value={settings.escalation3Days}
+                  onChange={(e) => { const v=parseInt(e.target.value,10); updateField("escalation3Days",Number.isFinite(v)?Math.max(1,v):60); }}
+                  className="admin-input mt-1.5" />
+                <p className="text-[11px] text-slate-400 mt-1">Admin receives an email alert for manual intervention.</p>
+              </div>
+            )}
+
+            {/* ── Restrictions ── */}
+            <SectionLabel>🔒 Restrictions</SectionLabel>
+            <ToggleRow label="Block facility bookings for overdue residents" value={settings.blockFacilityOnOverdue} onChange={(v) => updateField("blockFacilityOnOverdue",v)} />
+
+            {/* ── Pre-Due Reminders ── */}
+            <SectionLabel>🔔 Pre-Due Reminders</SectionLabel>
+            <ToggleRow label="Send reminder emails before due date" value={settings.sendPreDueReminders} onChange={(v) => updateField("sendPreDueReminders",v)} />
+            {settings.sendPreDueReminders && (
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Reminder days before due date</label>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  {[7,5,3,2,1,0].map((d) => {
+                    const selected = (settings.preDueReminderDays||[]).includes(d);
+                    return (
+                      <button key={d} type="button"
+                        onClick={() => {
+                          const cur = settings.preDueReminderDays||[];
+                          updateField("preDueReminderDays", selected ? cur.filter(x=>x!==d) : [...cur,d].sort((a,b)=>b-a));
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-600 border-slate-200 hover:border-blue-300"}`}>
+                        {d===0?"Due day":`${d}d before`}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Selected days trigger automatic reminder emails.</p>
+              </div>
+            )}
+
+            {/* ── Auto-Generate & Notifications ── */}
+            <SectionLabel>📧 Auto-Generate &amp; Notifications</SectionLabel>
+            <div className="space-y-3">
+              <ToggleRow label="Auto-generate bills on the 1st of each month" value={settings.autoGenerate} onChange={(v) => updateField("autoGenerate",v)} />
+              <ToggleRow label="Send email when a bill is generated" value={settings.sendEmailOnGenerate} onChange={(v) => updateField("sendEmailOnGenerate",v)} />
+              <ToggleRow label="Send overdue reminder email" value={settings.sendOverdueReminder} onChange={(v) => updateField("sendOverdueReminder",v)} />
+            </div>
             {settings.sendOverdueReminder && (
               <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Reminder after (days past due)
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={30}
-                  value={settings.overdueReminderDays}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    updateField(
-                      "overdueReminderDays",
-                      Number.isFinite(v) ? Math.min(30, Math.max(1, v)) : 3
-                    );
-                  }}
-                  className="admin-input mt-1.5"
-                />
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Overdue reminder after (days past due)</label>
+                <input type="number" min={1} max={30} value={settings.overdueReminderDays}
+                  onChange={(e) => { const v=parseInt(e.target.value,10); updateField("overdueReminderDays",Number.isFinite(v)?Math.min(30,Math.max(1,v)):3); }}
+                  className="admin-input mt-1.5" />
               </div>
             )}
 
@@ -464,6 +508,14 @@ function StatCard({ label, value, tone }) {
       <div className="text-2xl font-black tabular-nums">{value}</div>
       <div className="text-[10px] font-bold uppercase tracking-wide opacity-90">{label}</div>
     </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest pt-2 border-t border-slate-100">
+      {children}
+    </p>
   );
 }
 

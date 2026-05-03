@@ -52,18 +52,18 @@ exports.createResident = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 1️⃣ Create Resident
+    //  Create Resident
     const resident = await Resident.create({
       firstName,
       lastName,
       email,
       flat,
       residentType,
-      profileImage: req.file ? req.file.path : null, // ADDED: handle image
+      profileImage: req.file ? req.file.path : null, 
       ...rest,
     });
 
-    // 2️⃣ Create User
+    //  Create User
     await User.create({
       name: `${firstName} ${lastName}`,
       email,
@@ -72,14 +72,13 @@ exports.createResident = async (req, res) => {
       profileId: resident._id,
     });
 
-    // 3️⃣ 🔥 UPDATE FLAT (MAIN FIX)
     flatDoc.resident = resident._id;
     flatDoc.status = "Occupied";
     flatDoc.occupancyType = residentType; // Owner or Tenant
 
     await flatDoc.save();
 
-    // 4️⃣ Email
+    //  Email
     sendResidentWelcomeEmail(email, `${firstName} ${lastName}`, password)
       .catch(err => console.error("Email failed:", err));
 
@@ -200,12 +199,11 @@ exports.updateResident = async (req, res) => {
       });
     }
 
-    // Admin / staff: full update (flat assignment, status, etc.)
     const body = { ...req.body };
     delete body.password;
 
     if (req.file) {
-      body.profileImage = req.file.path; // ADDED: handle image update
+      body.profileImage = req.file.path;
     }
 
     const resident = await Resident.findByIdAndUpdate(req.params.id, body, {
@@ -262,7 +260,7 @@ exports.deleteResident = async (req, res) => {
       });
     }
 
-    // 🔥 UPDATE FLAT BACK TO VACANT
+    //  UPDATE FLAT BACK TO VACANT
     await Flat.findByIdAndUpdate(resident.flat, {
       resident: null,
       status: "Vacant",

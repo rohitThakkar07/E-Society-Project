@@ -3,10 +3,28 @@ import api from "../../../src/service/api";
 
 const DEFAULT_SETTINGS = {
   dueDays: 10,
+  gracePeriodDays: 5,
   lateFeeType: "none",
   lateFeeAmount: 0,
   lateFeePercent: 0,
+  // Escalation
+  escalation1Enabled: false,
+  escalation1Days: 15,
+  escalation1Type: "none",
+  escalation1Amount: 0,
+  escalation1Percent: 0,
+  escalation2Enabled: false,
+  escalation2Days: 30,
+  escalation3Enabled: false,
+  escalation3Days: 60,
+  // Restrictions
+  blockFacilityOnOverdue: false,
+  // Pre-due reminders
+  sendPreDueReminders: false,
+  preDueReminderDays: [7, 2],
+  // Auto-generate
   autoGenerate: false,
+  // Email
   sendEmailOnGenerate: true,
   sendOverdueReminder: true,
   overdueReminderDays: 3,
@@ -21,13 +39,29 @@ function normalizeSettingsFromApi(raw) {
   };
   return {
     ...DEFAULT_SETTINGS,
-    dueDays: Math.min(28, Math.max(1, n(raw.dueDays, DEFAULT_SETTINGS.dueDays))),
-    lateFeeType: ["none", "flat", "percent"].includes(raw.lateFeeType)
-      ? raw.lateFeeType
-      : DEFAULT_SETTINGS.lateFeeType,
-    lateFeeAmount: Math.max(0, n(raw.lateFeeAmount, 0)),
+    dueDays: Math.min(28, Math.max(1, n(raw.dueDays, 10))),
+    gracePeriodDays: Math.min(30, Math.max(0, n(raw.gracePeriodDays, 5))),
+    lateFeeType: ["none", "flat", "percent"].includes(raw.lateFeeType) ? raw.lateFeeType : "none",
+    lateFeeAmount:  Math.max(0, n(raw.lateFeeAmount, 0)),
     lateFeePercent: Math.min(100, Math.max(0, n(raw.lateFeePercent, 0))),
+    // Escalation
+    escalation1Enabled: Boolean(raw.escalation1Enabled),
+    escalation1Days:    Math.max(1, n(raw.escalation1Days, 15)),
+    escalation1Type:    ["none", "flat", "percent"].includes(raw.escalation1Type) ? raw.escalation1Type : "none",
+    escalation1Amount:  Math.max(0, n(raw.escalation1Amount, 0)),
+    escalation1Percent: Math.min(100, Math.max(0, n(raw.escalation1Percent, 0))),
+    escalation2Enabled: Boolean(raw.escalation2Enabled),
+    escalation2Days:    Math.max(1, n(raw.escalation2Days, 30)),
+    escalation3Enabled: Boolean(raw.escalation3Enabled),
+    escalation3Days:    Math.max(1, n(raw.escalation3Days, 60)),
+    // Restrictions
+    blockFacilityOnOverdue: Boolean(raw.blockFacilityOnOverdue),
+    // Pre-due reminders
+    sendPreDueReminders: Boolean(raw.sendPreDueReminders),
+    preDueReminderDays: Array.isArray(raw.preDueReminderDays) ? raw.preDueReminderDays : [7, 2],
+    // Auto-generate
     autoGenerate: Boolean(raw.autoGenerate),
+    // Email
     sendEmailOnGenerate: raw.sendEmailOnGenerate !== false,
     sendOverdueReminder: raw.sendOverdueReminder !== false,
     overdueReminderDays: Math.min(30, Math.max(1, n(raw.overdueReminderDays, 3))),
@@ -38,9 +72,22 @@ function payloadForSave(settings) {
   const s = settings || {};
   return {
     dueDays: s.dueDays,
+    gracePeriodDays: s.gracePeriodDays,
     lateFeeType: s.lateFeeType,
     lateFeeAmount: s.lateFeeAmount,
     lateFeePercent: s.lateFeePercent,
+    escalation1Enabled: s.escalation1Enabled,
+    escalation1Days: s.escalation1Days,
+    escalation1Type: s.escalation1Type,
+    escalation1Amount: s.escalation1Amount,
+    escalation1Percent: s.escalation1Percent,
+    escalation2Enabled: s.escalation2Enabled,
+    escalation2Days: s.escalation2Days,
+    escalation3Enabled: s.escalation3Enabled,
+    escalation3Days: s.escalation3Days,
+    blockFacilityOnOverdue: s.blockFacilityOnOverdue,
+    sendPreDueReminders: s.sendPreDueReminders,
+    preDueReminderDays: s.preDueReminderDays,
     autoGenerate: s.autoGenerate,
     sendEmailOnGenerate: s.sendEmailOnGenerate,
     sendOverdueReminder: s.sendOverdueReminder,

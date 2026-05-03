@@ -6,8 +6,6 @@ const { validationResult } = require("express-validator");
 const { sendMail } = require("../../../../utils/sendMail");
 const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
-// Centralized email utility used instead of inline transporter
-
 /* Register Resident */
 const registerResident = async (req, res) => {
 
@@ -35,7 +33,6 @@ const registerResident = async (req, res) => {
     });
 
 
-    console.log("after send email");
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -54,7 +51,6 @@ const registerResident = async (req, res) => {
 /* Login */
 
 const login = async (req, res) => {
-  console.log(req.body)
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {

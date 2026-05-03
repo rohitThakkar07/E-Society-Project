@@ -12,19 +12,18 @@ const InvoiceGenerator = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // ✅ Ensure you are destructuring the correct key from your slice
   const { singleRecord: data, loading } = useSelector((s) => s.maintenance || {});
 
   useEffect(() => {
     if (id) dispatch(fetchMaintenanceById(id));
   }, [id, dispatch]);
 
-  // ✅ Safe calculations
   const amount = data?.amount || 0;
   const lateFee = data?.lateFee || 0;
-  const total = amount + lateFee;
-  const residentName = data?.resident ? `${data.resident.firstName} ${data.resident.lastName || ""}` : "Loading...";
-  const flatDisplay = data?.resident ? `${data.resident.wing || "A"}-${data.resident.flatNumber || ""}` : "—";
+  const escalationCharge = data?.escalationCharge || 0;
+  const total = amount + lateFee + escalationCharge;
+  const residentName = data?.resident ? `${data.resident.firstName} ${data.resident.lastName || ""}`.trim() : "Loading...";
+  const flatDisplay = data?.flat ? `${data.flat.wing || "A"}-${data.flat.flatNumber || ""}` : (data?.resident ? `${data.resident.wing || "A"}-${data.resident.flatNumber || ""}` : "—");
 
   const generatePDF = () => {
     if (!data) return;
@@ -49,7 +48,8 @@ const InvoiceGenerator = () => {
       head: [["Description", "Qty", "Rate", "Amount"]],
       body: [
         ["Monthly Maintenance Charges", "1", `INR ${amount}`, `INR ${amount}`],
-        ["Late Payment Surcharge", "1", `INR ${lateFee}`, `INR ${lateFee}`],
+        ...(lateFee > 0 ? [["Late Payment Surcharge", "1", `INR ${lateFee}`, `INR ${lateFee}`]] : []),
+        ...(escalationCharge > 0 ? [["Escalation Charge", "1", `INR ${escalationCharge}`, `INR ${escalationCharge}`]] : []),
       ],
       foot: [["", "", "Total Amount Payable", `INR ${total}`]],
       theme: 'grid',
