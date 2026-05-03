@@ -83,12 +83,12 @@ const seedComplaints = async () => {
 
     // 1. Clear existing complaints
     await Complaint.deleteMany({});
-    console.log("🗑️ Cleared existing complaints.");
+    console.log("Cleared existing complaints.");
 
     // 2. Get all residents
     const residents = await Resident.find({});
     if (residents.length === 0) {
-      console.log("❌ No residents found. Please run seed:residents first.");
+      console.log("No residents found. Please run seed:residents first.");
       process.exit(1);
     }
 
@@ -114,11 +114,11 @@ const seedComplaints = async () => {
     }
 
     await Complaint.insertMany(complaintsToInsert);
-    console.log(`✅ ${complaintsToInsert.length} Complaints seeded successfully.`);
+    console.log(`${complaintsToInsert.length} Complaints seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding complaints failed:", error);
+    console.error("Seeding complaints failed:", error);
     process.exit(1);
   }
 };

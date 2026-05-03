@@ -230,7 +230,7 @@ const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // ✅ Actually save the new password and clear OTP fields
+    // Actually save the new password and clear OTP fields
     await User.updateOne(
       { _id: user._id },
       { $set: { password: hashedPassword }, $unset: { resetToken: 1, resetTokenExpiry: 1 } }

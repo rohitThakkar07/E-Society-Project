@@ -8,9 +8,9 @@ const connectDB = async () => {
     // 2. Attempt connection
     await mongoose.connect(dbURI);
     
-    console.log(`✅ MongoDB Connected: ${dbURI.includes('127.0.0.1') ? 'Localhost' : 'Remote Cluster'}`);
+    console.log(`MongoDB Connected: ${dbURI.includes('127.0.0.1') ? 'Localhost' : 'Remote Cluster'}`);
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("MongoDB connection error:", err.message);
     
     process.exit(1);
   }

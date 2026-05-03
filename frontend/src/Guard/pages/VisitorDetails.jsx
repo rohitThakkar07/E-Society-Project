@@ -13,11 +13,11 @@ import { toast } from "react-toastify";
 const ACCENT = "#4F6EF7";
 
 const STATUS_CONFIG = {
-  Pending:  { bg: "#FFF8E1", color: "#F59E0B", dot: "#F59E0B", icon: "⏳", label: "Pending"  },
-  Approved: { bg: "#E8F5E9", color: "#16A34A", dot: "#16A34A", icon: "✅", label: "Approved" },
-  Inside:   { bg: "#E3F2FD", color: "#1D4ED8", dot: "#1D4ED8", icon: "🏠", label: "Inside"   },
-  Exited:   { bg: "#F1F5F9", color: "#64748B", dot: "#94A3B8", icon: "🚶", label: "Exited"   },
-  Denied:   { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626", icon: "🚫", label: "Denied"   },
+  Pending:  { bg: "#FFF8E1", color: "#F59E0B", dot: "#F59E0B", icon: "P", label: "Pending"  },
+  Approved: { bg: "#E8F5E9", color: "#16A34A", dot: "#16A34A", icon: "A", label: "Approved" },
+  Inside:   { bg: "#E3F2FD", color: "#1D4ED8", dot: "#1D4ED8", icon: "I", label: "Inside"   },
+  Exited:   { bg: "#F1F5F9", color: "#64748B", dot: "#94A3B8", icon: "E", label: "Exited"   },
+  Denied:   { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626", icon: "D", label: "Denied"   },
 };
 
 const VisitorDetail = () => {
@@ -58,7 +58,7 @@ const VisitorDetail = () => {
     setOtpLoading(true);
     try {
       await API.post(`/visitor/verify-otp/${id}`, { otp });
-      toast.success("✅ OTP verified! Visitor approved.");
+      toast.success("OTP verified! Visitor approved.");
       dispatch(fetchVisitorById(id));
       setShowOtpBox(false); setOtp("");
     } catch (err) {

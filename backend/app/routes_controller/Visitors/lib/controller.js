@@ -1,187 +1,3 @@
-// const Visitor = require("../../../db/models/visitorModel");
-// const Resident = require("../../../db/models/residentsModel");
-// const nodemailer = require("nodemailer");
-// const { sendVisitorOTPEmail } = require("../../../../utils/visitor-verifyEmail");
-
-// const addVisitor = async (req, res) => {
-//   try {
-//     const { visitorName, mobileNumber, purpose, visitingResident } = req.body;
-
-//     // 1. Fetch Resident email from Database using the ID sent from frontend
-//     const resident = await Resident.findById(visitingResident);
-//     if (!resident) {
-//       return res.status(404).json({ success: false, message: "Resident not found" });
-//     }
-
-//     // 2. Generate 6-digit OTP
-//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-//     // 3. Create Visitor Record
-//     const visitor = await Visitor.create({
-//       visitorName,
-//       mobileNumber,
-//       purpose,
-//       visitingResident,
-//       otp,
-//       otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
-//     });
-
-//     // 4. Send Email via our Utility Service
-//     await sendVisitorOTPEmail(resident.email, visitorName, otp);
-
-//     res.status(201).json({ 
-//       success: true, 
-//       message: "OTP has been sent to the resident's email.",
-//       visitorId: visitor._id 
-//     });
-
-//   } catch (error) {
-//     console.error("Add Visitor Error:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-// //verify visitor otp 
-
-// const verifyVisitorOtp = async (req, res) => {
-//   const { visitorId, otp } = req.body;
-
-//   const visitor = await Visitor.findById(visitorId);
-
-//   if (!visitor) return res.status(404).json({ message: "Visitor not found" });
-
-//   if (visitor.otp !== otp) {
-//     return res.status(400).json({ message: "Invalid OTP" });
-//   }
-
-//   if (visitor.otpExpiry < new Date()) {
-//     return res.status(400).json({ message: "OTP expired" });
-//   }
-
-//   visitor.isVerified = true;
-//   visitor.status = "approved";
-//   visitor.entryTime = new Date();
-
-//   await visitor.save();
-
-//   res.json({ message: "Visitor entry allowed" });
-// };
-
-// const exitVisitor = async (req, res) => {
-//   const { visitorId } = req.body;
-
-//   const visitor = await Visitor.findById(visitorId);
-
-//   if (!visitor) return res.status(404).json({ message: "Not found" });
-
-//   visitor.status = "exited";
-//   visitor.exitTime = new Date();
-
-//   await visitor.save();
-
-//   res.json({ message: "Visitor exited" });
-// };
-
-// //search resident
-// const searchResident = async (req, res) => {
-//   const { query } = req.query;
-
-//   const residents = await Resident.find({
-//     $or: [
-//       { name: { $regex: query, $options: "i" } },
-//       { flatNumber: { $regex: query, $options: "i" } },
-//     ],
-//   });
-
-//   res.json(residents);
-// };
-
-// // Get All Visitors
-// const getAllVisitors = async (req, res) => {
-//   try {
-
-//     const visitors = await Visitor.find()
-//       .populate("visitingResident", "firstName lastName flatNumber wing")
-//       .sort({ createdAt: -1 });
-
-//     res.json({
-//       success: true,
-//       data: visitors
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// // Get Visitor by ID
-// const getVisitorById = async (req, res) => {
-//   try {
-
-//     const visitor = await Visitor.findById(req.params.id)
-//       .populate("visitingResident");
-
-//     res.json({
-//       success: true,
-//       data: visitor
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// // Update Visitor
-// const updateVisitor = async (req, res) => {
-//   try {
-
-//     const visitor = await Visitor.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true }
-//     );
-
-//     res.json({
-//       success: true,
-//       message: "Visitor updated",
-//       data: visitor
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// // Delete Visitor
-// const deleteVisitor = async (req, res) => {
-//   try {
-
-//     await Visitor.findByIdAndDelete(req.params.id);
-
-//     res.json({
-//       success: true,
-//       message: "Visitor deleted"
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// module.exports = {
-//   // createVisitor,
-//   addVisitor,
-//   verifyVisitorOtp,
-//   searchResident,
-//   exitVisitor,
-//   getAllVisitors,
-//   getVisitorById,
-//   updateVisitor,
-//   deleteVisitor
-// };
-
-
-// controllers/visitorController.js
 const Visitor  = require("../../../db/models/visitorModel");
 const Resident = require("../../../db/models/residentsModel");
 
@@ -223,7 +39,7 @@ const { sendMail } = require("../../../../utils/sendMail");
 
 const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName) => {
   // Console log always (dev visibility)
-  console.log(`📱 OTP [${otp}] for resident mobile ${residentMobile} | visitor: ${visitorName}`);
+  console.log(`OTP [${otp}] for resident mobile ${residentMobile} | visitor: ${visitorName}`);
 
   // Send email if resident has an email address
   if (!residentEmail) {
@@ -231,11 +47,11 @@ const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName
     return true;
   }
 
-  const subject = "🔐 Visitor Entry OTP — e-Society";
+  const subject = "Visitor Entry OTP — e-Society";
   const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
         <div style="background: #1e40af; padding: 28px 32px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">🛡️ e-Society</h1>
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">e-Society</h1>
           <p style="color: #bfdbfe; margin: 6px 0 0; font-size: 13px;">Security Gate System</p>
         </div>
         <div style="padding: 32px;">
@@ -264,7 +80,7 @@ const sendOTPtoResident = async (residentEmail, residentMobile, otp, visitorName
     `;
 
   await sendMail(residentEmail, subject, html);
-  console.log(`✅ OTP email sent to ${residentEmail}`);
+  console.log(`OTP email sent to ${residentEmail}`);
   return true;
 };
 

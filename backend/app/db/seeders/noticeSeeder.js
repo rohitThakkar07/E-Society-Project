@@ -71,7 +71,7 @@ const seedNotices = async () => {
 
     // 1. Clear existing notices
     await Notice.deleteMany({});
-    console.log("🗑️ Cleared existing notices.");
+    console.log("Cleared existing notices.");
 
     // 2. Get an admin user
     const admin = await User.findOne({ role: "admin" });
@@ -99,11 +99,11 @@ const seedNotices = async () => {
     }
 
     await Notice.insertMany(noticesToInsert);
-    console.log(`✅ ${noticesToInsert.length} Notices seeded successfully.`);
+    console.log(`${noticesToInsert.length} Notices seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding notices failed:", error);
+    console.error("Seeding notices failed:", error);
     process.exit(1);
   }
 };

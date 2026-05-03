@@ -32,7 +32,7 @@ const VisitorDashboard = () => {
     dispatch(fetchVisitors());
   }, [dispatch]);
 
-  // 🔥 OTP Handle
+  // OTP Handle
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) return toast.error("Enter valid 6-digit OTP");
@@ -46,14 +46,14 @@ const VisitorDashboard = () => {
     }
   };
 
-  // 🔥 Stats calculation
+  // Stats calculation
   const stats = useMemo(() => ({
     total: visitors.length,
     pending: visitors.filter(v => v.status === "Pending").length,
     inside: visitors.filter(v => ["Inside", "Approved"].includes(v.status)).length,
   }), [visitors]);
 
-  // 🔥 Filter Logic
+  // Filter Logic
   const filtered = useMemo(() =>
     visitors.filter((v) => {
       const q = search.toLowerCase();

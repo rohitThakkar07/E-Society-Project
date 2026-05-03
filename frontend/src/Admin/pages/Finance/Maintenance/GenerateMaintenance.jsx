@@ -155,7 +155,7 @@ export default function GenerateMaintenance() {
           <form onSubmit={handleSaveSettings} className="p-6 space-y-5">
 
             {/* ── Due Date ── */}
-            <SectionLabel>📅 Due Date</SectionLabel>
+            <SectionLabel>Due Date</SectionLabel>
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Due date (day of month)</label>
               <input type="number" min={1} max={28} value={settings.dueDays}
@@ -165,7 +165,7 @@ export default function GenerateMaintenance() {
             </div>
 
             {/* ── Grace Period ── */}
-            <SectionLabel>🕐 Grace Period (no penalty)</SectionLabel>
+            <SectionLabel>Grace Period (no penalty)</SectionLabel>
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Grace period (days after due date)</label>
               <input type="number" min={0} max={30} value={settings.gracePeriodDays}
@@ -175,7 +175,7 @@ export default function GenerateMaintenance() {
             </div>
 
             {/* ── Late Fee ── */}
-            <SectionLabel>💸 Late Fee (after grace period)</SectionLabel>
+            <SectionLabel>Late Fee (after grace period)</SectionLabel>
             <div>
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Late fee type</label>
               <div className="flex gap-2 mt-1.5">
@@ -205,7 +205,7 @@ export default function GenerateMaintenance() {
             )}
 
             {/* ── Escalation Level 1 ── */}
-            <SectionLabel>⚠️ Escalation Level 1 — Additional Charge</SectionLabel>
+            <SectionLabel>Escalation Level 1 — Additional Charge</SectionLabel>
             <ToggleRow label="Apply extra charge after N days overdue" value={settings.escalation1Enabled} onChange={(v) => updateField("escalation1Enabled",v)} />
             {settings.escalation1Enabled && (<>
               <div>
@@ -271,11 +271,11 @@ export default function GenerateMaintenance() {
             )}
 
             {/* ── Restrictions ── */}
-            <SectionLabel>🔒 Restrictions</SectionLabel>
+            <SectionLabel>Restrictions</SectionLabel>
             <ToggleRow label="Block facility bookings for overdue residents" value={settings.blockFacilityOnOverdue} onChange={(v) => updateField("blockFacilityOnOverdue",v)} />
 
             {/* ── Pre-Due Reminders ── */}
-            <SectionLabel>🔔 Pre-Due Reminders</SectionLabel>
+            <SectionLabel>Pre-Due Reminders</SectionLabel>
             <ToggleRow label="Send reminder emails before due date" value={settings.sendPreDueReminders} onChange={(v) => updateField("sendPreDueReminders",v)} />
             {settings.sendPreDueReminders && (
               <div>
@@ -300,7 +300,7 @@ export default function GenerateMaintenance() {
             )}
 
             {/* ── Auto-Generate & Notifications ── */}
-            <SectionLabel>📧 Auto-Generate &amp; Notifications</SectionLabel>
+            <SectionLabel>Auto-Generate &amp; Notifications</SectionLabel>
             <div className="space-y-3">
               <ToggleRow label="Auto-generate bills on the 1st of each month" value={settings.autoGenerate} onChange={(v) => updateField("autoGenerate",v)} />
               <ToggleRow label="Send email when a bill is generated" value={settings.sendEmailOnGenerate} onChange={(v) => updateField("sendEmailOnGenerate",v)} />
@@ -330,7 +330,7 @@ export default function GenerateMaintenance() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">
-                ⚡
+                G
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800">Generate monthly bills</p>

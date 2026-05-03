@@ -52,7 +52,7 @@ const seedPolls = async () => {
 
     // 1. Clear existing polls
     await Poll.deleteMany({});
-    console.log("🗑️ Cleared existing polls.");
+    console.log("Cleared existing polls.");
 
     // 2. Get an admin user and some residents for votes
     const admin = await User.findOne({ role: "admin" });
@@ -93,11 +93,11 @@ const seedPolls = async () => {
     }
 
     await Poll.insertMany(pollsToInsert);
-    console.log(`✅ ${pollsToInsert.length} Polls seeded successfully.`);
+    console.log(`${pollsToInsert.length} Polls seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding polls failed:", error);
+    console.error("Seeding polls failed:", error);
     process.exit(1);
   }
 };

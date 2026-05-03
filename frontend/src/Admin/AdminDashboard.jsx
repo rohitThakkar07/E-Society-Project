@@ -296,7 +296,7 @@ const AdminDashboard = () => {
         <div className="relative rounded-3xl p-8 bg-gradient-to-r from-slate-900 to-slate-800 text-white overflow-hidden shadow-xl">
            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-center gap-6">
-                 <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-3xl">👋</div>
+                 <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-3xl">Hi</div>
                  <div>
                     <h3 className="text-2xl font-black mb-1">Welcome back, Admin!</h3>
                     <p className="text-slate-400 text-sm font-medium">Your society operations are running smoothly. Need any help?</p>

@@ -105,7 +105,7 @@ const maintenanceSlice = createSlice({
                 state.list = action.payload; 
             })
             .addCase(fetchMaintenanceById.fulfilled, (state, action) => {
-                // ✅ Ensure singleRecord is populated correctly for the Invoice UI
+                // Ensure singleRecord is populated correctly for the Invoice UI
                 state.singleRecord = action.payload;
             })
             .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
@@ -118,7 +118,7 @@ const maintenanceSlice = createSlice({
                 state.list = state.list.filter(item => item._id !== action.payload);
             })
             
-            // ✅ Unified Update Matcher
+            // Unified Update Matcher
             .addMatcher(
                 (action) => [
                     payMaintenance.fulfilled.type, 

@@ -101,7 +101,7 @@ const seedEvents = async () => {
 
     // 1. Clear existing events
     await Event.deleteMany({});
-    console.log("🗑️ Cleared existing events.");
+    console.log("Cleared existing events.");
 
     // 2. Get an admin user for createdBy field
     const admin = await User.findOne({ role: "admin" });
@@ -112,11 +112,11 @@ const seedEvents = async () => {
     }));
 
     await Event.insertMany(eventsToInsert);
-    console.log(`✅ ${eventsToInsert.length} Events seeded successfully.`);
+    console.log(`${eventsToInsert.length} Events seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding events failed:", error);
+    console.error("Seeding events failed:", error);
     process.exit(1);
   }
 };

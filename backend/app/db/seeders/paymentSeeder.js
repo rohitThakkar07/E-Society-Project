@@ -11,13 +11,13 @@ const seedPayments = async () => {
 
     // 1. Clear existing payments
     await PaymentRecord.deleteMany({});
-    console.log("🗑️ Cleared existing payment records.");
+    console.log("Cleared existing payment records.");
 
     // 2. Get maintenance records (especially those marked as Paid)
     const bills = await Maintenance.find({ status: "Paid" }).limit(40);
     
     if (bills.length < 40) {
-      console.log(`⚠️ Only found ${bills.length} paid bills. Seeding payments for all of them.`);
+      console.log(`Only found ${bills.length} paid bills. Seeding payments for all of them.`);
     }
 
     const paymentsToInsert = [];
@@ -81,16 +81,16 @@ const seedPayments = async () => {
     }
 
     if (paymentsToInsert.length === 0) {
-        console.log("❌ No maintenance records found to link payments. Please run seed:maintenance first.");
+        console.log("No maintenance records found to link payments. Please run seed:maintenance first.");
         process.exit(1);
     }
 
     await PaymentRecord.insertMany(paymentsToInsert);
-    console.log(`✅ ${paymentsToInsert.length} Payment records seeded successfully.`);
+    console.log(`${paymentsToInsert.length} Payment records seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding payments failed:", error);
+    console.error("Seeding payments failed:", error);
     process.exit(1);
   }
 };

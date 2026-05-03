@@ -10,7 +10,7 @@ import {
   FiEdit, FiTrash2, FiSearch, FiPlus, 
   FiEye, FiFileText, FiHome, FiUser 
 } from "react-icons/fi";
-// ✅ Ensure path is correct
+// Ensure path is correct
 import {
   fetchMaintenanceList,
   deleteMaintenance,
@@ -53,7 +53,7 @@ const MaintenanceList = () => {
     dispatch(fetchMaintenanceList());
   }, [dispatch]);
 
-  // ✅ RELATIONSHIP-AWARE FILTER (Logic Unchanged)
+  // RELATIONSHIP-AWARE FILTER (Logic Unchanged)
   const filtered = useMemo(() => {
     return (maintenanceData || []).filter((item) => {
       const wing = item.flat?.wing || item.resident?.wing || "";

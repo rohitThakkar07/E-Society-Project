@@ -21,7 +21,7 @@ const Visitors = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  // ✅ Pagination & Search State
+  // Pagination & Search State
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -32,7 +32,7 @@ const Visitors = () => {
     dispatch(fetchVisitors());
   }, [dispatch]);
 
-  // ✅ Pagination Handlers
+  // Pagination Handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -211,7 +211,7 @@ const Visitors = () => {
           </TableBody>
         </Table>
 
-        {/* ✅ PAGINATION COMPONENT */}
+        {/* PAGINATION COMPONENT */}
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"

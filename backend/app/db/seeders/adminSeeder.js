@@ -35,13 +35,13 @@ const seedAdmin = async () => {
         mustChangePassword: true,
         status: "Active"
       });
-      console.log("✅ Admin user created: owner@gmail.com / temp123");
+      console.log("Admin user created: owner@gmail.com / temp123");
     }
     
-    console.log("👉 First login will now force a password change.");
+    console.log("First login will now force a password change.");
     
   } catch (err) {
-    console.error("❌ Error seeding admin:", err.message);
+    console.error("Error seeding admin:", err.message);
   } finally {
     mongoose.connection.close();
     process.exit(0);

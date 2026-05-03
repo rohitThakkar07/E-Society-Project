@@ -30,7 +30,7 @@ const upload = multer({
   }
 });
 
-// ✅ SPECIFIC ROUTES FIRST (more specific routes before generic ones)
+// SPECIFIC ROUTES FIRST (more specific routes before generic ones)
 router.get("/list", guardController.getAllGuards);
 
 router.post("/create", upload.single("idImage"), guardController.createGuard);
@@ -39,7 +39,7 @@ router.put("/update/:id", upload.single("idImage"), guardController.updateGuard)
 
 router.put("/status/:id", guardController.updateGuardStatus);
 
-// ✅ GENERIC ROUTES LAST (wildcard :id routes at the end)
+// GENERIC ROUTES LAST (wildcard :id routes at the end)
 router.get("/:id", guardController.getGuardById);
 
 router.delete("/delete/:id", guardController.deleteGuard);

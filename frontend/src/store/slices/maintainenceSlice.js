@@ -120,7 +120,7 @@ const maintenanceSlice = createSlice({
       .addCase(deleteMaintenance.fulfilled, (state, action) => {
         state.list = state.list.filter(item => item._id !== action.payload);
       })
-      // ✅ Handle Payment updates in the list AND single record simultaneously
+      // Handle Payment updates in the list AND single record simultaneously
       .addMatcher(
         (action) => [payMaintenance.fulfilled.type, markAsPaid.fulfilled.type, addPayment.fulfilled.type].includes(action.type),
         (state, action) => {

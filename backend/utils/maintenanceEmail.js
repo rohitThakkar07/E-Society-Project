@@ -10,7 +10,7 @@ function header(accentColor, badge) {
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td>
-            <div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px;">🏢 E-SOCIETY</div>
+            <div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px;">E-SOCIETY</div>
             <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px;">Society Management System</div>
           </td>
           <td align="right">
@@ -26,7 +26,7 @@ function footer() {
   return `
   <tr>
     <td style="background:#f8fafc;padding:20px;border-top:1px solid #f1f5f9;text-align:center;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">🏢 E-Society Management System &nbsp;|&nbsp; This is an auto-generated email.</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">E-Society Management System &nbsp;|&nbsp; This is an auto-generated email.</p>
     </td>
   </tr>`;
 }
@@ -55,8 +55,8 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
   const badge    = isOverdue ? "OVERDUE" : "DUE";
   const statusBg = isOverdue ? "#fff5f5" : "#eff6ff";
   const subject  = isOverdue
-    ? `⚠️ Overdue Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`
-    : `🏠 Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`;
+    ? `Overdue Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`
+    : `Maintenance Bill — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`;
 
   const body = `
   ${header(accent, badge)}
@@ -64,7 +64,7 @@ function buildBillEmail(resident, flat, maintenance, isOverdue = false) {
     <p style="margin:0 0 8px;font-size:15px;color:#64748b;">Dear,</p>
     <h2 style="margin:0 0 4px;font-size:22px;color:#0f172a;font-weight:700;">${name}</h2>
     <p style="margin:0 0 28px;font-size:14px;color:#64748b;">Flat: <strong>${flat.flatNumber}</strong></p>
-    ${isOverdue ? `<div style="background:#fff5f5;border-left:4px solid #e53e3e;padding:14px 18px;border-radius:6px;margin-bottom:24px;"><strong style="color:#e53e3e;">⚠️ Your maintenance payment is overdue. Please pay immediately to avoid further penalties.</strong></div>` : ""}
+    ${isOverdue ? `<div style="background:#fff5f5;border-left:4px solid #e53e3e;padding:14px 18px;border-radius:6px;margin-bottom:24px;"><strong style="color:#e53e3e;">Your maintenance payment is overdue. Please pay immediately to avoid further penalties.</strong></div>` : ""}
     <div style="background:${statusBg};border-radius:10px;padding:24px;margin-bottom:24px;">
       <table width="100%">
         <tr><td style="padding:8px 0;color:#475569;">Period</td><td style="text-align:right;font-weight:600;">${maintenance.month} ${maintenance.year}</td></tr>
@@ -90,8 +90,8 @@ function buildPreDueReminderEmail(resident, flat, maintenance, daysLeft) {
   const urgency = daysLeft === 0 ? "TODAY" : `${daysLeft} DAY${daysLeft > 1 ? "S" : ""} LEFT`;
   const accent  = daysLeft <= 2 ? "#f59e0b" : "#3b82f6";
   const subject = daysLeft === 0
-    ? `🔔 Maintenance Due TODAY — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`
-    : `🔔 Maintenance Reminder: ${daysLeft} day${daysLeft > 1 ? "s" : ""} left — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`;
+    ? `Maintenance Due TODAY — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`
+    : `Maintenance Reminder: ${daysLeft} day${daysLeft > 1 ? "s" : ""} left — ${flat.flatNumber} | ${maintenance.month} ${maintenance.year}`;
 
   const body = `
   ${header(accent, urgency)}
@@ -101,7 +101,7 @@ function buildPreDueReminderEmail(resident, flat, maintenance, daysLeft) {
     <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Flat: <strong>${flat.flatNumber}</strong></p>
     <div style="background:#fffbeb;border-left:4px solid ${accent};padding:14px 18px;border-radius:6px;margin-bottom:24px;">
       <strong style="color:${accent};">
-        ${daysLeft === 0 ? "⚠️ Your maintenance payment is due TODAY. Please pay before end of day to avoid late fees." : `⏰ Your maintenance payment is due in ${daysLeft} day${daysLeft > 1 ? "s" : ""}. Please pay on time to avoid late charges.`}
+        ${daysLeft === 0 ? "Your maintenance payment is due TODAY. Please pay before end of day to avoid late fees." : `Your maintenance payment is due in ${daysLeft} day${daysLeft > 1 ? "s" : ""}. Please pay on time to avoid late charges.`}
       </strong>
     </div>
     <div style="background:#f8fafc;border-radius:10px;padding:24px;margin-bottom:24px;">
@@ -186,7 +186,7 @@ function buildPaymentReceiptEmail(resident, flat, record) {
   const name        = `${resident.firstName} ${resident.lastName || ""}`.trim();
   const paymentDate = new Date(record.paidDate || new Date()).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
   const total       = (record.amount || 0) + (record.lateFee || 0) + (record.escalationCharge || 0);
-  const subject     = `✅ Payment Confirmed — ${flat.flatNumber} | ${record.month} ${record.year}`;
+  const subject     = `Payment Confirmed — ${flat.flatNumber} | ${record.month} ${record.year}`;
 
   const body = `
   ${header("#10b981", "PAID")}

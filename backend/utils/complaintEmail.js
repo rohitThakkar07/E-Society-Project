@@ -8,7 +8,7 @@ function buildComplaintResolvedEmail(resident, complaint) {
   const resolutionDate = new Date(complaint.resolvedAt || new Date()).toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
   });
-  const subject = `✅ Complaint Resolved: ${complaint.title}`;
+  const subject = `Complaint Resolved: ${complaint.title}`;
 
   const html = `
 <!DOCTYPE html>
@@ -20,7 +20,7 @@ function buildComplaintResolvedEmail(resident, complaint) {
         <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);">
           <tr>
             <td style="background:#10b981;padding:40px 36px;text-align:center;color:#ffffff;">
-              <div style="font-size:48px;margin-bottom:16px;">✨</div>
+              <div style="font-size:48px;margin-bottom:16px;"></div>
               <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:0.5px;">Resolution Confirmed</h1>
               <p style="margin:8px 0 0;font-size:15px;opacity:0.9;">Your complaint has been successfully resolved</p>
             </td>
@@ -66,7 +66,7 @@ function buildComplaintResolvedEmail(resident, complaint) {
           </tr>
           <tr>
             <td style="background:#f8fafc;padding:24px;border-top:1px solid #f1f5f9;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#94a3b8;">🏢 E-Society Management System &nbsp;|&nbsp; Support: +91 99999 00000</p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;">E-Society Management System &nbsp;|&nbsp; Support: +91 99999 00000</p>
             </td>
           </tr>
         </table>

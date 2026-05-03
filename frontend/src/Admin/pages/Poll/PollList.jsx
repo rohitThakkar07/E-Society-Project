@@ -16,7 +16,7 @@ const PollList = () => {
     dispatch(fetchPolls());
   }, [dispatch]);
 
-  // ✅ Helper to check expiry robustly
+  // Helper to check expiry robustly
   const isExpiredPoll = (poll) => {
     if (!poll) return true;
     if (poll.isActive === false) return true;
@@ -27,7 +27,7 @@ const PollList = () => {
     return expiryDate <= now;
   };
 
-  // ✅ Filtering logic
+  // Filtering logic
   const filtered = useMemo(() => {
     if (!polls || polls.length === 0) return [];
     if (filter === "All") return polls;

@@ -30,12 +30,12 @@ const seedResidents = async () => {
     await User.deleteMany({ role: "resident" });
     await Flat.updateMany({}, { $set: { resident: null, status: "Vacant", occupancyType: "Vacant" } });
     
-    console.log("🗑️ Cleared existing residents and reset flats.");
+    console.log("Cleared existing residents and reset flats.");
 
     // 2. Get all flats
     const flats = await Flat.find({});
     if (flats.length === 0) {
-      console.log("❌ No flats found. Please run seed:flats first.");
+      console.log("No flats found. Please run seed:flats first.");
       process.exit(1);
     }
 
@@ -104,17 +104,17 @@ const seedResidents = async () => {
 
     // 4. Batch Operations
     await Resident.insertMany(residentsToInsert);
-    console.log(`✅ ${residentsToInsert.length} Resident profiles created.`);
+    console.log(`${residentsToInsert.length} Resident profiles created.`);
 
     await User.insertMany(usersToInsert);
-    console.log(`👤 ${usersToInsert.length} Resident User accounts created. (Password: Resident@123)`);
+    console.log(`${usersToInsert.length} Resident User accounts created. (Password: Resident@123)`);
 
     await Flat.bulkWrite(flatUpdates);
-    console.log(`🏠 ${flatUpdates.length} Flats updated with occupancy data.`);
+    console.log(`${flatUpdates.length} Flats updated with occupancy data.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding failed:", error);
+    console.error("Seeding failed:", error);
     process.exit(1);
   }
 };

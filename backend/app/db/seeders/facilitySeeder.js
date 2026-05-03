@@ -100,15 +100,15 @@ const seedFacilities = async () => {
 
     // 1. Clear existing facilities
     await Facility.deleteMany({});
-    console.log("🗑️ Cleared existing facilities.");
+    console.log("Cleared existing facilities.");
 
     // 2. Insert 10 facilities
     await Facility.insertMany(facilityData);
-    console.log(`✅ ${facilityData.length} Facilities seeded successfully.`);
+    console.log(`${facilityData.length} Facilities seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding facilities failed:", error);
+    console.error("Seeding facilities failed:", error);
     process.exit(1);
   }
 };

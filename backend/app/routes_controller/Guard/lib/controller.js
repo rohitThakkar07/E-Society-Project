@@ -5,7 +5,7 @@ const Guard = require("../../../db/models/guardModal");
 const User = require("../../../db/models/userModel");
 const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require("../../../../utils/passwordPolicy");
 
-// ✅ CREATE GUARD
+// CREATE GUARD
 exports.createGuard = async (req, res) => {
   try {
     const {
@@ -13,7 +13,6 @@ exports.createGuard = async (req, res) => {
       lastName,
       mobileNumber,
       alternativeNumber,
-      // ✅ : frontend sends 'emailAddress' — accept both
       email,
       emailAddress,
       city,
@@ -28,7 +27,7 @@ exports.createGuard = async (req, res) => {
       monthlySalary,
     } = req.body;
 
-    // ✅ Normalize field names
+    // Normalize field names
     const resolvedEmail = email || emailAddress || null;
     const resolvedIdProofType = idProofType || idType || "Aadhar Card";
     const resolvedIdProofNum = idProofNumber || idNumber || null;
@@ -151,7 +150,7 @@ exports.createGuard = async (req, res) => {
   }
 };
 
-// ✅ GET ALL GUARDS
+// GET ALL GUARDS
 exports.getAllGuards = async (req, res) => {
   try {
     const guards = await Guard.find({}).sort({ createdAt: -1 }).lean();
@@ -171,7 +170,7 @@ exports.getAllGuards = async (req, res) => {
   }
 };
 
-// ✅ GET SINGLE GUARD BY ID
+// GET SINGLE GUARD BY ID
 exports.getGuardById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -199,7 +198,7 @@ exports.getGuardById = async (req, res) => {
   }
 };
 
-// ✅ UPDATE GUARD
+// UPDATE GUARD
 exports.updateGuard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -329,7 +328,7 @@ exports.updateGuard = async (req, res) => {
   }
 };
 
-// ✅ DELETE GUARD
+// DELETE GUARD
 exports.deleteGuard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -366,7 +365,7 @@ exports.deleteGuard = async (req, res) => {
   }
 };
 
-// ✅ UPDATE GUARD STATUS (for toggle Active/Inactive)
+// UPDATE GUARD STATUS (for toggle Active/Inactive)
 exports.updateGuardStatus = async (req, res) => {
   try {
     const { id } = req.params;

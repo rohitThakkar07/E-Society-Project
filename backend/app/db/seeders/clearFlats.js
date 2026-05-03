@@ -5,14 +5,14 @@ const clearFlats = async () => {
   try {
     await connectDB();
 
-    // ⚠️ delete all flats
+    // delete all flats
     const result = await Flat.deleteMany();
 
-    console.log(`🗑️ ${result.deletedCount} flats deleted`);
+    console.log(`${result.deletedCount} flats deleted`);
 
     process.exit();
   } catch (error) {
-    console.error("❌ Error deleting flats:", error);
+    console.error("Error deleting flats:", error);
     process.exit(1);
   }
 };

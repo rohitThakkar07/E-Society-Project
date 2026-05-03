@@ -21,7 +21,7 @@ const seedExpenses = async () => {
 
     // 1. Clear existing expenses
     await Expense.deleteMany({});
-    console.log("🗑️ Cleared existing expenses.");
+    console.log("Cleared existing expenses.");
 
     // 2. Get an admin user
     const admin = await User.findOne({ role: "admin" });
@@ -62,11 +62,11 @@ const seedExpenses = async () => {
     });
 
     await Expense.insertMany(expensesToInsert);
-    console.log(`✅ ${expensesToInsert.length} Expenses seeded successfully.`);
+    console.log(`${expensesToInsert.length} Expenses seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding expenses failed:", error);
+    console.error("Seeding expenses failed:", error);
     process.exit(1);
   }
 };

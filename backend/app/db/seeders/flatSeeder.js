@@ -1,7 +1,6 @@
 const connectDB = require("../config/db");
 const Flat = require("../models/flatModal");
 
-// 🔹 Real Indian Names (50)
 const indianNames = [
   "Ramesh Patel","Amit Shah","Neha Desai","Kiran Joshi","Pooja Mehta",
   "Rahul Trivedi","Sneha Parmar","Vikas Yadav","Anjali Gupta","Suresh Nair",
@@ -70,7 +69,7 @@ const seedFlats = async () => {
     const flats = generateFlats();
 
     await Flat.deleteMany();
-    console.log("🗑️ Old flats removed");
+    console.log("Old flats removed");
 
     await Flat.insertMany(flats);
 

@@ -8,7 +8,7 @@ export const fetchPolls = createAsyncThunk("poll/fetchPolls", async (params = {}
     const q = new URLSearchParams(params).toString();
     const res = await API.get(`/poll/list${q ? `?${q}` : ""}`);
 
-    // ✅ FIX: Handle all possible API response shapes
+    // FIX: Handle all possible API response shapes
     const payload = res?.data?.data ?? res?.data ?? res;
     return Array.isArray(payload) ? payload : [];
   } catch (err) {

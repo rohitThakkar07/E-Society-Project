@@ -253,7 +253,7 @@ const MaintenancePayment = () => {
                               : "bg-yellow-100 text-yellow-700"
                           }`}
                         >
-                          {bill.status === "Overdue" ? "⚠️ Overdue" : "Pending"}
+                          {bill.status === "Overdue" ? "Overdue" : "Pending"}
                         </span>
                       </div>
                       <p className="text-gray-600 text-sm mb-4">

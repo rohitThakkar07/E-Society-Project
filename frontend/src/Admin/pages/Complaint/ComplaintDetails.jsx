@@ -107,7 +107,7 @@ const ComplaintDetails = () => {
               {complaint.description}
             </div>
 
-            {/* ✅ ATTACHMENT SECTION */}
+            {/* ATTACHMENT SECTION */}
             {complaint.attachment ? (
               <div className="mt-10 pt-10 border-t border-gray-50">
                 <div className="flex items-center justify-between mb-4">

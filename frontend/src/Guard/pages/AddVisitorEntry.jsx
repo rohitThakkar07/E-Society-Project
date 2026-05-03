@@ -117,7 +117,7 @@ const AddVisitorEntry = () => {
     setLoading(true);
     try {
       await API.post(`/visitor/verify-otp/${visitorId}`, { otp });
-      toast.success("✅ OTP verified! Visitor entry approved.");
+      toast.success("OTP verified! Visitor entry approved.");
       navigate("/guard/visitors");
     } catch (err) {
       toast.error(err.response?.data?.message || "OTP verification failed.");

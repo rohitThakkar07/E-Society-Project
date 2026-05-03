@@ -7,7 +7,7 @@ const getErrorMessage = (error) => {
   return error.response?.data?.message || error.message || "Something went wrong";
 };
 
-// 🔥 Thunks with Error Handling
+// Thunks with Error Handling
 export const fetchComplaints = createAsyncThunk(
   "complaint/fetchComplaints",
   async (_, { rejectWithValue }) => {
@@ -91,7 +91,7 @@ export const updateComplaintStatus = createAsyncThunk(
   }
 );
 
-// 🔥 Initial State
+// Initial State
 const initialState = {
   complaints: [],
   singleComplaint: null,
@@ -99,7 +99,7 @@ const initialState = {
   error: null,
 };
 
-// 🔥 Slice
+// Slice
 const complaintSlice = createSlice({
   name: "complaint",
   initialState,
@@ -145,7 +145,7 @@ const complaintSlice = createSlice({
       });
 
 
-    // 🔥 Global Matchers for Loading and Error State
+    // Global Matchers for Loading and Error State
     builder.addMatcher(
       (action) => action.type.startsWith("complaint/") && action.type.endsWith("/pending"),
       (state) => {

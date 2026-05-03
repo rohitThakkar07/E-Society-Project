@@ -24,11 +24,11 @@ const clearAndRebuild = async () => {
     await Flat.syncIndexes();
     await Resident.syncIndexes();
     await User.syncIndexes();
-    console.log("✅ Model indexes synchronized.");
+    console.log("Model indexes synchronized.");
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     process.exit(1);
   }
 };

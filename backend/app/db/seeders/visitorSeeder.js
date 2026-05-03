@@ -18,12 +18,12 @@ const seedVisitors = async () => {
 
     // 1. Clear existing visitors
     await Visitor.deleteMany({});
-    console.log("🗑️ Cleared existing visitors.");
+    console.log("Cleared existing visitors.");
 
     // 2. Get all residents
     const residents = await Resident.find({});
     if (residents.length === 0) {
-      console.log("❌ No residents found. Please run seed:residents first.");
+      console.log("No residents found. Please run seed:residents first.");
       process.exit(1);
     }
 
@@ -62,11 +62,11 @@ const seedVisitors = async () => {
     }
 
     await Visitor.insertMany(visitorsToInsert);
-    console.log(`✅ ${visitorsToInsert.length} Visitors seeded successfully.`);
+    console.log(`${visitorsToInsert.length} Visitors seeded successfully.`);
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding visitors failed:", error);
+    console.error("Seeding visitors failed:", error);
     process.exit(1);
   }
 };

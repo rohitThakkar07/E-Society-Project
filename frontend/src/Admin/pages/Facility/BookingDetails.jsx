@@ -54,14 +54,14 @@ const BookingDetails = () => {
 
   if (!booking) return null;
 
-  // ✅ FIX: Resident Label (Handles Resident Name + Flat Number)
+  // FIX: Resident Label (Handles Resident Name + Flat Number)
   const residentName = booking.resident?.firstName 
     ? `${booking.resident.firstName} ${booking.resident.lastName || ""}` 
     : booking.resident?.name || "—";
   
   const residentFlat = booking.resident?.flatNumber || "—";
 
-  // ✅ FIX: Facility Data
+  // FIX: Facility Data
   const facilityName = booking.facility?.name || "—";
   
   // These fields depend on whether you kept them in the schema or not
